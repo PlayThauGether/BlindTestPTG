@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵 Deezer Edition</title>
+    <title>Quiz Party 🎵 by Play Thau'Gether</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
 </head>
@@ -20,33 +20,70 @@
         // ===========================================
         // DEEZER API - 100% GRATUIT ET SANS AUTH !
         // ===========================================
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-
+        
         class DeezerAPI {
+            constructor() {
+                // Plusieurs proxies en cas de problème
+                this.proxies = [
+                    '', // Essayer d'abord sans proxy (certains navigateurs permettent)
+                    'https://corsproxy.io/?',
+                    'https://api.codetabs.com/v1/proxy?quest='
+                ];
+                this.currentProxyIndex = 0;
+            }
+
+            async fetchWithProxy(url) {
+                for (let i = 0; i < this.proxies.length; i++) {
+                    try {
+                        const proxy = this.proxies[i];
+                        const finalUrl = proxy + encodeURIComponent(url);
+                        console.log(`🔄 Tentative ${i + 1}/${this.proxies.length}:`, finalUrl);
+                        
+                        const response = await fetch(finalUrl);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        
+                        const data = await response.json();
+                        console.log('✅ Succès !', data);
+                        return data;
+                    } catch (error) {
+                        console.warn(`❌ Proxy ${i + 1} échoué:`, error.message);
+                        if (i === this.proxies.length - 1) {
+                            throw new Error('Tous les proxies ont échoué');
+                        }
+                    }
+                }
+            }
+
             async searchTracks(query, limit = 50) {
                 try {
                     const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
-                    const response = await fetch(CORS_PROXY + encodeURIComponent(url));
-                    const data = await response.json();
+                    const data = await this.fetchWithProxy(url);
+                    
+                    if (!data.data || data.data.length === 0) {
+                        throw new Error('Aucun résultat');
+                    }
                     
                     return data.data.map(track => ({
                         id: track.id,
                         title: track.title,
                         artist: track.artist.name,
                         cover: track.album.cover_big || track.album.cover_medium,
-                        preview: track.preview // ✅ TOUJOURS disponible !
+                        preview: track.preview
                     }));
                 } catch (error) {
-                    console.error('Deezer API error:', error);
-                    return [];
+                    console.error('Deezer search error:', error);
+                    throw error;
                 }
             }
 
             async getPlaylistTracks(playlistId) {
                 try {
                     const url = `https://api.deezer.com/playlist/${playlistId}`;
-                    const response = await fetch(CORS_PROXY + encodeURIComponent(url));
-                    const data = await response.json();
+                    const data = await this.fetchWithProxy(url);
+                    
+                    if (!data.tracks || !data.tracks.data) {
+                        throw new Error('Playlist introuvable');
+                    }
                     
                     return data.tracks.data.map(track => ({
                         id: track.id,
@@ -56,16 +93,19 @@
                         preview: track.preview
                     }));
                 } catch (error) {
-                    console.error('Deezer API error:', error);
-                    return [];
+                    console.error('Deezer playlist error:', error);
+                    throw error;
                 }
             }
 
             async getChart(limit = 50) {
                 try {
                     const url = `https://api.deezer.com/chart/0/tracks?limit=${limit}`;
-                    const response = await fetch(CORS_PROXY + encodeURIComponent(url));
-                    const data = await response.json();
+                    const data = await this.fetchWithProxy(url);
+                    
+                    if (!data.data || data.data.length === 0) {
+                        throw new Error('Chart introuvable');
+                    }
                     
                     return data.data.map(track => ({
                         id: track.id,
@@ -75,8 +115,8 @@
                         preview: track.preview
                     }));
                 } catch (error) {
-                    console.error('Deezer API error:', error);
-                    return [];
+                    console.error('Deezer chart error:', error);
+                    throw error;
                 }
             }
         }
@@ -611,21 +651,35 @@
             const handleLoadDeezerData = async (type, param) => {
                 let tracks = [];
                 
-                if (type === 'chart') {
-                    tracks = await deezer.getChart(50);
-                    alert(`✅ Top 50 chargé ! ${tracks.length} morceaux prêts 🎵`);
-                } else if (type === 'search') {
-                    tracks = await deezer.searchTracks(param, 50);
-                    alert(`✅ Recherche "${param}" : ${tracks.length} morceaux trouvés 🎵`);
-                } else if (type === 'playlist') {
-                    tracks = await deezer.getPlaylistTracks(param);
-                    alert(`✅ Playlist chargée ! ${tracks.length} morceaux prêts 🎵`);
-                }
-
-                if (tracks.length > 0) {
-                    setMusicDB(tracks);
-                } else {
-                    alert('❌ Aucun morceau trouvé');
+                try {
+                    if (type === 'chart') {
+                        tracks = await deezer.getChart(50);
+                        if (tracks.length > 0) {
+                            setMusicDB(tracks);
+                            alert(`✅ Top 50 chargé ! ${tracks.length} morceaux prêts 🎵`);
+                        } else {
+                            alert('❌ Impossible de charger le Top 50');
+                        }
+                    } else if (type === 'search') {
+                        tracks = await deezer.searchTracks(param, 50);
+                        if (tracks.length > 0) {
+                            setMusicDB(tracks);
+                            alert(`✅ Recherche "${param}" : ${tracks.length} morceaux trouvés 🎵`);
+                        } else {
+                            alert(`❌ Aucun résultat pour "${param}"`);
+                        }
+                    } else if (type === 'playlist') {
+                        tracks = await deezer.getPlaylistTracks(param);
+                        if (tracks.length > 0) {
+                            setMusicDB(tracks);
+                            alert(`✅ Playlist chargée ! ${tracks.length} morceaux prêts 🎵`);
+                        } else {
+                            alert('❌ Playlist vide ou introuvable');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erreur Deezer:', error);
+                    alert(`❌ Erreur : ${error.message}\n\nEssaie de recharger la page ou d'utiliser les morceaux de démo.`);
                 }
             };
 
