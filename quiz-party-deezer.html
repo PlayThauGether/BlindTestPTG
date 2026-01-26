@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Party 🎵 Deezer Edition</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ===========================================
+        // DEEZER API - 100% GRATUIT ET SANS AUTH !
+        // ===========================================
+        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
+        class DeezerAPI {
+            async searchTracks(query, limit = 50) {
+                try {
+                    const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+                    const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+                    const data = await response.json();
+                    
+                    return data.data.map(track => ({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist.name,
+                        cover: track.album.cover_big || track.album.cover_medium,
+                        preview: track.preview // ✅ TOUJOURS disponible !
+                    }));
+                } catch (error) {
+                    console.error('Deezer API error:', error);
+                    return [];
+                }
+            }
+
+            async getPlaylistTracks(playlistId) {
+                try {
+                    const url = `https://api.deezer.com/playlist/${playlistId}`;
+                    const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+                    const data = await response.json();
+                    
+                    return data.tracks.data.map(track => ({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist.name,
+                        cover: track.album.cover_big || track.album.cover_medium,
+                        preview: track.preview
+                    }));
+                } catch (error) {
+                    console.error('Deezer API error:', error);
+                    return [];
+                }
+            }
+
+            async getChart(limit = 50) {
+                try {
+                    const url = `https://api.deezer.com/chart/0/tracks?limit=${limit}`;
+                    const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+                    const data = await response.json();
+                    
+                    return data.data.map(track => ({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.artist.name,
+                        cover: track.album.cover_big,
+                        preview: track.preview
+                    }));
+                } catch (error) {
+                    console.error('Deezer API error:', error);
+                    return [];
+                }
+            }
+        }
+
+        // ===========================================
+        // DONNÉES DE DÉMO
+        // ===========================================
+        const DEMO_MUSIC = [
+            { id: '1', title: "Shape of You", artist: "Ed Sheeran", cover: "https://e-cdns-images.dzcdn.net/images/cover/ba5db46f4b838ef6027e6f96/500x500.jpg", preview: "https://cdns-preview-e.dzcdn.net/stream/c-e77d23e0c8ed7567a507a6d1b6a9ca1b-9.mp3" },
+            { id: '2', title: "Blinding Lights", artist: "The Weeknd", cover: "https://e-cdns-images.dzcdn.net/images/cover/8863bc11d2aa12b54f5aeb36/500x500.jpg", preview: "https://cdns-preview-1.dzcdn.net/stream/c-1c5209dfc87c32ae96aefeaa20fd0c88-7.mp3" }
+        ];
+
+        const DEMO_FILMS = [
+            { id: 'f1', title: "The Matrix", poster: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+            { id: 'f2', title: "Inception", poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg" },
+            { id: 'f3', title: "Pulp Fiction", poster: "https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg" }
+        ];
+
+        // ===========================================
+        // UTILITAIRES
+        // ===========================================
+        const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+        const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        const storage = {
+            get: key => {
+                try {
+                    const data = localStorage.getItem(key);
+                    return data ? JSON.parse(data) : null;
+                } catch { return null; }
+            },
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch { return false; }
+            }
+        };
+
+        const prepareQuestions = (mode, musicDB, filmsDB) => {
+            const music = shuffle(musicDB);
+            const films = filmsDB;
+
+            if (mode === 'soiree') {
+                return [
+                    ...music.slice(0, 3).map(q => ({ ...q, type: 'qcm' })),
+                    ...music.slice(3, 6).map(q => ({ ...q, type: 'writing' })),
+                    ...films.slice(0, 3).map(q => ({ ...q, type: 'film' }))
+                ];
+            }
+            if (mode === 'film') {
+                return films.map(q => ({ ...q, type: 'film' }));
+            }
+            return music.slice(0, 5).map(q => ({ ...q, type: mode }));
+        };
+
+        // ===========================================
+        // COMPOSANTS UI
+        // ===========================================
+        const Button = ({ children, onClick, disabled, variant = 'primary', large, className = '' }) => (
+            <button 
+                className={`btn ${variant} ${large ? 'large' : ''} ${className}`}
+                onClick={onClick}
+                disabled={disabled}
+            >
+                {children}
+            </button>
+        );
+
+        const ModeCard = ({ icon, title, desc, onClick, special }) => (
+            <div className={`mode-card ${special ? 'special' : ''}`} onClick={onClick}>
+                <div className="mode-icon">{icon}</div>
+                <div className="mode-title">{title}</div>
+                <div className="mode-desc">{desc}</div>
+            </div>
+        );
+
+        // ===========================================
+        // ÉCRAN HOME
+        // ===========================================
+        const HomeScreen = ({ onStart, onLoadDeezerData }) => {
+            const [name, setName] = useState('');
+            const [searchQuery, setSearchQuery] = useState('');
+            const [playlistUrl, setPlaylistUrl] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const handleSearch = async () => {
+                if (!searchQuery.trim()) return;
+                setLoading(true);
+                await onLoadDeezerData('search', searchQuery);
+                setLoading(false);
+            };
+
+            const handlePlaylist = async () => {
+                const match = playlistUrl.match(/playlist\/(\d+)/);
+                if (!match) {
+                    alert('❌ URL invalide ! Exemple: https://www.deezer.com/fr/playlist/1234567890');
+                    return;
+                }
+                setLoading(true);
+                await onLoadDeezerData('playlist', match[1]);
+                setLoading(false);
+            };
+
+            const handleTopChart = async () => {
+                setLoading(true);
+                await onLoadDeezerData('chart');
+                setLoading(false);
+            };
+
+            return (
+                <div className="screen">
+                    <div className="logo">
+                        <h1 className="title">QUIZ PARTY</h1>
+                        <p className="subtitle">🎵 Musique & Cinéma 🎬</p>
+                    </div>
+
+                    <div className="deezer-banner">
+                        <h3>🎵 Powered by Deezer</h3>
+                        <p>100% des morceaux ont l'audio - Aucune connexion nécessaire !</p>
+                        
+                        <div className="deezer-options">
+                            <div className="deezer-option">
+                                <h4>🔥 Top Chart</h4>
+                                <p>Les 50 morceaux les plus écoutés</p>
+                                <Button onClick={handleTopChart} disabled={loading}>
+                                    {loading ? '⏳' : '🎵'} Charger le Top 50
+                                </Button>
+                            </div>
+
+                            <div className="deezer-option">
+                                <h4>🔍 Recherche</h4>
+                                <input
+                                    type="text"
+                                    className="deezer-input"
+                                    placeholder="Artiste, chanson, genre..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                                <Button onClick={handleSearch} disabled={loading || !searchQuery.trim()}>
+                                    {loading ? '⏳' : '🔍'} Rechercher
+                                </Button>
+                            </div>
+
+                            <div className="deezer-option">
+                                <h4>📋 Playlist Deezer</h4>
+                                <input
+                                    type="text"
+                                    className="deezer-input"
+                                    placeholder="https://www.deezer.com/playlist/..."
+                                    value={playlistUrl}
+                                    onChange={(e) => setPlaylistUrl(e.target.value)}
+                                />
+                                <Button onClick={handlePlaylist} disabled={loading || !playlistUrl.trim()}>
+                                    {loading ? '⏳' : '📋'} Charger
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input
+                        type="text"
+                        className="name-input"
+                        placeholder="Ton pseudo"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        maxLength={20}
+                    />
+
+                    <div className="mode-grid">
+                        <ModeCard icon="🎯" title="Mode QCM" desc="Choix multiples" onClick={() => name && onStart('qcm', name)} />
+                        <ModeCard icon="✍️" title="Mode Écriture" desc="Titre + Artiste" onClick={() => name && onStart('writing', name)} />
+                        <ModeCard icon="🎬" title="Mode Film" desc="Devinez le film" onClick={() => name && onStart('film', name)} />
+                        <ModeCard icon="🎉" title="Mode Soirée" desc="Les 3 modes !" onClick={() => name && onStart('soiree', name)} special />
+                    </div>
+
+                    {!name && <p className="warning">⚠️ Entre ton pseudo</p>}
+                </div>
+            );
+        };
+
+        // ===========================================
+        // ÉCRAN JOIN
+        // ===========================================
+        const JoinScreen = ({ onCreateRoom, onJoinRoom, onBack }) => {
+            const [code, setCode] = useState('');
+
+            return (
+                <div className="screen">
+                    <h2 className="screen-title">Rejoindre une partie</h2>
+                    
+                    <div className="join-grid">
+                        <div className="join-card">
+                            <h3>Créer une partie</h3>
+                            <p>Tu seras l'hôte</p>
+                            <Button onClick={onCreateRoom}>▶️ Créer</Button>
+                        </div>
+
+                        <div className="join-divider">OU</div>
+
+                        <div className="join-card">
+                            <h3>Rejoindre</h3>
+                            <input
+                                type="text"
+                                className="code-input"
+                                placeholder="CODE"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                                maxLength={6}
+                            />
+                            <Button variant="secondary" onClick={() => onJoinRoom(code)} disabled={code.length !== 6}>
+                                👥 Rejoindre
+                            </Button>
+                        </div>
+                    </div>
+
+                    <Button onClick={onBack} className="back-btn">🏠 Retour</Button>
+                </div>
+            );
+        };
+
+        // ===========================================
+        // ÉCRAN LOBBY
+        // ===========================================
+        const LobbyScreen = ({ room, isHost, onStart }) => (
+            <div className="screen">
+                <h2 className="screen-title">Salle d'attente</h2>
+                
+                <div className="code-display">
+                    <div className="code-label">Code</div>
+                    <div className="code-value">{room.code}</div>
+                </div>
+
+                <div className="players-box">
+                    <h3>👥 Joueurs ({room.players.length})</h3>
+                    {room.players.map((p, i) => (
+                        <div key={i} className="player">
+                            <span className="player-num">{i + 1}</span>
+                            <span className="player-name">{p.name}</span>
+                            {p.name === room.host && <span>👑</span>}
+                        </div>
+                    ))}
+                </div>
+
+                {isHost ? (
+                    <Button large onClick={onStart}>▶️ Lancer</Button>
+                ) : (
+                    <div className="waiting">
+                        <p>⚡ En attente...</p>
+                    </div>
+                )}
+            </div>
+        );
+
+        // ===========================================
+        // ÉCRAN GAME
+        // ===========================================
+        const GameScreen = ({ room, playerIndex, onAnswer, musicDB }) => {
+            const [time, setTime] = useState(20);
+            const [answered, setAnswered] = useState(false);
+            const [options, setOptions] = useState([]);
+            const [correctAns, setCorrectAns] = useState('');
+            const [qText, setQText] = useState('');
+            const [inputs, setInputs] = useState({ title: '', artist: '', film: '' });
+            const [result, setResult] = useState(null);
+
+            const audioRef = useRef(null);
+            const timerRef = useRef(null);
+            
+            const q = room.questions[room.currentQ];
+            const player = room.players[playerIndex];
+
+            useEffect(() => {
+                setTime(20);
+                setAnswered(false);
+                setResult(null);
+                setInputs({ title: '', artist: '', film: '' });
+
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                }
+                if (q.preview && q.type !== 'film') {
+                    setTimeout(() => audioRef.current?.play().catch(() => {}), 200);
+                }
+
+                if (q.type === 'qcm') {
+                    const qType = Math.random() > 0.5 ? 'artist' : 'title';
+                    const correct = q[qType];
+                    const opts = [correct];
+                    const pool = shuffle(musicDB.filter(m => m[qType] !== correct));
+                    
+                    while (opts.length < 4 && pool.length > 0) {
+                        const val = pool.pop()[qType];
+                        if (!opts.includes(val)) opts.push(val);
+                    }
+
+                    setOptions(shuffle(opts));
+                    setCorrectAns(correct);
+                    setQText(qType === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
+                }
+
+                timerRef.current = setInterval(() => {
+                    setTime(prev => {
+                        if (prev <= 1) {
+                            clearInterval(timerRef.current);
+                            if (!answered) submit(null);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+
+                return () => {
+                    clearInterval(timerRef.current);
+                    if (audioRef.current) audioRef.current.pause();
+                };
+            }, [room.currentQ]);
+
+            const submit = (answer) => {
+                if (answered) return;
+                setAnswered(true);
+                clearInterval(timerRef.current);
+                if (audioRef.current) audioRef.current.pause();
+
+                let correct = false;
+                let points = 0;
+                let msg = '';
+
+                if (q.type === 'qcm') {
+                    correct = answer === correctAns;
+                    points = correct ? Math.max(100 + time * 2, 10) : 0;
+                    msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.title} - ${q.artist}`;
+                } else if (q.type === 'writing') {
+                    const t = inputs.title.toLowerCase().trim();
+                    const a = inputs.artist.toLowerCase().trim();
+                    const titleOk = t && q.title.toLowerCase().includes(t.split(' ')[0]);
+                    const artistOk = a && q.artist.toLowerCase().includes(a.split(' ')[0]);
+                    
+                    if (titleOk && artistOk) {
+                        correct = true;
+                        points = Math.max(100 + time * 2, 10);
+                        msg = `🎉 Parfait ! +${points} pts`;
+                    } else if (titleOk) {
+                        correct = true;
+                        points = Math.max(50 + time, 5);
+                        msg = `👍 Bon titre ! +${points} pts (50%)`;
+                    } else if (artistOk) {
+                        correct = true;
+                        points = Math.max(50 + time, 5);
+                        msg = `👍 Bon artiste ! +${points} pts (50%)`;
+                    } else {
+                        msg = `❌ C'était : ${q.title} - ${q.artist}`;
+                    }
+                } else if (q.type === 'film') {
+                    const filmInput = inputs.film.toLowerCase().trim();
+                    correct = filmInput && q.title.toLowerCase().includes(filmInput.split(' ')[0]);
+                    points = correct ? Math.max(100 + time * 2, 10) : 0;
+                    msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.title}`;
+                }
+
+                setResult({ correct, msg });
+
+                setTimeout(() => {
+                    onAnswer(points);
+                }, 2500);
+            };
+
+            return (
+                <div className="screen game">
+                    <div className="game-header">
+                        <div className="timer">⏱️ {time}s</div>
+                        <div>Q {room.currentQ + 1}/{room.questions.length}</div>
+                        <div className="score">🏆 {player.score}</div>
+                    </div>
+
+                    <div className="img-box">
+                        <img src={q.cover || q.poster} alt="Cover" className="cover" />
+                    </div>
+
+                    {q.preview && q.type !== 'film' && (
+                        <div className="audio-box">
+                            <audio ref={audioRef} src={q.preview} loop />
+                            <button className="audio-btn" onClick={() => {
+                                if (audioRef.current?.paused) audioRef.current.play();
+                                else audioRef.current?.pause();
+                            }}>
+                                🎵 Musique
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="question-box">
+                        {q.type === 'qcm' && (
+                            <>
+                                <h3 className="q-text">{qText}</h3>
+                                <div className="options">
+                                    {options.map((opt, i) => (
+                                        <button
+                                            key={i}
+                                            className={`opt ${result ? (opt === correctAns ? 'correct' : 'wrong') : ''}`}
+                                            onClick={() => submit(opt)}
+                                            disabled={answered}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {q.type === 'writing' && (
+                            <>
+                                <h3 className="q-text">Écris le titre et l'artiste</h3>
+                                <input
+                                    className="input"
+                                    placeholder="Titre"
+                                    value={inputs.title}
+                                    onChange={(e) => setInputs({...inputs, title: e.target.value})}
+                                    disabled={answered}
+                                />
+                                <input
+                                    className="input"
+                                    placeholder="Artiste"
+                                    value={inputs.artist}
+                                    onChange={(e) => setInputs({...inputs, artist: e.target.value})}
+                                    disabled={answered}
+                                />
+                                {!answered && <Button onClick={() => submit(null)}>Valider</Button>}
+                            </>
+                        )}
+
+                        {q.type === 'film' && (
+                            <>
+                                <h3 className="q-text">Quel est ce film ?</h3>
+                                <input
+                                    className="input"
+                                    placeholder="Titre du film"
+                                    value={inputs.film}
+                                    onChange={(e) => setInputs({...inputs, film: e.target.value})}
+                                    disabled={answered}
+                                />
+                                {!answered && <Button onClick={() => submit(null)}>Valider</Button>}
+                            </>
+                        )}
+
+                        {result && (
+                            <div className={`result ${result.correct ? 'correct' : 'wrong'}`}>
+                                {result.msg}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // ===========================================
+        // ÉCRAN LEADERBOARD
+        // ===========================================
+        const LeaderboardScreen = ({ room, onRestart }) => {
+            const sorted = [...room.players].sort((a, b) => b.score - a.score);
+
+            return (
+                <div className="screen">
+                    <h2 className="screen-title">🏆 Classement 🏆</h2>
+                    
+                    <div className="podium">
+                        {sorted.slice(0, 3).map((p, i) => (
+                            <div key={i} className={`podium-item p${i+1}`}>
+                                <div className="medal">{['🥇','🥈','🥉'][i]}</div>
+                                <div className="p-name">{p.name}</div>
+                                <div className="p-score">{p.score} pts</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="leaderboard">
+                        {sorted.map((p, i) => (
+                            <div key={i} className="lb-row">
+                                <span className="rank">#{i+1}</span>
+                                <span className="name">{p.name}</span>
+                                <span className="pts">{p.score} pts</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Button large onClick={onRestart}>🏠 Nouvelle partie</Button>
+                </div>
+            );
+        };
+
+        // ===========================================
+        // APP PRINCIPALE
+        // ===========================================
+        const App = () => {
+            const [screen, setScreen] = useState('home');
+            const [mode, setMode] = useState(null);
+            const [playerName, setPlayerName] = useState('');
+            const [room, setRoom] = useState(null);
+            const [playerIdx, setPlayerIdx] = useState(0);
+            const [isHost, setIsHost] = useState(false);
+            const [deezer] = useState(new DeezerAPI());
+            const [musicDB, setMusicDB] = useState(DEMO_MUSIC);
+            const [filmsDB] = useState(DEMO_FILMS);
+
+            const pollRef = useRef(null);
+
+            useEffect(() => {
+                if (room?.code) {
+                    pollRef.current = setInterval(() => {
+                        const latest = storage.get(`room:${room.code}`);
+                        if (latest) {
+                            setRoom(latest);
+                            if (latest.started && screen === 'lobby') setScreen('game');
+                            if (latest.currentQ >= latest.questions.length && screen === 'game') {
+                                setScreen('leaderboard');
+                                clearInterval(pollRef.current);
+                            }
+                        }
+                    }, 1000);
+                }
+                return () => clearInterval(pollRef.current);
+            }, [room?.code, screen]);
+
+            const handleStart = (selectedMode, name) => {
+                setMode(selectedMode);
+                setPlayerName(name);
+                setScreen('join');
+            };
+
+            const handleLoadDeezerData = async (type, param) => {
+                let tracks = [];
+                
+                if (type === 'chart') {
+                    tracks = await deezer.getChart(50);
+                    alert(`✅ Top 50 chargé ! ${tracks.length} morceaux prêts 🎵`);
+                } else if (type === 'search') {
+                    tracks = await deezer.searchTracks(param, 50);
+                    alert(`✅ Recherche "${param}" : ${tracks.length} morceaux trouvés 🎵`);
+                } else if (type === 'playlist') {
+                    tracks = await deezer.getPlaylistTracks(param);
+                    alert(`✅ Playlist chargée ! ${tracks.length} morceaux prêts 🎵`);
+                }
+
+                if (tracks.length > 0) {
+                    setMusicDB(tracks);
+                } else {
+                    alert('❌ Aucun morceau trouvé');
+                }
+            };
+
+            const createRoom = () => {
+                const code = genCode();
+                const newRoom = {
+                    code,
+                    mode,
+                    host: playerName,
+                    players: [{ name: playerName, score: 0 }],
+                    questions: prepareQuestions(mode, musicDB, filmsDB),
+                    currentQ: 0,
+                    started: false
+                };
+                storage.set(`room:${code}`, newRoom);
+                setRoom(newRoom);
+                setPlayerIdx(0);
+                setIsHost(true);
+                setScreen('lobby');
+            };
+
+            const joinRoom = (code) => {
+                const existing = storage.get(`room:${code}`);
+                if (!existing) { alert('Code invalide !'); return; }
+                if (existing.started) { alert('Partie déjà lancée !'); return; }
+
+                existing.players.push({ name: playerName, score: 0 });
+                storage.set(`room:${code}`, existing);
+                setRoom(existing);
+                setPlayerIdx(existing.players.length - 1);
+                setIsHost(false);
+                setScreen('lobby');
+            };
+
+            const startGame = () => {
+                const updated = { ...room, started: true };
+                storage.set(`room:${room.code}`, updated);
+                setRoom(updated);
+                setScreen('game');
+            };
+
+            const handleAnswer = (points) => {
+                const updated = { ...room };
+                updated.players[playerIdx].score += points;
+                updated.currentQ += 1;
+                storage.set(`room:${room.code}`, updated);
+                setRoom(updated);
+
+                if (updated.currentQ >= updated.questions.length) {
+                    setTimeout(() => setScreen('leaderboard'), 500);
+                }
+            };
+
+            const restart = () => {
+                setScreen('home');
+                setRoom(null);
+                setMode(null);
+                setPlayerName('');
+            };
+
+            return (
+                <div className="app">
+                    <div className="bg"></div>
+                    {screen === 'home' && (
+                        <HomeScreen 
+                            onStart={handleStart}
+                            onLoadDeezerData={handleLoadDeezerData}
+                        />
+                    )}
+                    {screen === 'join' && (
+                        <JoinScreen 
+                            onCreateRoom={createRoom}
+                            onJoinRoom={joinRoom}
+                            onBack={() => setScreen('home')}
+                        />
+                    )}
+                    {screen === 'lobby' && room && (
+                        <LobbyScreen 
+                            room={room}
+                            isHost={isHost}
+                            onStart={startGame}
+                        />
+                    )}
+                    {screen === 'game' && room && (
+                        <GameScreen 
+                            room={room}
+                            playerIndex={playerIdx}
+                            onAnswer={handleAnswer}
+                            musicDB={musicDB}
+                        />
+                    )}
+                    {screen === 'leaderboard' && room && (
+                        <LeaderboardScreen 
+                            room={room}
+                            onRestart={restart}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #0a0e27;
+            color: white;
+        }
+
+        .app {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(131, 56, 236, 0.1), transparent 50%);
+            animation: pulse 8s infinite;
+            z-index: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .screen {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen.game {
+            justify-content: flex-start;
+            padding-top: 1rem;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-family: 'Bungee Shade', cursive;
+            font-size: 4rem;
+            background: linear-gradient(45deg, #ff006e, #00f5ff, #ffbe0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #00f5ff;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        .deezer-banner {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .deezer-banner h3 {
+            color: #ffbe0b;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .deezer-banner > p {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+
+        .deezer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .deezer-option {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #8338ec;
+        }
+
+        .deezer-option h4 {
+            color: #ff006e;
+            margin-bottom: 0.5rem;
+        }
+
+        .deezer-option p {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .deezer-input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .deezer-input:focus {
+            outline: none;
+            border-color: #ff006e;
+        }
+
+        .name-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 1.2rem;
+            margin-bottom: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #ff006e;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .mode-card {
+            background: #1a1f3a;
+            border: 3px solid transparent;
+            border-radius: 20px;
+            padding: 2rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            border-color: #ff006e;
+        }
+
+        .mode-card.special {
+            grid-column: 1 / -1;
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-desc {
+            color: #aaa;
+        }
+
+        .warning {
+            margin-top: 2rem;
+            color: #ff006e;
+            font-weight: 600;
+        }
+
+        .screen-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            margin-bottom: 2rem;
+        }
+
+        .join-grid {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+        }
+
+        .join-card {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .join-card h3 {
+            color: #ff006e;
+            margin-bottom: 1rem;
+        }
+
+        .join-divider {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00f5ff;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0.5rem;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #00f5ff, #ffbe0b);
+        }
+
+        .btn.large {
+            padding: 1.5rem 3rem;
+            font-size: 1.3rem;
+            margin-top: 2rem;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #8338ec;
+            margin-top: 2rem;
+        }
+
+        .code-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .code-label {
+            color: #aaa;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .code-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            letter-spacing: 0.2em;
+        }
+
+        .players-box {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .players-box h3 {
+            color: #00f5ff;
+            margin-bottom: 1rem;
+        }
+
+        .player {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-num {
+            background: #8338ec;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .player-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .waiting {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 1.2rem;
+            color: #ffbe0b;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 1.5rem;
+            background: #1a1f3a;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #8338ec;
+            font-weight: 800;
+        }
+
+        .timer {
+            color: #ff006e;
+            font-size: 1.3rem;
+        }
+
+        .score {
+            color: #ffbe0b;
+            font-size: 1.3rem;
+        }
+
+        .img-box {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 1.5rem;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .cover {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .audio-box {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .audio-btn {
+            background: linear-gradient(135deg, #ffbe0b, #ff006e);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .question-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .q-text {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00f5ff;
+            margin-bottom: 1.5rem;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .opt {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #8338ec;
+            padding: 1.5rem;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .opt:hover:not(:disabled) {
+            background: rgba(131, 56, 236, 0.2);
+            transform: scale(1.05);
+        }
+
+        .opt.correct {
+            background: rgba(0, 255, 100, 0.2);
+            border-color: #00ff64;
+        }
+
+        .opt.wrong {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0033;
+        }
+
+        .input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #ff006e;
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .result.correct {
+            background: rgba(0, 255, 100, 0.2);
+            border: 2px solid #00ff64;
+            color: #00ff64;
+        }
+
+        .result.wrong {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0033;
+            color: #ff6b6b;
+        }
+
+        .podium {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .podium-item {
+            background: #1a1f3a;
+            border: 3px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .podium-item.p1 {
+            border-color: #FFD700;
+            transform: scale(1.1);
+        }
+
+        .podium-item.p2 {
+            border-color: #C0C0C0;
+        }
+
+        .podium-item.p3 {
+            border-color: #CD7F32;
+        }
+
+        .medal {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .p-name {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #ffbe0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .p-score {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ff006e;
+        }
+
+        .leaderboard {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem 0;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .rank {
+            background: #8338ec;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .pts {
+            font-weight: 800;
+            color: #ffbe0b;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .title { font-size: 2.5rem; }
+            .mode-grid { grid-template-columns: 1fr; }
+            .options { grid-template-columns: 1fr; }
+            .join-grid { flex-direction: column; }
+            .deezer-options { grid-template-columns: 1fr; }
+        }
+    </style>
+</body>
+</html>
