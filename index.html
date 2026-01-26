@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵 by Play Thau'Gether</title>
+    <title>Quiz Party 🎵 Deezer Edition</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
 </head>
@@ -129,12 +129,6 @@
             { id: '2', title: "Blinding Lights", artist: "The Weeknd", cover: "https://e-cdns-images.dzcdn.net/images/cover/8863bc11d2aa12b54f5aeb36/500x500.jpg", preview: "https://cdns-preview-1.dzcdn.net/stream/c-1c5209dfc87c32ae96aefeaa20fd0c88-7.mp3" }
         ];
 
-        const DEMO_FILMS = [
-            { id: 'f1', title: "The Matrix", poster: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
-            { id: 'f2', title: "Inception", poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg" },
-            { id: 'f3', title: "Pulp Fiction", poster: "https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg" }
-        ];
-
         // ===========================================
         // UTILITAIRES
         // ===========================================
@@ -156,21 +150,18 @@
             }
         };
 
-        const prepareQuestions = (mode, musicDB, filmsDB) => {
+        const prepareQuestions = (mode, musicDB, numQuestions) => {
             const music = shuffle(musicDB);
-            const films = filmsDB;
 
             if (mode === 'soiree') {
+                const questionsPerType = Math.floor(numQuestions / 3);
                 return [
-                    ...music.slice(0, 3).map(q => ({ ...q, type: 'qcm' })),
-                    ...music.slice(3, 6).map(q => ({ ...q, type: 'writing' })),
-                    ...films.slice(0, 3).map(q => ({ ...q, type: 'film' }))
+                    ...music.slice(0, questionsPerType).map(q => ({ ...q, type: 'qcm' })),
+                    ...music.slice(questionsPerType, questionsPerType * 2).map(q => ({ ...q, type: 'writing' })),
+                    ...music.slice(questionsPerType * 2, numQuestions).map(q => ({ ...q, type: 'qcm' }))
                 ];
             }
-            if (mode === 'film') {
-                return films.map(q => ({ ...q, type: 'film' }));
-            }
-            return music.slice(0, 5).map(q => ({ ...q, type: mode }));
+            return music.slice(0, numQuestions).map(q => ({ ...q, type: mode }));
         };
 
         // ===========================================
@@ -202,6 +193,7 @@
             const [searchQuery, setSearchQuery] = useState('');
             const [playlistUrl, setPlaylistUrl] = useState('');
             const [loading, setLoading] = useState(false);
+            const [numQuestions, setNumQuestions] = useState(10);
 
             const handleSearch = async () => {
                 if (!searchQuery.trim()) return;
@@ -231,7 +223,7 @@
                 <div className="screen">
                     <div className="logo">
                         <h1 className="title">QUIZ PARTY</h1>
-                        <p className="subtitle">🎵 Musique & Cinéma 🎬</p>
+                        <p className="subtitle">🎵 Musique 🎵</p>
                     </div>
 
                     <div className="deezer-banner">
@@ -287,11 +279,25 @@
                         maxLength={20}
                     />
 
+                    <div className="num-questions-selector">
+                        <label>Nombre de questions :</label>
+                        <div className="num-buttons">
+                            {[5, 10, 15, 20, 30].map(num => (
+                                <button
+                                    key={num}
+                                    className={`num-btn ${numQuestions === num ? 'active' : ''}`}
+                                    onClick={() => setNumQuestions(num)}
+                                >
+                                    {num}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="mode-grid">
-                        <ModeCard icon="🎯" title="Mode QCM" desc="Choix multiples" onClick={() => name && onStart('qcm', name)} />
-                        <ModeCard icon="✍️" title="Mode Écriture" desc="Titre + Artiste" onClick={() => name && onStart('writing', name)} />
-                        <ModeCard icon="🎬" title="Mode Film" desc="Devinez le film" onClick={() => name && onStart('film', name)} />
-                        <ModeCard icon="🎉" title="Mode Soirée" desc="Les 3 modes !" onClick={() => name && onStart('soiree', name)} special />
+                        <ModeCard icon="🎯" title="Mode QCM" desc="Choix multiples" onClick={() => name && onStart('qcm', name, numQuestions)} />
+                        <ModeCard icon="✍️" title="Mode Écriture" desc="Titre + Artiste" onClick={() => name && onStart('writing', name, numQuestions)} />
+                        <ModeCard icon="🎉" title="Mode Soirée" desc="QCM + Écriture mélangés !" onClick={() => name && onStart('soiree', name, numQuestions)} special />
                     </div>
 
                     {!name && <p className="warning">⚠️ Entre ton pseudo</p>}
@@ -381,7 +387,7 @@
             const [options, setOptions] = useState([]);
             const [correctAns, setCorrectAns] = useState('');
             const [qText, setQText] = useState('');
-            const [inputs, setInputs] = useState({ title: '', artist: '', film: '' });
+            const [inputs, setInputs] = useState({ title: '', artist: '' });
             const [result, setResult] = useState(null);
 
             const audioRef = useRef(null);
@@ -390,19 +396,20 @@
             const q = room.questions[room.currentQ];
             const player = room.players[playerIndex];
 
+            // Calculer le flou en fonction du temps (20s -> flou max, 0s -> pas de flou)
+            const blurAmount = answered ? 0 : Math.max(0, (time / 20) * 25);
+
             useEffect(() => {
                 setTime(20);
                 setAnswered(false);
                 setResult(null);
-                setInputs({ title: '', artist: '', film: '' });
+                setInputs({ title: '', artist: '' });
 
                 if (audioRef.current) {
                     audioRef.current.pause();
                     audioRef.current.currentTime = 0;
                 }
-                if (q.preview && q.type !== 'film') {
-                    setTimeout(() => audioRef.current?.play().catch(() => {}), 200);
-                }
+                setTimeout(() => audioRef.current?.play().catch(() => {}), 200);
 
                 if (q.type === 'qcm') {
                     const qType = Math.random() > 0.5 ? 'artist' : 'title';
@@ -424,7 +431,7 @@
                     setTime(prev => {
                         if (prev <= 1) {
                             clearInterval(timerRef.current);
-                            if (!answered) submit(null);
+                            if (!answered) submit(null, 0);
                             return 0;
                         }
                         return prev - 1;
@@ -437,7 +444,7 @@
                 };
             }, [room.currentQ]);
 
-            const submit = (answer) => {
+            const submit = (answer, timeWhenAnswered = time) => {
                 if (answered) return;
                 setAnswered(true);
                 clearInterval(timerRef.current);
@@ -449,7 +456,8 @@
 
                 if (q.type === 'qcm') {
                     correct = answer === correctAns;
-                    points = correct ? Math.max(100 + time * 2, 10) : 0;
+                    // Points : 50 de base + 10 par seconde restante (max 250 points)
+                    points = correct ? (50 + timeWhenAnswered * 10) : 0;
                     msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.title} - ${q.artist}`;
                 } else if (q.type === 'writing') {
                     const t = inputs.title.toLowerCase().trim();
@@ -459,24 +467,19 @@
                     
                     if (titleOk && artistOk) {
                         correct = true;
-                        points = Math.max(100 + time * 2, 10);
+                        points = 50 + timeWhenAnswered * 10; // Max 250 points
                         msg = `🎉 Parfait ! +${points} pts`;
                     } else if (titleOk) {
                         correct = true;
-                        points = Math.max(50 + time, 5);
+                        points = Math.floor((50 + timeWhenAnswered * 10) * 0.5); // 50% des points
                         msg = `👍 Bon titre ! +${points} pts (50%)`;
                     } else if (artistOk) {
                         correct = true;
-                        points = Math.max(50 + time, 5);
+                        points = Math.floor((50 + timeWhenAnswered * 10) * 0.5); // 50% des points
                         msg = `👍 Bon artiste ! +${points} pts (50%)`;
                     } else {
                         msg = `❌ C'était : ${q.title} - ${q.artist}`;
                     }
-                } else if (q.type === 'film') {
-                    const filmInput = inputs.film.toLowerCase().trim();
-                    correct = filmInput && q.title.toLowerCase().includes(filmInput.split(' ')[0]);
-                    points = correct ? Math.max(100 + time * 2, 10) : 0;
-                    msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.title}`;
                 }
 
                 setResult({ correct, msg });
@@ -495,20 +498,23 @@
                     </div>
 
                     <div className="img-box">
-                        <img src={q.cover || q.poster} alt="Cover" className="cover" />
+                        <img 
+                            src={q.cover} 
+                            alt="Cover" 
+                            className="cover" 
+                            style={{ filter: `blur(${blurAmount}px)` }}
+                        />
                     </div>
 
-                    {q.preview && q.type !== 'film' && (
-                        <div className="audio-box">
-                            <audio ref={audioRef} src={q.preview} loop />
-                            <button className="audio-btn" onClick={() => {
-                                if (audioRef.current?.paused) audioRef.current.play();
-                                else audioRef.current?.pause();
-                            }}>
-                                🎵 Musique
-                            </button>
-                        </div>
-                    )}
+                    <div className="audio-box">
+                        <audio ref={audioRef} src={q.preview} loop />
+                        <button className="audio-btn" onClick={() => {
+                            if (audioRef.current?.paused) audioRef.current.play();
+                            else audioRef.current?.pause();
+                        }}>
+                            🎵 Musique
+                        </button>
+                    </div>
 
                     <div className="question-box">
                         {q.type === 'qcm' && (
@@ -519,7 +525,7 @@
                                         <button
                                             key={i}
                                             className={`opt ${result ? (opt === correctAns ? 'correct' : 'wrong') : ''}`}
-                                            onClick={() => submit(opt)}
+                                            onClick={() => submit(opt, time)}
                                             disabled={answered}
                                         >
                                             {opt}
@@ -546,21 +552,7 @@
                                     onChange={(e) => setInputs({...inputs, artist: e.target.value})}
                                     disabled={answered}
                                 />
-                                {!answered && <Button onClick={() => submit(null)}>Valider</Button>}
-                            </>
-                        )}
-
-                        {q.type === 'film' && (
-                            <>
-                                <h3 className="q-text">Quel est ce film ?</h3>
-                                <input
-                                    className="input"
-                                    placeholder="Titre du film"
-                                    value={inputs.film}
-                                    onChange={(e) => setInputs({...inputs, film: e.target.value})}
-                                    disabled={answered}
-                                />
-                                {!answered && <Button onClick={() => submit(null)}>Valider</Button>}
+                                {!answered && <Button onClick={() => submit(null, time)}>Valider</Button>}
                             </>
                         )}
 
@@ -578,14 +570,22 @@
         // ÉCRAN LEADERBOARD
         // ===========================================
         const LeaderboardScreen = ({ room, onRestart }) => {
+            if (!room || !room.players) {
+                return (
+                    <div className="screen">
+                        <h2 className="screen-title">Chargement...</h2>
+                    </div>
+                );
+            }
+
             const sorted = [...room.players].sort((a, b) => b.score - a.score);
 
             return (
                 <div className="screen">
-                    <h2 className="screen-title">🏆 Classement 🏆</h2>
+                    <h2 className="screen-title">🏆 Classement Final 🏆</h2>
                     
                     <div className="podium">
-                        {sorted.slice(0, 3).map((p, i) => (
+                        {sorted.slice(0, Math.min(3, sorted.length)).map((p, i) => (
                             <div key={i} className={`podium-item p${i+1}`}>
                                 <div className="medal">{['🥇','🥈','🥉'][i]}</div>
                                 <div className="p-name">{p.name}</div>
@@ -616,12 +616,12 @@
             const [screen, setScreen] = useState('home');
             const [mode, setMode] = useState(null);
             const [playerName, setPlayerName] = useState('');
+            const [numQuestions, setNumQuestions] = useState(10);
             const [room, setRoom] = useState(null);
             const [playerIdx, setPlayerIdx] = useState(0);
             const [isHost, setIsHost] = useState(false);
             const [deezer] = useState(new DeezerAPI());
             const [musicDB, setMusicDB] = useState(DEMO_MUSIC);
-            const [filmsDB] = useState(DEMO_FILMS);
 
             const pollRef = useRef(null);
 
@@ -642,9 +642,10 @@
                 return () => clearInterval(pollRef.current);
             }, [room?.code, screen]);
 
-            const handleStart = (selectedMode, name) => {
+            const handleStart = (selectedMode, name, numQuestions) => {
                 setMode(selectedMode);
                 setPlayerName(name);
+                setNumQuestions(numQuestions);
                 setScreen('join');
             };
 
@@ -690,7 +691,7 @@
                     mode,
                     host: playerName,
                     players: [{ name: playerName, score: 0 }],
-                    questions: prepareQuestions(mode, musicDB, filmsDB),
+                    questions: prepareQuestions(mode, musicDB, numQuestions),
                     currentQ: 0,
                     started: false
                 };
@@ -985,6 +986,56 @@
             margin-top: 2rem;
             color: #ff006e;
             font-weight: 600;
+        }
+
+        .num-questions-selector {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: #1a1f3a;
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #8338ec;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .num-questions-selector label {
+            display: block;
+            color: #ffbe0b;
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .num-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .num-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #8338ec;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .num-btn:hover {
+            background: rgba(131, 56, 236, 0.2);
+            transform: scale(1.05);
+        }
+
+        .num-btn.active {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            border-color: #ff006e;
+            box-shadow: 0 5px 20px rgba(255, 0, 110, 0.4);
         }
 
         .screen-title {
