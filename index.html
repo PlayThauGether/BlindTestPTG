@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵 Deezer Edition</title>
+    <title>Quiz Party 🎵 v3.0</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
 </head>
@@ -18,196 +18,97 @@
         const { useState, useEffect, useRef } = React;
 
         // ===========================================
-        // GEMINI AI pour détection automatique des films
+        // GEMINI AI
         // ===========================================
-        const GEMINI_API_KEY = 'AIzaSyD0qW3cCIMLx2QPhf9hvrycYGiFGiiCcb4'; // Clé API Gemini activée !
+        const GEMINI_API_KEY = 'AIzaSyD0qW3cCIMLx2QPhf9hvrycYGiFGiiCcb4';
         
         class GeminiFilmDetector {
-            constructor(apiKey) {
-                this.apiKey = apiKey;
-                this.cache = {}; // Cache pour éviter de rappeler l'API
-            }
-
             async detectMoviesFromTracks(tracks) {
-                if (!this.apiKey || this.apiKey === 'METTRE_TA_CLE_API_ICI') {
-                    console.warn('⚠️ Pas de clé API Gemini, utilisation du mapping manuel');
+                if (!GEMINI_API_KEY || GEMINI_API_KEY === 'METTRE_TA_CLE_API_ICI') {
                     return tracks.map(track => ({
                         ...track,
-                        movieTitle: getMovieFromMusic(track.title, track.artist)
+                        movieTitle: track.title,
+                        isMovie: false
                     }));
                 }
 
-                console.log('🤖 Demande à Gemini de détecter les films...');
-                
-                // Préparer les morceaux pour Gemini (par lots de 10)
+                console.log('🤖 Gemini analyse les films...');
                 const results = [];
                 
                 for (let i = 0; i < tracks.length; i += 10) {
                     const batch = tracks.slice(i, i + 10);
                     const tracksList = batch.map((t, idx) => 
-                        `${i + idx + 1}. "${t.title}" par ${t.artist}`
+                        `${idx + 1}. "${t.title}" par ${t.artist}`
                     ).join('\n');
 
-                    const prompt = `Tu es un expert en musiques de films. Pour chaque morceau ci-dessous, identifie de quel film il provient.
-Si c'est une musique de film, réponds UNIQUEMENT avec le titre du film en français.
-Si ce n'est PAS une musique de film, réponds "NON".
-Format de réponse : un film par ligne, dans l'ordre des morceaux.
+                    const prompt = `Tu es un expert en musiques de films. Pour chaque morceau, identifie de quel film il provient.
+Si c'est une musique de film, réponds avec le titre du film en français.
+Si ce n'est PAS une musique de film, réponds "PAS_UN_FILM".
 
 Morceaux :
 ${tracksList}
 
-Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans numérotation ni explication.`;
+Réponds UN film par ligne, dans l'ordre, sans numéros. Exemples valides:
+- "Harry Potter"
+- "Star Wars"
+- "PAS_UN_FILM"`;
 
                     try {
                         const response = await fetch(
-                            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`,
+                            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
                             {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    contents: [{
-                                        parts: [{ text: prompt }]
-                                    }]
+                                    contents: [{ parts: [{ text: prompt }] }]
                                 })
                             }
                         );
 
                         const data = await response.json();
                         const text = data.candidates[0].content.parts[0].text;
-                        const movies = text.trim().split('\n').map(line => line.trim());
+                        const movies = text.trim().split('\n').map(l => l.trim().replace(/^[-*•]\s*/, ''));
 
-                        console.log(`✅ Gemini a analysé ${batch.length} morceaux`);
+                        console.log(`✅ Lot ${Math.floor(i/10) + 1} analysé:`, movies);
 
-                        // Associer les résultats
                         batch.forEach((track, idx) => {
-                            const detectedMovie = movies[idx];
-                            const movieTitle = (detectedMovie && detectedMovie !== 'NON') 
-                                ? detectedMovie 
-                                : getMovieFromMusic(track.title, track.artist);
-                            
+                            const detected = movies[idx] || 'PAS_UN_FILM';
+                            const isMovie = detected !== 'PAS_UN_FILM';
                             results.push({
                                 ...track,
-                                movieTitle: movieTitle,
-                                detectedByAI: detectedMovie && detectedMovie !== 'NON'
+                                movieTitle: isMovie ? detected : track.title,
+                                isMovie: isMovie,
+                                detectedByAI: isMovie
                             });
                         });
 
-                        // Attendre 1 seconde entre les lots pour ne pas surcharger l'API
                         if (i + 10 < tracks.length) {
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            await new Promise(r => setTimeout(r, 1500));
                         }
-
                     } catch (error) {
                         console.error('❌ Erreur Gemini:', error);
-                        // Fallback sur le mapping manuel
                         batch.forEach(track => {
                             results.push({
                                 ...track,
-                                movieTitle: getMovieFromMusic(track.title, track.artist),
-                                detectedByAI: false
+                                movieTitle: track.title,
+                                isMovie: false
                             });
                         });
                     }
                 }
 
-                const aiDetected = results.filter(r => r.detectedByAI).length;
-                console.log(`🎬 Résultat : ${aiDetected} films détectés par IA, ${results.length - aiDetected} par mapping manuel`);
-
+                const detected = results.filter(r => r.isMovie).length;
+                console.log(`🎬 ${detected} films détectés sur ${tracks.length}`);
                 return results;
             }
         }
-
-        // ===========================================
-        // MAPPING MUSIQUES → FILMS (Fallback si pas d'API)
-        // ===========================================
-        // Format: "Titre musique (Artiste)" : "Titre du film"
-        const MOVIE_MUSIC_MAP = {
-            // Harry Potter - Tous les thèmes
-            "lily": "Harry Potter",
-            "harry potter": "Harry Potter",
-            "hedwig": "Harry Potter",
-            "hogwarts": "Harry Potter",
-            "potter": "Harry Potter",
-            "obliviate": "Harry Potter",
-            "dumbledore": "Harry Potter",
-            
-            // Star Wars
-            "star wars": "Star Wars",
-            "imperial": "Star Wars",
-            "force theme": "Star Wars",
-            "duel of the fates": "Star Wars",
-            
-            // Titanic / Celine Dion
-            "my heart will go on": "Titanic",
-            "titanic": "Titanic",
-            "celine dion titanic": "Titanic",
-            
-            // James Bond
-            "skyfall": "Skyfall",
-            "james bond": "James Bond",
-            "007": "James Bond",
-            
-            // Disney
-            "let it go": "La Reine des Neiges",
-            "frozen": "La Reine des Neiges",
-            "circle of life": "Le Roi Lion",
-            "lion king": "Le Roi Lion",
-            "whole new world": "Aladdin",
-            "aladdin": "Aladdin",
-            
-            // Films musicaux
-            "shallow": "A Star Is Born",
-            "bohemian rhapsody": "Bohemian Rhapsody",
-            "eye of the tiger": "Rocky",
-            "rocky": "Rocky",
-            "lose yourself": "8 Mile",
-            "purple rain": "Purple Rain",
-            "footloose": "Footloose",
-            "flashdance": "Flashdance",
-            "dirty dancing": "Dirty Dancing",
-            "top gun": "Top Gun",
-            "danger zone": "Top Gun",
-            "ghostbusters": "S.O.S Fantômes",
-            "back to the future": "Retour vers le Futur",
-            "power of love": "Retour vers le Futur",
-            "bodyguard": "Bodyguard",
-            "i will always love you": "Bodyguard",
-            
-            // Aventure
-            "jurassic": "Jurassic Park",
-            "pirates": "Pirates des Caraïbes",
-            "indiana jones": "Indiana Jones",
-            
-            // Marvel / DC
-            "avengers": "Avengers",
-            "iron man": "Iron Man",
-            "batman": "Batman",
-            "dark knight": "The Dark Knight",
-            "superman": "Superman",
-            
-            // Hans Zimmer
-            "interstellar": "Interstellar",
-            "inception": "Inception",
-            "time hans": "Inception",
-            "gladiator": "Gladiator",
-            "now we are free": "Gladiator",
-            
-            // Fantasy
-            "lord of the rings": "Le Seigneur des Anneaux",
-            "hobbit": "Le Hobbit",
-            "concerning hobbits": "Le Seigneur des Anneaux"
-        };
 
         // ===========================================
         // DEEZER API
         // ===========================================
         class DeezerAPI {
             constructor() {
-                this.proxies = [
-                    '',
-                    'https://corsproxy.io/?',
-                    'https://api.codetabs.com/v1/proxy?quest='
-                ];
+                this.proxies = ['', 'https://corsproxy.io/?', 'https://api.codetabs.com/v1/proxy?quest='];
             }
 
             async fetchWithProxy(url) {
@@ -215,87 +116,49 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     try {
                         const proxy = this.proxies[i];
                         const finalUrl = proxy + encodeURIComponent(url);
-                        console.log(`🔄 Tentative ${i + 1}/${this.proxies.length}`);
-                        
                         const response = await fetch(finalUrl);
                         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                        
-                        const data = await response.json();
-                        console.log('✅ Succès !');
-                        return data;
+                        return await response.json();
                     } catch (error) {
-                        console.warn(`❌ Proxy ${i + 1} échoué`);
-                        if (i === this.proxies.length - 1) {
-                            throw new Error('Tous les proxies ont échoué');
-                        }
+                        if (i === this.proxies.length - 1) throw error;
                     }
                 }
             }
 
             async searchTracks(query, limit = 50) {
-                try {
-                    const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
-                    const data = await this.fetchWithProxy(url);
-                    
-                    if (!data.data || data.data.length === 0) {
-                        throw new Error('Aucun résultat');
-                    }
-                    
-                    return data.data.map(track => ({
-                        id: track.id,
-                        title: track.title,
-                        artist: track.artist.name,
-                        cover: track.album.cover_big || track.album.cover_medium,
-                        preview: track.preview
-                    }));
-                } catch (error) {
-                    console.error('Deezer search error:', error);
-                    throw error;
-                }
+                const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+                const data = await this.fetchWithProxy(url);
+                return data.data.map(track => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist.name,
+                    cover: track.album.cover_big || track.album.cover_medium,
+                    preview: track.preview
+                }));
             }
 
             async getPlaylistTracks(playlistId) {
-                try {
-                    const url = `https://api.deezer.com/playlist/${playlistId}`;
-                    const data = await this.fetchWithProxy(url);
-                    
-                    if (!data.tracks || !data.tracks.data) {
-                        throw new Error('Playlist introuvable');
-                    }
-                    
-                    return data.tracks.data.map(track => ({
-                        id: track.id,
-                        title: track.title,
-                        artist: track.artist.name,
-                        cover: track.album.cover_big || track.album.cover_medium,
-                        preview: track.preview
-                    }));
-                } catch (error) {
-                    console.error('Deezer playlist error:', error);
-                    throw error;
-                }
+                const url = `https://api.deezer.com/playlist/${playlistId}`;
+                const data = await this.fetchWithProxy(url);
+                return data.tracks.data.map(track => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist.name,
+                    cover: track.album.cover_big || track.album.cover_medium,
+                    preview: track.preview
+                }));
             }
 
             async getChart(limit = 50) {
-                try {
-                    const url = `https://api.deezer.com/chart/0/tracks?limit=${limit}`;
-                    const data = await this.fetchWithProxy(url);
-                    
-                    if (!data.data || data.data.length === 0) {
-                        throw new Error('Chart introuvable');
-                    }
-                    
-                    return data.data.map(track => ({
-                        id: track.id,
-                        title: track.title,
-                        artist: track.artist.name,
-                        cover: track.album.cover_big,
-                        preview: track.preview
-                    }));
-                } catch (error) {
-                    console.error('Deezer chart error:', error);
-                    throw error;
-                }
+                const url = `https://api.deezer.com/chart/0/tracks?limit=${limit}`;
+                const data = await this.fetchWithProxy(url);
+                return data.data.map(track => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist.name,
+                    cover: track.album.cover_big,
+                    preview: track.preview
+                }));
             }
         }
 
@@ -320,38 +183,20 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
             }
         };
 
-        // Fonction pour trouver le film correspondant à une musique
-        const getMovieFromMusic = (musicTitle, artistName) => {
-            const searchText = `${musicTitle} ${artistName}`.toLowerCase();
-            
-            // Chercher dans le mapping (insensible à la casse)
-            for (const [keyword, movie] of Object.entries(MOVIE_MUSIC_MAP)) {
-                if (searchText.includes(keyword.toLowerCase())) {
-                    console.log(`✅ Film détecté: "${keyword}" → ${movie}`);
-                    return movie;
-                }
-            }
-            
-            console.log(`❌ Aucun film détecté pour: ${musicTitle} - ${artistName}`);
-            return musicTitle; // Retourne le titre de la musique par défaut
-        };
-
         const prepareQuestions = (mode, musicDB, numQuestions, movieMusicDB = []) => {
             const music = shuffle(musicDB);
 
             if (mode === 'soiree') {
-                const questionsPerType = Math.floor(numQuestions / 2);
+                const half = Math.floor(numQuestions / 2);
                 return [
-                    ...music.slice(0, questionsPerType).map(q => ({ ...q, type: 'qcm' })),
-                    ...music.slice(questionsPerType, numQuestions).map(q => ({ ...q, type: 'writing' }))
+                    ...music.slice(0, half).map(q => ({ ...q, type: 'qcm' })),
+                    ...music.slice(half, numQuestions).map(q => ({ ...q, type: 'writing' }))
                 ];
             }
             if (mode === 'cinema') {
-                // Mode cinéma avec les musiques de films
                 return shuffle(movieMusicDB).slice(0, numQuestions).map(q => ({ 
                     ...q, 
-                    type: 'cinema',
-                    movieTitle: q.movieTitle || getMovieFromMusic(q.title, q.artist) || q.title
+                    type: 'cinema'
                 }));
             }
             return music.slice(0, numQuestions).map(q => ({ ...q, type: mode }));
@@ -399,7 +244,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
             const handlePlaylist = async () => {
                 const match = playlistUrl.match(/playlist\/(\d+)/);
                 if (!match) {
-                    alert('❌ URL invalide ! Exemple: https://www.deezer.com/fr/playlist/1234567890');
+                    alert('❌ URL invalide !');
                     return;
                 }
                 setLoading(true);
@@ -410,7 +255,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
             const handleMoviePlaylist = async () => {
                 const match = moviePlaylistUrl.match(/playlist\/(\d+)/);
                 if (!match) {
-                    alert('❌ URL invalide ! Exemple: https://www.deezer.com/fr/playlist/1234567890');
+                    alert('❌ URL invalide !');
                     return;
                 }
                 setLoading(true);
@@ -432,36 +277,14 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     </div>
 
                     <div className="deezer-banner">
-                        <h3>🎵 Powered by Deezer</h3>
-                        <p>100% des morceaux ont l'audio - Aucune connexion nécessaire !</p>
-                        
-                        {GEMINI_API_KEY === 'METTRE_TA_CLE_API_ICI' && (
-                            <div className="gemini-warning">
-                                <p>💡 <strong>Détection IA désactivée</strong></p>
-                                <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
-                                    Pour détecter automatiquement tous les films avec l'IA Gemini :<br/>
-                                    1. Va sur <a href="https://makersuite.google.com/app/apikey" target="_blank" style={{color: '#00f5ff'}}>makersuite.google.com/app/apikey</a><br/>
-                                    2. Crée une clé API gratuite<br/>
-                                    3. Remplace "METTRE_TA_CLE_API_ICI" dans le code (ligne 24)
-                                </p>
-                            </div>
-                        )}
-                        
-                        {GEMINI_API_KEY !== 'METTRE_TA_CLE_API_ICI' && (
-                            <div className="gemini-success">
-                                <p>🤖 <strong>Détection IA activée !</strong></p>
-                                <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
-                                    Gemini identifiera automatiquement les films 🎬
-                                </p>
-                            </div>
-                        )}
+                        <h3>🤖 Powered by Deezer + Gemini AI</h3>
+                        <p>Détection automatique des films activée !</p>
                         
                         <div className="deezer-options">
                             <div className="deezer-option">
                                 <h4>🔥 Top Chart</h4>
-                                <p>Les 50 morceaux les plus écoutés</p>
                                 <Button onClick={handleTopChart} disabled={loading}>
-                                    {loading ? '⏳' : '🎵'} Charger le Top 50
+                                    {loading ? '⏳' : '🎵'} Top 50
                                 </Button>
                             </div>
 
@@ -470,7 +293,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                                 <input
                                     type="text"
                                     className="deezer-input"
-                                    placeholder="Artiste, chanson, genre..."
+                                    placeholder="Artiste, chanson..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -485,7 +308,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                                 <input
                                     type="text"
                                     className="deezer-input"
-                                    placeholder="https://www.deezer.com/playlist/..."
+                                    placeholder="URL Deezer..."
                                     value={playlistUrl}
                                     onChange={(e) => setPlaylistUrl(e.target.value)}
                                 />
@@ -495,12 +318,11 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                             </div>
 
                             <div className="deezer-option cinema">
-                                <h4>🎬 Playlist Films (BO)</h4>
-                                <p>Pour le mode Cinéma</p>
+                                <h4>🎬 Playlist Films</h4>
                                 <input
                                     type="text"
                                     className="deezer-input"
-                                    placeholder="Playlist Deezer de musiques de films..."
+                                    placeholder="URL playlist BO..."
                                     value={moviePlaylistUrl}
                                     onChange={(e) => setMoviePlaylistUrl(e.target.value)}
                                 />
@@ -538,8 +360,8 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     <div className="mode-grid">
                         <ModeCard icon="🎯" title="Mode QCM" desc="Choix multiples" onClick={() => name && onStart('qcm', name, numQuestions)} />
                         <ModeCard icon="✍️" title="Mode Écriture" desc="Titre + Artiste" onClick={() => name && onStart('writing', name, numQuestions)} />
-                        <ModeCard icon="🎬" title="Mode Cinéma" desc="Devine le film depuis la BO !" onClick={() => name && onStart('cinema', name, numQuestions)} />
-                        <ModeCard icon="🎉" title="Mode Soirée" desc="QCM + Écriture mélangés !" onClick={() => name && onStart('soiree', name, numQuestions)} special />
+                        <ModeCard icon="🎬" title="Mode Cinéma" desc="Devine le film !" onClick={() => name && onStart('cinema', name, numQuestions)} />
+                        <ModeCard icon="🎉" title="Mode Soirée" desc="QCM + Écriture !" onClick={() => name && onStart('soiree', name, numQuestions)} special />
                     </div>
 
                     {!name && <p className="warning">⚠️ Entre ton pseudo</p>}
@@ -634,6 +456,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
 
             const audioRef = useRef(null);
             const timerRef = useRef(null);
+            const autoSubmitRef = useRef(false);
             
             const q = room.questions[room.currentQ];
             const player = room.players[playerIndex];
@@ -645,6 +468,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                 setAnswered(false);
                 setResult(null);
                 setInputs({ title: '', artist: '', movie: '' });
+                autoSubmitRef.current = false;
 
                 if (audioRef.current) {
                     audioRef.current.pause();
@@ -672,7 +496,10 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     setTime(prev => {
                         if (prev <= 1) {
                             clearInterval(timerRef.current);
-                            if (!answered) submit(null, 0);
+                            if (!autoSubmitRef.current) {
+                                autoSubmitRef.current = true;
+                                submit(null, 0);
+                            }
                             return 0;
                         }
                         return prev - 1;
@@ -832,23 +659,16 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
         // ===========================================
         // ÉCRAN LEADERBOARD
         // ===========================================
-        const LeaderboardScreen = ({ players, onRestart }) => {
-            console.log('🏆 LeaderboardScreen rendu avec players:', players);
-            
-            if (!players || players.length === 0) {
-                console.error('❌ Pas de joueurs pour le leaderboard !');
+        const LeaderboardScreen = ({ room, onRestart }) => {
+            if (!room || !room.players || room.players.length === 0) {
                 return (
                     <div className="screen">
-                        <h2 className="screen-title">Chargement du classement...</h2>
-                        <p style={{color: '#aaa', marginTop: '2rem'}}>
-                            Si cet écran persiste, recharge la page
-                        </p>
+                        <h2 className="screen-title">Chargement...</h2>
                     </div>
                 );
             }
 
-            const sorted = [...players].sort((a, b) => b.score - a.score);
-            console.log('📊 Classement trié:', sorted);
+            const sorted = [...room.players].sort((a, b) => b.score - a.score);
 
             return (
                 <div className="screen">
@@ -891,23 +711,24 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
             const [playerIdx, setPlayerIdx] = useState(0);
             const [isHost, setIsHost] = useState(false);
             const [deezer] = useState(new DeezerAPI());
-            const [gemini] = useState(new GeminiFilmDetector(GEMINI_API_KEY));
+            const [gemini] = useState(new GeminiFilmDetector());
             const [musicDB, setMusicDB] = useState([]);
             const [movieMusicDB, setMovieMusicDB] = useState([]);
 
             const pollRef = useRef(null);
 
             useEffect(() => {
-                if (room?.code) {
+                if (room?.code && screen !== 'leaderboard') {
                     pollRef.current = setInterval(() => {
                         const latest = storage.get(`room:${room.code}`);
                         if (latest) {
                             setRoom(latest);
-                            if (latest.started && screen === 'lobby') setScreen('game');
+                            if (latest.started && screen === 'lobby') {
+                                setScreen('game');
+                            }
                             if (latest.currentQ >= latest.questions.length && screen === 'game') {
-                                console.log('🏆 Partie terminée ! Affichage du leaderboard...');
-                                setScreen('leaderboard');
                                 clearInterval(pollRef.current);
+                                setTimeout(() => setScreen('leaderboard'), 1000);
                             }
                         }
                     }, 1000);
@@ -928,76 +749,42 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     
                     if (type === 'chart') {
                         tracks = await deezer.getChart(50);
-                        if (tracks.length > 0) {
-                            setMusicDB(tracks);
-                            alert(`✅ Top 50 chargé ! ${tracks.length} morceaux prêts 🎵`);
-                        }
                     } else if (type === 'search') {
                         tracks = await deezer.searchTracks(param, 50);
-                        if (tracks.length > 0) {
-                            setMusicDB(tracks);
-                            alert(`✅ ${tracks.length} morceaux trouvés 🎵`);
-                        }
                     } else if (type === 'playlist') {
                         tracks = await deezer.getPlaylistTracks(param);
-                        if (tracks.length > 0) {
-                            setMusicDB(tracks);
-                            alert(`✅ Playlist chargée ! ${tracks.length} morceaux prêts 🎵`);
-                        }
                     }
                     
-                    if (tracks.length === 0) {
+                    if (tracks.length > 0) {
+                        setMusicDB(tracks);
+                        alert(`✅ ${tracks.length} morceaux chargés !`);
+                    } else {
                         alert('❌ Aucun morceau trouvé');
                     }
                 } catch (error) {
-                    console.error('Erreur Deezer:', error);
                     alert(`❌ Erreur : ${error.message}`);
                 }
             };
 
             const handleLoadMovieMusic = async (playlistId) => {
                 try {
-                    console.log('🎬 Chargement de la playlist films...');
                     const tracks = await deezer.getPlaylistTracks(playlistId);
-                    
                     if (tracks.length === 0) {
                         alert('❌ Playlist vide');
                         return;
                     }
 
-                    console.log(`📀 ${tracks.length} morceaux chargés, analyse en cours...`);
+                    console.log(`📀 ${tracks.length} morceaux, analyse Gemini...`);
+                    const analyzed = await gemini.detectMoviesFromTracks(tracks);
                     
-                    // Utiliser Gemini pour détecter les films
-                    const movietracks = await gemini.detectMoviesFromTracks(tracks);
+                    const movies = analyzed.filter(t => t.isMovie);
+                    setMovieMusicDB(movies);
                     
-                    // Filtrer seulement ceux qui sont des films
-                    const validMovies = movietracks.filter(t => 
-                        t.movieTitle && 
-                        t.movieTitle !== t.title && 
-                        t.movieTitle.toLowerCase() !== 'non'
-                    );
+                    const aiCount = movies.filter(m => m.detectedByAI).length;
+                    alert(`✅ ${movies.length} films détectés sur ${tracks.length} morceaux !\n🤖 ${aiCount} par IA Gemini`);
                     
-                    setMovieMusicDB(validMovies);
-                    
-                    const aiDetected = movietracks.filter(t => t.detectedByAI).length;
-                    const manualDetected = validMovies.length - aiDetected;
-                    
-                    let message = `✅ Playlist films chargée !\n\n`;
-                    message += `🎬 ${validMovies.length} musiques de films détectées sur ${tracks.length}\n\n`;
-                    if (aiDetected > 0) {
-                        message += `🤖 ${aiDetected} détectés par IA Gemini\n`;
-                    }
-                    if (manualDetected > 0) {
-                        message += `📋 ${manualDetected} détectés par mapping manuel`;
-                    }
-                    
-                    alert(message);
-                    
-                    if (validMovies.length === 0) {
-                        alert('⚠️ Aucune musique de film détectée dans cette playlist.\n\nEssaie une playlist avec des bandes originales de films !');
-                    }
+                    console.log('🎬 Films détectés:', movies.map(m => m.movieTitle));
                 } catch (error) {
-                    console.error('Erreur:', error);
                     alert(`❌ Erreur : ${error.message}`);
                 }
             };
@@ -1007,7 +794,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                 const questionsDB = mode === 'cinema' ? movieMusicDB : musicDB;
                 
                 if (questionsDB.length === 0) {
-                    alert('⚠️ Charge d\'abord des morceaux avec Deezer !');
+                    alert('⚠️ Charge des morceaux d\'abord !');
                     setScreen('home');
                     return;
                 }
@@ -1022,7 +809,6 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     started: false
                 };
                 
-                console.log('🎮 Partie créée:', newRoom);
                 storage.set(`room:${code}`, newRoom);
                 setRoom(newRoom);
                 setPlayerIdx(0);
@@ -1032,8 +818,14 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
 
             const joinRoom = (code) => {
                 const existing = storage.get(`room:${code}`);
-                if (!existing) { alert('Code invalide !'); return; }
-                if (existing.started) { alert('Partie déjà lancée !'); return; }
+                if (!existing) { 
+                    alert('❌ Code invalide !'); 
+                    return; 
+                }
+                if (existing.started) { 
+                    alert('❌ Partie déjà lancée !'); 
+                    return; 
+                }
 
                 existing.players.push({ name: playerName, score: 0 });
                 storage.set(`room:${code}`, existing);
@@ -1055,23 +847,11 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                 updated.players[playerIdx].score += points;
                 updated.currentQ += 1;
                 
-                console.log(`📊 Question ${updated.currentQ}/${updated.questions.length}`);
-                console.log('🎮 Room mise à jour:', updated);
-                
                 storage.set(`room:${room.code}`, updated);
                 setRoom(updated);
 
                 if (updated.currentQ >= updated.questions.length) {
-                    console.log('🏆 FIN DE PARTIE ! Affichage leaderboard...');
-                    console.log('👥 Joueurs finaux:', updated.players);
-                    
-                    // Forcer le passage au leaderboard avec les bonnes données
-                    setTimeout(() => {
-                        const finalRoom = storage.get(`room:${room.code}`);
-                        console.log('📦 Room récupérée du storage:', finalRoom);
-                        setRoom(finalRoom);
-                        setScreen('leaderboard');
-                    }, 1000);
+                    setTimeout(() => setScreen('leaderboard'), 1000);
                 }
             };
 
@@ -1117,7 +897,7 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
                     )}
                     {screen === 'leaderboard' && room && (
                         <LeaderboardScreen 
-                            players={room.players}
+                            room={room}
                             onRestart={restart}
                         />
                     )}
@@ -1144,10 +924,8 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
 
         .bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: 
                 radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1), transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(131, 56, 236, 0.1), transparent 50%);
@@ -1217,46 +995,9 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
 
         .deezer-banner > p {
             text-align: center;
-            color: #aaa;
-            margin-bottom: 1.5rem;
-        }
-
-        .gemini-warning {
-            background: rgba(255, 190, 11, 0.1);
-            border: 2px solid #ffbe0b;
-            border-radius: 15px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .gemini-warning p {
-            margin: 0;
-            color: #ffbe0b;
-        }
-
-        .gemini-warning a {
-            color: #00f5ff;
-            text-decoration: none;
-            font-weight: 800;
-        }
-
-        .gemini-warning a:hover {
-            text-decoration: underline;
-        }
-
-        .gemini-success {
-            background: rgba(0, 255, 100, 0.1);
-            border: 2px solid #00ff64;
-            border-radius: 15px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .gemini-success p {
-            margin: 0;
             color: #00ff64;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
         }
 
         .deezer-options {
@@ -1280,12 +1021,6 @@ Réponds uniquement avec les titres de films (ou "NON"), un par ligne, sans num�
             color: #ff006e;
             margin-bottom: 0.5rem;
             font-size: 1.1rem;
-        }
-
-        .deezer-option p {
-            color: #aaa;
-            font-size: 0.85rem;
-            margin-bottom: 0.8rem;
         }
 
         .deezer-input {
