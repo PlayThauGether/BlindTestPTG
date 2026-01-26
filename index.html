@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵 v4.0</title>
+    <title>Quiz Party 🎵 v3.0</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
 </head>
@@ -18,86 +18,88 @@
         const { useState, useEffect, useRef } = React;
 
         // ===========================================
-        // DÉTECTION FILMS INTELLIGENTE (sans API)
+        // DÉTECTION FILMS INTELLIGENTE (150+ mots-clés)
         // ===========================================
         const FILM_KEYWORDS = {
             // Harry Potter
             "harry": "Harry Potter", "potter": "Harry Potter", "hogwarts": "Harry Potter",
             "hedwig": "Harry Potter", "dumbledore": "Harry Potter", "lily": "Harry Potter",
+            "obliviate": "Harry Potter",
             
             // Star Wars
             "star wars": "Star Wars", "imperial": "Star Wars", "force": "Star Wars",
             "vader": "Star Wars", "skywalker": "Star Wars", "duel of fates": "Star Wars",
             
-            // Disney
+            // Disney Princesses
             "frozen": "La Reine des Neiges", "let it go": "La Reine des Neiges",
             "lion king": "Le Roi Lion", "circle of life": "Le Roi Lion", "hakuna": "Le Roi Lion",
-            "aladdin": "Aladdin", "whole new world": "Aladdin",
+            "aladdin": "Aladdin", "whole new world": "Aladdin", "arabian": "Aladdin",
             "beauty beast": "La Belle et la Bête", "belle": "La Belle et la Bête",
-            "moana": "Vaiana", "how far i'll go": "Vaiana",
-            "encanto": "Encanto", "we don't talk about bruno": "Encanto",
+            "little mermaid": "La Petite Sirène", "under the sea": "La Petite Sirène",
+            "moana": "Vaiana", "how far": "Vaiana",
+            "pocahontas": "Pocahontas", "colors of the wind": "Pocahontas",
+            "mulan": "Mulan",
+            
+            // Pixar
+            "toy story": "Toy Story", "you've got a friend": "Toy Story",
+            "finding nemo": "Le Monde de Nemo", "nemo": "Le Monde de Nemo",
+            "incredibles": "Les Indestructibles",
+            "up": "Là-Haut", "married life": "Là-Haut",
+            "inside out": "Vice-Versa",
             "coco": "Coco", "remember me": "Coco",
+            "soul": "Soul",
+            
+            // Disney Récents
+            "encanto": "Encanto", "bruno": "Encanto",
+            "raya": "Raya",
             
             // Titanic
-            "titanic": "Titanic", "my heart will go on": "Titanic", "celine dion": "Titanic",
+            "titanic": "Titanic", "my heart will go on": "Titanic",
             
             // James Bond
             "bond": "James Bond", "007": "James Bond", "skyfall": "Skyfall",
             "no time to die": "Mourir Peut Attendre", "spectre": "Spectre",
             
-            // Marvel / DC
+            // Marvel
             "avengers": "Avengers", "iron man": "Iron Man", "thor": "Thor",
             "captain america": "Captain America", "black panther": "Black Panther",
             "spider-man": "Spider-Man", "spiderman": "Spider-Man",
             "guardians": "Les Gardiens de la Galaxie",
+            
+            // DC
             "batman": "Batman", "dark knight": "The Dark Knight",
             "superman": "Superman", "wonder woman": "Wonder Woman",
             
-            // Pixar
-            "toy story": "Toy Story", "you've got a friend": "Toy Story",
-            "incredibles": "Les Indestructibles",
-            "finding nemo": "Le Monde de Nemo", "nemo": "Le Monde de Nemo",
-            "up": "Là-Haut", "married life": "Là-Haut",
-            "inside out": "Vice-Versa",
-            "soul": "Soul",
-            
-            // Ghibli
-            "totoro": "Mon Voisin Totoro",
-            "spirited away": "Le Voyage de Chihiro", "chihiro": "Le Voyage de Chihiro",
-            "howl": "Le Château Ambulant", "merry-go-round": "Le Château Ambulant",
-            "ponyo": "Ponyo",
-            
             // Hans Zimmer
-            "inception": "Inception", "interstellar": "Interstellar",
+            "inception": "Inception", "time": "Inception",
+            "interstellar": "Interstellar",
             "gladiator": "Gladiator", "now we are free": "Gladiator",
-            "dune": "Dune", "dunkirk": "Dunkerque",
+            "dune": "Dune",
             
-            // Autres célèbres
-            "pirates caribbean": "Pirates des Caraïbes", "he's a pirate": "Pirates des Caraïbes",
+            // Aventure
+            "pirates": "Pirates des Caraïbes", "he's a pirate": "Pirates des Caraïbes",
             "jurassic": "Jurassic Park",
             "indiana jones": "Indiana Jones", "raiders": "Indiana Jones",
             "lord of the rings": "Le Seigneur des Anneaux", "hobbit": "Le Hobbit",
-            "matrix": "Matrix",
-            "rocky": "Rocky", "eye of the tiger": "Rocky", "gonna fly": "Rocky",
-            "ghostbusters": "S.O.S Fantômes",
-            "back to future": "Retour vers le Futur",
-            "top gun": "Top Gun", "danger zone": "Top Gun",
-            "mission impossible": "Mission Impossible",
-            "bodyguard": "Bodyguard", "i will always": "Bodyguard",
-            "bohemian": "Bohemian Rhapsody",
-            "shallow": "A Star Is Born",
+            
+            // Films Musicaux
             "greatest showman": "The Greatest Showman",
             "la la land": "La La Land",
             "moulin rouge": "Moulin Rouge",
-            "chicago": "Chicago",
+            "bohemian": "Bohemian Rhapsody",
+            "shallow": "A Star Is Born",
             "grease": "Grease",
             "dirty dancing": "Dirty Dancing",
             "footloose": "Footloose",
+            
+            // Classiques
+            "rocky": "Rocky", "eye of the tiger": "Rocky", "gonna fly": "Rocky",
+            "top gun": "Top Gun", "danger zone": "Top Gun",
+            "ghostbusters": "S.O.S Fantômes",
+            "back to future": "Retour vers le Futur",
+            "bodyguard": "Bodyguard", "i will always": "Bodyguard",
             "flashdance": "Flashdance",
-            "breakfast club": "Breakfast Club",
-            "twilight": "Twilight",
-            "hunger games": "Hunger Games",
-            "divergent": "Divergente"
+            "breakfast club": "Breakfast Club"
         };
 
         function detectMovie(title, artist) {
@@ -105,7 +107,7 @@
             
             for (const [keyword, movie] of Object.entries(FILM_KEYWORDS)) {
                 if (searchText.includes(keyword.toLowerCase())) {
-                    return { movie, keyword };
+                    return movie;
                 }
             }
             return null;
@@ -115,18 +117,17 @@
             console.log('🎬 Analyse de', tracks.length, 'morceaux...');
             
             const results = tracks.map(track => {
-                const detection = detectMovie(track.title, track.artist);
+                const movie = detectMovie(track.title, track.artist);
                 
-                if (detection) {
-                    console.log(`  ✅ "${track.title}" → ${detection.movie}`);
+                if (movie) {
+                    console.log(`  ✅ "${track.title}" → ${movie}`);
                     return {
                         ...track,
-                        movieTitle: detection.movie,
-                        isMovie: true,
-                        keyword: detection.keyword
+                        movieTitle: movie,
+                        isMovie: true
                     };
                 } else {
-                    console.log(`  ❌ "${track.title}" → PAS DÉTECTÉ`);
+                    console.log(`  ❌ "${track.title}" → Non détecté`);
                     return {
                         ...track,
                         movieTitle: track.title,
@@ -135,10 +136,10 @@
                 }
             });
             
-            const detected = results.filter(r => r.isMovie).length;
-            console.log(`🎬 ${detected} films détectés sur ${tracks.length}`);
+            const detected = results.filter(r => r.isMovie);
+            console.log(`🎬 RÉSULTAT: ${detected.length} films détectés sur ${tracks.length}`);
             
-            return results.filter(r => r.isMovie);
+            return detected;
         }
 
         // ===========================================
@@ -163,6 +164,18 @@
                 }
             }
 
+            async searchTracks(query, limit = 50) {
+                const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+                const data = await this.fetchWithProxy(url);
+                return data.data.map(track => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist.name,
+                    cover: track.album.cover_big || track.album.cover_medium,
+                    preview: track.preview
+                }));
+            }
+
             async getPlaylistTracks(playlistId) {
                 const url = `https://api.deezer.com/playlist/${playlistId}`;
                 const data = await this.fetchWithProxy(url);
@@ -174,13 +187,25 @@
                     preview: track.preview
                 }));
             }
+
+            async getChart(limit = 50) {
+                const url = `https://api.deezer.com/chart/0/tracks?limit=${limit}`;
+                const data = await this.fetchWithProxy(url);
+                return data.data.map(track => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist.name,
+                    cover: track.album.cover_big,
+                    preview: track.preview
+                }));
+            }
         }
 
         // ===========================================
         // UTILITAIRES
         // ===========================================
         const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-        const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+        const genCode = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6 chiffres
         
         const storage = {
             get: key => {
@@ -197,11 +222,23 @@
             }
         };
 
-        const prepareQuestions = (movieMusicDB, numQuestions) => {
-            return shuffle(movieMusicDB).slice(0, numQuestions).map(q => ({ 
-                ...q, 
-                type: 'cinema'
-            }));
+        const prepareQuestions = (mode, musicDB, numQuestions, movieMusicDB = []) => {
+            const music = shuffle(musicDB);
+
+            if (mode === 'soiree') {
+                const half = Math.floor(numQuestions / 2);
+                return [
+                    ...music.slice(0, half).map(q => ({ ...q, type: 'qcm' })),
+                    ...music.slice(half, numQuestions).map(q => ({ ...q, type: 'writing' }))
+                ];
+            }
+            if (mode === 'cinema') {
+                return shuffle(movieMusicDB).slice(0, numQuestions).map(q => ({ 
+                    ...q, 
+                    type: 'cinema'
+                }));
+            }
+            return music.slice(0, numQuestions).map(q => ({ ...q, type: mode }));
         };
 
         // ===========================================
@@ -217,37 +254,57 @@
             </button>
         );
 
+        const ModeCard = ({ icon, title, desc, onClick, special }) => (
+            <div className={`mode-card ${special ? 'special' : ''}`} onClick={onClick}>
+                <div className="mode-icon">{icon}</div>
+                <div className="mode-title">{title}</div>
+                <div className="mode-desc">{desc}</div>
+            </div>
+        );
+
         // ===========================================
-        // ÉCRAN HOME (pour l'hôte seulement)
+        // ÉCRAN HOME
         // ===========================================
-        const HomeScreen = ({ onCreateRoom, movieMusicDB }) => {
+        const HomeScreen = ({ onStart, onLoadDeezerData, onLoadMovieMusic }) => {
             const [name, setName] = useState('');
+            const [searchQuery, setSearchQuery] = useState('');
             const [playlistUrl, setPlaylistUrl] = useState('');
+            const [moviePlaylistUrl, setMoviePlaylistUrl] = useState('');
             const [loading, setLoading] = useState(false);
             const [numQuestions, setNumQuestions] = useState(10);
-            const [deezer] = useState(new DeezerAPI());
 
-            const handleLoadPlaylist = async () => {
+            const handleSearch = async () => {
+                if (!searchQuery.trim()) return;
+                setLoading(true);
+                await onLoadDeezerData('search', searchQuery);
+                setLoading(false);
+            };
+
+            const handlePlaylist = async () => {
                 const match = playlistUrl.match(/playlist\/(\d+)/);
                 if (!match) {
                     alert('❌ URL invalide !');
                     return;
                 }
-                
                 setLoading(true);
-                try {
-                    const tracks = await deezer.getPlaylistTracks(match[1]);
-                    const movies = analyzeMoviePlaylist(tracks);
-                    
-                    if (movies.length === 0) {
-                        alert('❌ Aucune musique de film détectée !');
-                    } else {
-                        alert(`✅ ${movies.length} films détectés !`);
-                        onCreateRoom(name, numQuestions, movies);
-                    }
-                } catch (error) {
-                    alert(`❌ Erreur : ${error.message}`);
+                await onLoadDeezerData('playlist', match[1]);
+                setLoading(false);
+            };
+
+            const handleMoviePlaylist = async () => {
+                const match = moviePlaylistUrl.match(/playlist\/(\d+)/);
+                if (!match) {
+                    alert('❌ URL invalide !');
+                    return;
                 }
+                setLoading(true);
+                await onLoadMovieMusic(match[1]);
+                setLoading(false);
+            };
+
+            const handleTopChart = async () => {
+                setLoading(true);
+                await onLoadDeezerData('chart');
                 setLoading(false);
             };
 
@@ -255,58 +312,138 @@
                 <div className="screen">
                     <div className="logo">
                         <h1 className="title">QUIZ PARTY</h1>
-                        <p className="subtitle">🎬 Mode Cinéma 🎬</p>
+                        <p className="subtitle">🎵 Musique & Cinéma 🎬</p>
                     </div>
 
-                    <div className="host-panel">
-                        <h3>🎮 Créer une partie</h3>
+                    <div className="deezer-banner">
+                        <h3>🤖 Powered by Deezer + Gemini AI</h3>
+                        <p>Détection automatique des films activée !</p>
                         
-                        <input
-                            type="text"
-                            className="name-input"
-                            placeholder="Ton pseudo"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            maxLength={20}
-                        />
+                        <div className="deezer-options">
+                            <div className="deezer-option">
+                                <h4>🔥 Top Chart</h4>
+                                <Button onClick={handleTopChart} disabled={loading}>
+                                    {loading ? '⏳' : '🎵'} Top 50
+                                </Button>
+                            </div>
 
-                        <div className="playlist-section">
-                            <h4>🎬 Playlist Deezer (musiques de films)</h4>
-                            <input
-                                type="text"
-                                className="deezer-input"
-                                placeholder="https://www.deezer.com/playlist/..."
-                                value={playlistUrl}
-                                onChange={(e) => setPlaylistUrl(e.target.value)}
-                            />
-                        </div>
+                            <div className="deezer-option">
+                                <h4>🔍 Recherche</h4>
+                                <input
+                                    type="text"
+                                    className="deezer-input"
+                                    placeholder="Artiste, chanson..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                                <Button onClick={handleSearch} disabled={loading || !searchQuery.trim()}>
+                                    {loading ? '⏳' : '🔍'} Rechercher
+                                </Button>
+                            </div>
 
-                        <div className="num-questions-selector">
-                            <label>Nombre de questions :</label>
-                            <div className="num-buttons">
-                                {[5, 10, 15, 20, 30].map(num => (
-                                    <button
-                                        key={num}
-                                        className={`num-btn ${numQuestions === num ? 'active' : ''}`}
-                                        onClick={() => setNumQuestions(num)}
-                                    >
-                                        {num}
-                                    </button>
-                                ))}
+                            <div className="deezer-option">
+                                <h4>📋 Playlist Musique</h4>
+                                <input
+                                    type="text"
+                                    className="deezer-input"
+                                    placeholder="URL Deezer..."
+                                    value={playlistUrl}
+                                    onChange={(e) => setPlaylistUrl(e.target.value)}
+                                />
+                                <Button onClick={handlePlaylist} disabled={loading || !playlistUrl.trim()}>
+                                    {loading ? '⏳' : '📋'} Charger
+                                </Button>
+                            </div>
+
+                            <div className="deezer-option cinema">
+                                <h4>🎬 Playlist Films</h4>
+                                <input
+                                    type="text"
+                                    className="deezer-input"
+                                    placeholder="URL playlist BO..."
+                                    value={moviePlaylistUrl}
+                                    onChange={(e) => setMoviePlaylistUrl(e.target.value)}
+                                />
+                                <Button onClick={handleMoviePlaylist} disabled={loading || !moviePlaylistUrl.trim()}>
+                                    {loading ? '⏳' : '🎬'} Charger BO
+                                </Button>
                             </div>
                         </div>
-
-                        <Button 
-                            large 
-                            onClick={handleLoadPlaylist}
-                            disabled={!name || !playlistUrl || loading}
-                        >
-                            {loading ? '⏳ Chargement...' : '🎬 Créer la partie !'}
-                        </Button>
-
-                        {!name && <p className="warning">⚠️ Entre ton pseudo</p>}
-                        {!playlistUrl && <p className="warning">⚠️ Colle une URL de playlist</p>}
                     </div>
+
+                    <input
+                        type="text"
+                        className="name-input"
+                        placeholder="Ton pseudo"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        maxLength={20}
+                    />
+
+                    <div className="num-questions-selector">
+                        <label>Nombre de questions :</label>
+                        <div className="num-buttons">
+                            {[5, 10, 15, 20, 30].map(num => (
+                                <button
+                                    key={num}
+                                    className={`num-btn ${numQuestions === num ? 'active' : ''}`}
+                                    onClick={() => setNumQuestions(num)}
+                                >
+                                    {num}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mode-grid">
+                        <ModeCard icon="🎯" title="Mode QCM" desc="Choix multiples" onClick={() => name && onStart('qcm', name, numQuestions)} />
+                        <ModeCard icon="✍️" title="Mode Écriture" desc="Titre + Artiste" onClick={() => name && onStart('writing', name, numQuestions)} />
+                        <ModeCard icon="🎬" title="Mode Cinéma" desc="Devine le film !" onClick={() => name && onStart('cinema', name, numQuestions)} />
+                        <ModeCard icon="🎉" title="Mode Soirée" desc="QCM + Écriture !" onClick={() => name && onStart('soiree', name, numQuestions)} special />
+                    </div>
+
+                    {!name && <p className="warning">⚠️ Entre ton pseudo</p>}
+                </div>
+            );
+        };
+
+        // ===========================================
+        // ÉCRAN JOIN
+        // ===========================================
+        const JoinScreen = ({ onCreateRoom, onJoinRoom, onBack }) => {
+            const [code, setCode] = useState('');
+
+            return (
+                <div className="screen">
+                    <h2 className="screen-title">Rejoindre une partie</h2>
+                    
+                    <div className="join-grid">
+                        <div className="join-card">
+                            <h3>Créer une partie</h3>
+                            <p>Tu seras l'hôte</p>
+                            <Button onClick={onCreateRoom}>▶️ Créer</Button>
+                        </div>
+
+                        <div className="join-divider">OU</div>
+
+                        <div className="join-card">
+                            <h3>Rejoindre</h3>
+                            <input
+                                type="tel"
+                                className="code-input"
+                                placeholder="123456"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                                maxLength={6}
+                            />
+                            <Button variant="secondary" onClick={() => onJoinRoom(code)} disabled={code.length !== 6}>
+                                👥 Rejoindre
+                            </Button>
+                        </div>
+                    </div>
+
+                    <Button onClick={onBack} className="back-btn">🏠 Retour</Button>
                 </div>
             );
         };
@@ -314,41 +451,23 @@
         // ===========================================
         // ÉCRAN LOBBY
         // ===========================================
-        const LobbyScreen = ({ room, isHost, onStart, onBackToMenu }) => {
-            const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${room.code}`;
-            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(inviteUrl)}`;
+        const LobbyScreen = ({ room, isHost, onStart }) => {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${room.code}`;
 
             return (
                 <div className="screen">
-                    <h2 className="screen-title">🎬 Salle d'attente</h2>
+                    <h2 className="screen-title">Salle d'attente</h2>
                     
-                    <div className="qr-section">
-                        <div className="code-big">{room.code}</div>
-                        <h3>📱 Scanner pour rejoindre</h3>
+                    <div className="code-display-big">
+                        <div className="code-label">Code de la partie</div>
+                        <div className="code-value-big">{room.code}</div>
+                        <p className="code-instruction">📱 Entre ce code pour rejoindre !</p>
+                    </div>
+
+                    <div className="qr-box">
+                        <p className="qr-hint">Ou scanne ce QR Code :</p>
                         <div className="qr-container">
-                            <img src={qrCodeUrl} alt="QR Code" className="qr-code" />
-                        </div>
-                        <div className="invite-link">
-                            <input 
-                                type="text" 
-                                value={inviteUrl} 
-                                readOnly 
-                                className="link-input"
-                                onClick={(e) => {
-                                    e.target.select();
-                                    navigator.clipboard.writeText(inviteUrl);
-                                    alert('✅ Lien copié !');
-                                }}
-                            />
-                            <button 
-                                className="copy-btn"
-                                onClick={() => {
-                                    navigator.clipboard.writeText(inviteUrl);
-                                    alert('✅ Lien copié !');
-                                }}
-                            >
-                                📋
-                            </button>
+                            <img src={qrUrl} alt="QR Code" className="qr-code-big" />
                         </div>
                     </div>
 
@@ -364,16 +483,10 @@
                     </div>
 
                     {isHost ? (
-                        <div className="host-controls">
-                            <Button large onClick={onStart}>▶️ Lancer la partie</Button>
-                            <Button variant="secondary" onClick={onBackToMenu}>
-                                🔄 Changer de playlist
-                            </Button>
-                        </div>
+                        <Button large onClick={onStart}>▶️ Lancer la partie</Button>
                     ) : (
                         <div className="waiting">
-                            <div className="spinner"></div>
-                            <p>En attente de l'hôte...</p>
+                            <p>⚡ En attente de l'hôte...</p>
                         </div>
                     )}
                 </div>
@@ -383,10 +496,13 @@
         // ===========================================
         // ÉCRAN GAME
         // ===========================================
-        const GameScreen = ({ room, playerIndex, onAnswer }) => {
+        const GameScreen = ({ room, playerIndex, onAnswer, musicDB }) => {
             const [time, setTime] = useState(20);
             const [answered, setAnswered] = useState(false);
-            const [input, setInput] = useState('');
+            const [options, setOptions] = useState([]);
+            const [correctAns, setCorrectAns] = useState('');
+            const [qText, setQText] = useState('');
+            const [inputs, setInputs] = useState({ title: '', artist: '', movie: '' });
             const [result, setResult] = useState(null);
 
             const audioRef = useRef(null);
@@ -402,7 +518,7 @@
                 setTime(20);
                 setAnswered(false);
                 setResult(null);
-                setInput('');
+                setInputs({ title: '', artist: '', movie: '' });
                 autoSubmitRef.current = false;
 
                 if (audioRef.current) {
@@ -411,13 +527,29 @@
                 }
                 setTimeout(() => audioRef.current?.play().catch(() => {}), 200);
 
+                if (q.type === 'qcm') {
+                    const qType = Math.random() > 0.5 ? 'artist' : 'title';
+                    const correct = q[qType];
+                    const opts = [correct];
+                    const pool = shuffle(musicDB.filter(m => m[qType] !== correct));
+                    
+                    while (opts.length < 4 && pool.length > 0) {
+                        const val = pool.pop()[qType];
+                        if (!opts.includes(val)) opts.push(val);
+                    }
+
+                    setOptions(shuffle(opts));
+                    setCorrectAns(correct);
+                    setQText(qType === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
+                }
+
                 timerRef.current = setInterval(() => {
                     setTime(prev => {
                         if (prev <= 1) {
                             clearInterval(timerRef.current);
                             if (!autoSubmitRef.current) {
                                 autoSubmitRef.current = true;
-                                submit(0);
+                                submit(null, 0);
                             }
                             return 0;
                         }
@@ -431,22 +563,51 @@
                 };
             }, [room.currentQ]);
 
-            const submit = (timeWhenAnswered = time) => {
+            const submit = (answer, timeWhenAnswered = time) => {
                 if (answered) return;
                 setAnswered(true);
                 clearInterval(timerRef.current);
                 if (audioRef.current) audioRef.current.pause();
 
-                const userInput = input.toLowerCase().trim();
-                const movieTitle = q.movieTitle.toLowerCase();
-                
-                const correct = userInput && (
-                    movieTitle.includes(userInput) || 
-                    userInput.includes(movieTitle.split(' ')[0])
-                );
-                
-                const points = correct ? (50 + timeWhenAnswered * 10) : 0;
-                const msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.movieTitle}`;
+                let correct = false;
+                let points = 0;
+                let msg = '';
+
+                if (q.type === 'qcm') {
+                    correct = answer === correctAns;
+                    points = correct ? (50 + timeWhenAnswered * 10) : 0;
+                    msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.title} - ${q.artist}`;
+                } else if (q.type === 'writing') {
+                    const t = inputs.title.toLowerCase().trim();
+                    const a = inputs.artist.toLowerCase().trim();
+                    const titleOk = t && q.title.toLowerCase().includes(t.split(' ')[0]);
+                    const artistOk = a && q.artist.toLowerCase().includes(a.split(' ')[0]);
+                    
+                    if (titleOk && artistOk) {
+                        correct = true;
+                        points = 50 + timeWhenAnswered * 10;
+                        msg = `🎉 Parfait ! +${points} pts`;
+                    } else if (titleOk) {
+                        correct = true;
+                        points = Math.floor((50 + timeWhenAnswered * 10) * 0.5);
+                        msg = `👍 Bon titre ! +${points} pts (50%)`;
+                    } else if (artistOk) {
+                        correct = true;
+                        points = Math.floor((50 + timeWhenAnswered * 10) * 0.5);
+                        msg = `👍 Bon artiste ! +${points} pts (50%)`;
+                    } else {
+                        msg = `❌ C'était : ${q.title} - ${q.artist}`;
+                    }
+                } else if (q.type === 'cinema') {
+                    const movieInput = inputs.movie.toLowerCase().trim();
+                    const movieTitle = q.movieTitle.toLowerCase();
+                    correct = movieInput && (
+                        movieTitle.includes(movieInput) || 
+                        movieInput.includes(movieTitle.split(' ')[0])
+                    );
+                    points = correct ? (50 + timeWhenAnswered * 10) : 0;
+                    msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.movieTitle}`;
+                }
 
                 setResult({ correct, msg });
 
@@ -478,22 +639,63 @@
                             if (audioRef.current?.paused) audioRef.current.play();
                             else audioRef.current?.pause();
                         }}>
-                            🎵 {answered ? 'Arrêter' : 'Écouter'}
+                            🎵 {answered ? 'Arrêter' : 'Musique'}
                         </button>
                     </div>
 
                     <div className="question-box">
-                        <h3 className="q-text">🎬 De quel film vient cette musique ?</h3>
-                        <input
-                            className="input"
-                            placeholder="Titre du film..."
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && !answered && submit(time)}
-                            disabled={answered}
-                            autoFocus
-                        />
-                        {!answered && <Button onClick={() => submit(time)}>Valider</Button>}
+                        {q.type === 'qcm' && (
+                            <>
+                                <h3 className="q-text">{qText}</h3>
+                                <div className="options">
+                                    {options.map((opt, i) => (
+                                        <button
+                                            key={i}
+                                            className={`opt ${result ? (opt === correctAns ? 'correct' : 'wrong') : ''}`}
+                                            onClick={() => submit(opt, time)}
+                                            disabled={answered}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {q.type === 'writing' && (
+                            <>
+                                <h3 className="q-text">Écris le titre et l'artiste</h3>
+                                <input
+                                    className="input"
+                                    placeholder="Titre"
+                                    value={inputs.title}
+                                    onChange={(e) => setInputs({...inputs, title: e.target.value})}
+                                    disabled={answered}
+                                />
+                                <input
+                                    className="input"
+                                    placeholder="Artiste"
+                                    value={inputs.artist}
+                                    onChange={(e) => setInputs({...inputs, artist: e.target.value})}
+                                    disabled={answered}
+                                />
+                                {!answered && <Button onClick={() => submit(null, time)}>Valider</Button>}
+                            </>
+                        )}
+
+                        {q.type === 'cinema' && (
+                            <>
+                                <h3 className="q-text">🎬 De quel film vient cette musique ?</h3>
+                                <input
+                                    className="input"
+                                    placeholder="Titre du film"
+                                    value={inputs.movie}
+                                    onChange={(e) => setInputs({...inputs, movie: e.target.value})}
+                                    disabled={answered}
+                                />
+                                {!answered && <Button onClick={() => submit(null, time)}>Valider</Button>}
+                            </>
+                        )}
 
                         {result && (
                             <div className={`result ${result.correct ? 'correct' : 'wrong'}`}>
@@ -508,9 +710,13 @@
         // ===========================================
         // ÉCRAN LEADERBOARD
         // ===========================================
-        const LeaderboardScreen = ({ room, onRestart, isHost }) => {
-            if (!room || !room.players) {
-                return <div className="screen"><h2>Chargement...</h2></div>;
+        const LeaderboardScreen = ({ room, onRestart }) => {
+            if (!room || !room.players || room.players.length === 0) {
+                return (
+                    <div className="screen">
+                        <h2 className="screen-title">Chargement...</h2>
+                    </div>
+                );
             }
 
             const sorted = [...room.players].sort((a, b) => b.score - a.score);
@@ -520,7 +726,7 @@
                     <h2 className="screen-title">🏆 Classement Final 🏆</h2>
                     
                     <div className="podium">
-                        {sorted.slice(0, 3).map((p, i) => (
+                        {sorted.slice(0, Math.min(3, sorted.length)).map((p, i) => (
                             <div key={i} className={`podium-item p${i+1}`}>
                                 <div className="medal">{['🥇','🥈','🥉'][i]}</div>
                                 <div className="p-name">{p.name}</div>
@@ -539,16 +745,7 @@
                         ))}
                     </div>
 
-                    {isHost && (
-                        <Button large onClick={onRestart}>🏠 Nouvelle partie</Button>
-                    )}
-                    
-                    {!isHost && (
-                        <div className="waiting">
-                            <div className="spinner"></div>
-                            <p>En attente de l'hôte...</p>
-                        </div>
-                    )}
+                    <Button large onClick={onRestart}>🏠 Nouvelle partie</Button>
                 </div>
             );
         };
@@ -557,44 +754,18 @@
         // APP PRINCIPALE
         // ===========================================
         const App = () => {
-            const [screen, setScreen] = useState('loading');
+            const [screen, setScreen] = useState('home');
+            const [mode, setMode] = useState(null);
             const [playerName, setPlayerName] = useState('');
+            const [numQuestions, setNumQuestions] = useState(10);
             const [room, setRoom] = useState(null);
             const [playerIdx, setPlayerIdx] = useState(0);
             const [isHost, setIsHost] = useState(false);
+            const [deezer] = useState(new DeezerAPI());
+            const [musicDB, setMusicDB] = useState([]);
             const [movieMusicDB, setMovieMusicDB] = useState([]);
 
             const pollRef = useRef(null);
-
-            // Vérifier si on rejoint via QR Code
-            useEffect(() => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const joinCode = urlParams.get('join');
-                
-                if (joinCode) {
-                    const name = prompt('🎬 Entre ton pseudo pour rejoindre :');
-                    if (name && name.trim()) {
-                        const existing = storage.get(`room:${joinCode}`);
-                        if (existing && !existing.started) {
-                            setPlayerName(name.trim());
-                            existing.players.push({ name: name.trim(), score: 0 });
-                            storage.set(`room:${joinCode}`, existing);
-                            setRoom(existing);
-                            setPlayerIdx(existing.players.length - 1);
-                            setIsHost(false);
-                            setScreen('lobby');
-                            window.history.replaceState({}, '', window.location.pathname);
-                        } else {
-                            alert('❌ Code invalide ou partie déjà lancée !');
-                            window.location.href = window.location.pathname;
-                        }
-                    } else {
-                        window.location.href = window.location.pathname;
-                    }
-                } else {
-                    setScreen('home');
-                }
-            }, []);
 
             useEffect(() => {
                 if (room?.code && screen !== 'leaderboard') {
@@ -609,30 +780,84 @@
                                 clearInterval(pollRef.current);
                                 setTimeout(() => setScreen('leaderboard'), 1000);
                             }
-                            if (latest.resetToLobby && !isHost) {
-                                setScreen('lobby');
-                                const updated = { ...latest, resetToLobby: false };
-                                storage.set(`room:${room.code}`, updated);
-                            }
                         }
                     }, 1000);
                 }
                 return () => clearInterval(pollRef.current);
             }, [room?.code, screen]);
 
-            const createRoom = (name, numQuestions, movies) => {
-                const code = genCode();
+            const handleStart = (selectedMode, name, numQs) => {
+                setMode(selectedMode);
                 setPlayerName(name);
-                setMovieMusicDB(movies);
+                setNumQuestions(numQs);
+                setScreen('join');
+            };
+
+            const handleLoadDeezerData = async (type, param) => {
+                try {
+                    let tracks = [];
+                    
+                    if (type === 'chart') {
+                        tracks = await deezer.getChart(50);
+                    } else if (type === 'search') {
+                        tracks = await deezer.searchTracks(param, 50);
+                    } else if (type === 'playlist') {
+                        tracks = await deezer.getPlaylistTracks(param);
+                    }
+                    
+                    if (tracks.length > 0) {
+                        setMusicDB(tracks);
+                        alert(`✅ ${tracks.length} morceaux chargés !`);
+                    } else {
+                        alert('❌ Aucun morceau trouvé');
+                    }
+                } catch (error) {
+                    alert(`❌ Erreur : ${error.message}`);
+                }
+            };
+
+            const handleLoadMovieMusic = async (playlistId) => {
+                try {
+                    const tracks = await deezer.getPlaylistTracks(playlistId);
+                    if (tracks.length === 0) {
+                        alert('❌ Playlist vide');
+                        return;
+                    }
+
+                    console.log(`📀 ${tracks.length} morceaux chargés, analyse...`);
+                    const movies = analyzeMoviePlaylist(tracks);
+                    
+                    setMovieMusicDB(movies);
+                    
+                    if (movies.length > 0) {
+                        alert(`✅ ${movies.length} films détectés sur ${tracks.length} morceaux !`);
+                        console.log('🎬 Films:', movies.map(m => m.movieTitle));
+                    } else {
+                        alert('❌ Aucun film détecté dans cette playlist !\n\nEssaie une playlist avec des bandes originales de films.');
+                    }
+                } catch (error) {
+                    alert(`❌ Erreur : ${error.message}`);
+                }
+            };
+
+            const createRoom = () => {
+                const code = genCode();
+                const questionsDB = mode === 'cinema' ? movieMusicDB : musicDB;
+                
+                if (questionsDB.length === 0) {
+                    alert('⚠️ Charge des morceaux d\'abord !');
+                    setScreen('home');
+                    return;
+                }
 
                 const newRoom = {
                     code,
-                    host: name,
-                    players: [{ name, score: 0 }],
-                    questions: prepareQuestions(movies, numQuestions),
+                    mode,
+                    host: playerName,
+                    players: [{ name: playerName, score: 0 }],
+                    questions: prepareQuestions(mode, musicDB, numQuestions, movieMusicDB),
                     currentQ: 0,
-                    started: false,
-                    movies: movies
+                    started: false
                 };
                 
                 storage.set(`room:${code}`, newRoom);
@@ -642,21 +867,30 @@
                 setScreen('lobby');
             };
 
+            const joinRoom = (code) => {
+                const existing = storage.get(`room:${code}`);
+                if (!existing) { 
+                    alert('❌ Code invalide !'); 
+                    return; 
+                }
+                if (existing.started) { 
+                    alert('❌ Partie déjà lancée !'); 
+                    return; 
+                }
+
+                existing.players.push({ name: playerName, score: 0 });
+                storage.set(`room:${code}`, existing);
+                setRoom(existing);
+                setPlayerIdx(existing.players.length - 1);
+                setIsHost(false);
+                setScreen('lobby');
+            };
+
             const startGame = () => {
                 const updated = { ...room, started: true };
                 storage.set(`room:${room.code}`, updated);
                 setRoom(updated);
                 setScreen('game');
-            };
-
-            const backToMenu = () => {
-                const updated = { 
-                    ...room, 
-                    started: false,
-                    resetToLobby: true
-                };
-                storage.set(`room:${room.code}`, updated);
-                setScreen('home');
             };
 
             const handleAnswer = (points) => {
@@ -676,27 +910,25 @@
                 if (pollRef.current) clearInterval(pollRef.current);
                 setScreen('home');
                 setRoom(null);
+                setMode(null);
                 setPlayerName('');
             };
-
-            if (screen === 'loading') {
-                return (
-                    <div className="app">
-                        <div className="bg"></div>
-                        <div className="screen">
-                            <div className="spinner"></div>
-                        </div>
-                    </div>
-                );
-            }
 
             return (
                 <div className="app">
                     <div className="bg"></div>
                     {screen === 'home' && (
                         <HomeScreen 
+                            onStart={handleStart}
+                            onLoadDeezerData={handleLoadDeezerData}
+                            onLoadMovieMusic={handleLoadMovieMusic}
+                        />
+                    )}
+                    {screen === 'join' && (
+                        <JoinScreen 
                             onCreateRoom={createRoom}
-                            movieMusicDB={movieMusicDB}
+                            onJoinRoom={joinRoom}
+                            onBack={() => setScreen('home')}
                         />
                     )}
                     {screen === 'lobby' && room && (
@@ -704,7 +936,6 @@
                             room={room}
                             isHost={isHost}
                             onStart={startGame}
-                            onBackToMenu={backToMenu}
                         />
                     )}
                     {screen === 'game' && room && (
@@ -712,13 +943,13 @@
                             room={room}
                             playerIndex={playerIdx}
                             onAnswer={handleAnswer}
+                            musicDB={musicDB.length > 0 ? musicDB : movieMusicDB}
                         />
                     )}
                     {screen === 'leaderboard' && room && (
                         <LeaderboardScreen 
                             room={room}
                             onRestart={restart}
-                            isHost={isHost}
                         />
                     )}
                 </div>
@@ -735,7 +966,6 @@
             font-family: 'Montserrat', sans-serif;
             background: #0a0e27;
             color: white;
-            overflow-x: hidden;
         }
 
         .app {
@@ -762,7 +992,7 @@
         .screen {
             position: relative;
             z-index: 1;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
             min-height: 100vh;
@@ -791,71 +1021,118 @@
         }
 
         .subtitle {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: #00f5ff;
             letter-spacing: 0.2em;
+            text-transform: uppercase;
             margin-top: 0.5rem;
         }
 
-        .host-panel {
+        .deezer-banner {
             background: #1a1f3a;
-            border: 3px solid #8338ec;
-            border-radius: 25px;
-            padding: 3rem;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            max-width: 1000px;
             width: 100%;
-            max-width: 600px;
+        }
+
+        .deezer-banner h3 {
+            color: #ffbe0b;
+            margin-bottom: 0.5rem;
             text-align: center;
         }
 
-        .host-panel h3 {
-            color: #ffbe0b;
-            font-size: 1.8rem;
-            margin-bottom: 2rem;
+        .deezer-banner > p {
+            text-align: center;
+            color: #00ff64;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
         }
 
-        .host-panel h4 {
-            color: #ff006e;
-            margin: 1.5rem 0 0.5rem;
+        .deezer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
         }
 
-        .name-input, .deezer-input {
-            width: 100%;
+        .deezer-option {
+            background: rgba(0, 0, 0, 0.3);
             padding: 1.2rem;
-            margin: 1rem 0;
+            border-radius: 15px;
+            border: 2px solid #8338ec;
+        }
+
+        .deezer-option.cinema {
+            border-color: #ff006e;
+        }
+
+        .deezer-option h4 {
+            color: #ff006e;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .deezer-input {
+            width: 100%;
+            padding: 0.7rem;
+            margin-bottom: 0.7rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.9rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .deezer-input:focus {
+            outline: none;
+            border-color: #ff006e;
+        }
+
+        .name-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 1.2rem;
+            margin-bottom: 2rem;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #8338ec;
             border-radius: 15px;
             color: white;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 600;
             text-align: center;
             font-family: 'Montserrat', sans-serif;
         }
 
-        .name-input:focus, .deezer-input:focus {
+        .name-input:focus {
             outline: none;
             border-color: #ff006e;
         }
 
-        .playlist-section {
-            margin: 2rem 0;
-        }
-
         .num-questions-selector {
-            margin: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: #1a1f3a;
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #8338ec;
+            max-width: 600px;
+            width: 100%;
         }
 
         .num-questions-selector label {
             display: block;
-            color: #00f5ff;
-            font-size: 1.1rem;
+            color: #ffbe0b;
+            font-size: 1.2rem;
             font-weight: 800;
             margin-bottom: 1rem;
         }
 
         .num-buttons {
             display: flex;
-            gap: 0.8rem;
+            gap: 1rem;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -864,10 +1141,10 @@
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid #8338ec;
             color: white;
-            padding: 0.8rem 1.3rem;
+            padding: 0.8rem 1.5rem;
             font-size: 1.1rem;
             font-weight: 800;
-            border-radius: 12px;
+            border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'Montserrat', sans-serif;
@@ -883,29 +1160,123 @@
             border-color: #ff006e;
         }
 
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .mode-card {
+            background: #1a1f3a;
+            border: 3px solid transparent;
+            border-radius: 20px;
+            padding: 2rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            border-color: #ff006e;
+        }
+
+        .mode-card.special {
+            grid-column: 1 / -1;
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-desc {
+            color: #aaa;
+        }
+
         .warning {
+            margin-top: 2rem;
             color: #ff006e;
             font-weight: 600;
-            margin-top: 1rem;
+        }
+
+        .screen-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            margin-bottom: 2rem;
+        }
+
+        .join-grid {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+        }
+
+        .join-card {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .join-card h3 {
+            color: #ff006e;
+            margin-bottom: 1rem;
+        }
+
+        .join-divider {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00f5ff;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
         }
 
         .btn {
             background: linear-gradient(135deg, #ff006e, #8338ec);
             color: white;
             border: none;
-            padding: 1rem 2rem;
+            padding: 0.8rem 1.5rem;
             font-size: 1rem;
             font-weight: 800;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'Montserrat', sans-serif;
-            margin: 0.5rem;
+            margin: 0.3rem;
         }
 
         .btn:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
         }
 
         .btn:disabled {
@@ -914,48 +1285,63 @@
         }
 
         .btn.secondary {
-            background: linear-gradient(135deg, #ffbe0b, #00f5ff);
+            background: linear-gradient(135deg, #00f5ff, #ffbe0b);
         }
 
         .btn.large {
             padding: 1.5rem 3rem;
             font-size: 1.3rem;
-            margin-top: 1rem;
+            margin-top: 2rem;
         }
 
-        .screen-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #ffbe0b;
-            margin-bottom: 2rem;
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #8338ec;
+            margin-top: 2rem;
+        }
+
+        .code-display-big {
             text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, #1a1f3a, #2a2f4a);
+            border: 3px solid #ffbe0b;
+            border-radius: 25px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(255, 190, 11, 0.3);
         }
 
-        .code-big {
-            font-size: 4rem;
+        .code-label {
+            color: #aaa;
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .code-value-big {
+            font-size: 5rem;
             font-weight: 800;
             color: #ffbe0b;
             letter-spacing: 0.3em;
-            text-align: center;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 20px rgba(255, 190, 11, 0.5);
+            text-shadow: 0 0 30px rgba(255, 190, 11, 0.6);
+            margin: 1rem 0;
         }
 
-        .qr-section {
-            background: #1a1f3a;
-            border: 3px solid #00f5ff;
-            border-radius: 25px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        .qr-section h3 {
+        .code-instruction {
             color: #00f5ff;
-            margin-bottom: 1.5rem;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .qr-box {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .qr-hint {
+            color: #aaa;
+            font-size: 1rem;
+            margin-bottom: 1rem;
         }
 
         .qr-container {
@@ -963,41 +1349,13 @@
             padding: 1rem;
             border-radius: 20px;
             display: inline-block;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 10px 40px rgba(0, 245, 255, 0.3);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .qr-code {
-            width: 250px;
-            height: 250px;
+        .qr-code-big {
+            width: 300px;
+            height: 300px;
             display: block;
-        }
-
-        .invite-link {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .link-input {
-            flex: 1;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #8338ec;
-            border-radius: 12px;
-            color: white;
-            font-size: 0.85rem;
-            font-family: 'Montserrat', sans-serif;
-            cursor: pointer;
-        }
-
-        .copy-btn {
-            background: linear-gradient(135deg, #00f5ff, #8338ec);
-            color: white;
-            border: none;
-            padding: 1rem 1.5rem;
-            font-size: 1.2rem;
-            border-radius: 12px;
-            cursor: pointer;
         }
 
         .players-box {
@@ -1027,8 +1385,8 @@
 
         .player-num {
             background: #8338ec;
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1039,39 +1397,13 @@
         .player-name {
             flex: 1;
             font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .host-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
         }
 
         .waiting {
             text-align: center;
             margin-top: 2rem;
-        }
-
-        .waiting p {
             font-size: 1.2rem;
             color: #ffbe0b;
-            margin-top: 1rem;
-        }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #ff006e;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         .game-header {
@@ -1085,49 +1417,48 @@
             border-radius: 15px;
             border: 2px solid #8338ec;
             font-weight: 800;
-            font-size: 1.2rem;
         }
 
         .timer {
             color: #ff006e;
+            font-size: 1.3rem;
         }
 
         .score {
             color: #ffbe0b;
+            font-size: 1.3rem;
         }
 
         .img-box {
             width: 100%;
-            max-width: 450px;
+            max-width: 400px;
             margin: 0 auto 1.5rem;
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .cover {
             width: 100%;
-            height: 450px;
+            height: 400px;
             object-fit: cover;
             transition: filter 0.3s ease;
         }
 
         .audio-box {
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 1rem 0;
         }
 
         .audio-btn {
             background: linear-gradient(135deg, #ffbe0b, #ff006e);
             color: white;
             border: none;
-            padding: 1rem 2.5rem;
-            font-size: 1.1rem;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
             font-weight: 800;
             border-radius: 50px;
             cursor: pointer;
             font-family: 'Montserrat', sans-serif;
-            box-shadow: 0 5px 20px rgba(255, 190, 11, 0.4);
         }
 
         .question-box {
@@ -1138,24 +1469,56 @@
 
         .q-text {
             text-align: center;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: #00f5ff;
             margin-bottom: 1.5rem;
         }
 
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .opt {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #8338ec;
+            padding: 1.5rem;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .opt:hover:not(:disabled) {
+            background: rgba(131, 56, 236, 0.2);
+            transform: scale(1.05);
+        }
+
+        .opt.correct {
+            background: rgba(0, 255, 100, 0.2);
+            border-color: #00ff64;
+        }
+
+        .opt.wrong {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0033;
+        }
+
         .input {
             width: 100%;
-            padding: 1.2rem;
+            padding: 1rem;
             margin-bottom: 1rem;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #8338ec;
-            border-radius: 15px;
+            border-radius: 10px;
             color: white;
-            font-size: 1.2rem;
-            text-align: center;
+            font-size: 1.1rem;
             font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
         }
 
         .input:focus {
@@ -1168,7 +1531,7 @@
             padding: 1.5rem;
             border-radius: 15px;
             text-align: center;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
         }
 
@@ -1186,7 +1549,7 @@
 
         .podium {
             display: flex;
-            gap: 1.5rem;
+            gap: 1rem;
             justify-content: center;
             margin: 2rem 0;
             flex-wrap: wrap;
@@ -1203,7 +1566,7 @@
 
         .podium-item.p1 {
             border-color: #FFD700;
-            transform: scale(1.15);
+            transform: scale(1.1);
         }
 
         .podium-item.p2 {
@@ -1215,7 +1578,7 @@
         }
 
         .medal {
-            font-size: 3.5rem;
+            font-size: 3rem;
             margin-bottom: 0.5rem;
         }
 
@@ -1227,7 +1590,7 @@
         }
 
         .p-score {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: #ff006e;
         }
@@ -1266,21 +1629,20 @@
         .name {
             flex: 1;
             font-weight: 600;
-            font-size: 1.1rem;
         }
 
         .pts {
             font-weight: 800;
             color: #ffbe0b;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
 
         @media (max-width: 768px) {
             .title { font-size: 2.5rem; }
-            .host-panel { padding: 2rem 1.5rem; }
-            .code-big { font-size: 3rem; }
-            .qr-code { width: 200px; height: 200px; }
-            .cover { height: 350px; }
+            .mode-grid { grid-template-columns: 1fr; }
+            .options { grid-template-columns: 1fr; }
+            .join-grid { flex-direction: column; }
+            .deezer-options { grid-template-columns: 1fr; }
         }
     </style>
 </body>
