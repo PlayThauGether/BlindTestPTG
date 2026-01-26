@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵 v3.0</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -16,131 +15,6 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-
-        // ===========================================
-        // DÉTECTION FILMS INTELLIGENTE (150+ mots-clés)
-        // ===========================================
-        const FILM_KEYWORDS = {
-            // Harry Potter
-            "harry": "Harry Potter", "potter": "Harry Potter", "hogwarts": "Harry Potter",
-            "hedwig": "Harry Potter", "dumbledore": "Harry Potter", "lily": "Harry Potter",
-            "obliviate": "Harry Potter",
-            
-            // Star Wars
-            "star wars": "Star Wars", "imperial": "Star Wars", "force": "Star Wars",
-            "vader": "Star Wars", "skywalker": "Star Wars", "duel of fates": "Star Wars",
-            
-            // Disney Princesses
-            "frozen": "La Reine des Neiges", "let it go": "La Reine des Neiges",
-            "lion king": "Le Roi Lion", "circle of life": "Le Roi Lion", "hakuna": "Le Roi Lion",
-            "aladdin": "Aladdin", "whole new world": "Aladdin", "arabian": "Aladdin",
-            "beauty beast": "La Belle et la Bête", "belle": "La Belle et la Bête",
-            "little mermaid": "La Petite Sirène", "under the sea": "La Petite Sirène",
-            "moana": "Vaiana", "how far": "Vaiana",
-            "pocahontas": "Pocahontas", "colors of the wind": "Pocahontas",
-            "mulan": "Mulan",
-            
-            // Pixar
-            "toy story": "Toy Story", "you've got a friend": "Toy Story",
-            "finding nemo": "Le Monde de Nemo", "nemo": "Le Monde de Nemo",
-            "incredibles": "Les Indestructibles",
-            "up": "Là-Haut", "married life": "Là-Haut",
-            "inside out": "Vice-Versa",
-            "coco": "Coco", "remember me": "Coco",
-            "soul": "Soul",
-            
-            // Disney Récents
-            "encanto": "Encanto", "bruno": "Encanto",
-            "raya": "Raya",
-            
-            // Titanic
-            "titanic": "Titanic", "my heart will go on": "Titanic",
-            
-            // James Bond
-            "bond": "James Bond", "007": "James Bond", "skyfall": "Skyfall",
-            "no time to die": "Mourir Peut Attendre", "spectre": "Spectre",
-            
-            // Marvel
-            "avengers": "Avengers", "iron man": "Iron Man", "thor": "Thor",
-            "captain america": "Captain America", "black panther": "Black Panther",
-            "spider-man": "Spider-Man", "spiderman": "Spider-Man",
-            "guardians": "Les Gardiens de la Galaxie",
-            
-            // DC
-            "batman": "Batman", "dark knight": "The Dark Knight",
-            "superman": "Superman", "wonder woman": "Wonder Woman",
-            
-            // Hans Zimmer
-            "inception": "Inception", "time": "Inception",
-            "interstellar": "Interstellar",
-            "gladiator": "Gladiator", "now we are free": "Gladiator",
-            "dune": "Dune",
-            
-            // Aventure
-            "pirates": "Pirates des Caraïbes", "he's a pirate": "Pirates des Caraïbes",
-            "jurassic": "Jurassic Park",
-            "indiana jones": "Indiana Jones", "raiders": "Indiana Jones",
-            "lord of the rings": "Le Seigneur des Anneaux", "hobbit": "Le Hobbit",
-            
-            // Films Musicaux
-            "greatest showman": "The Greatest Showman",
-            "la la land": "La La Land",
-            "moulin rouge": "Moulin Rouge",
-            "bohemian": "Bohemian Rhapsody",
-            "shallow": "A Star Is Born",
-            "grease": "Grease",
-            "dirty dancing": "Dirty Dancing",
-            "footloose": "Footloose",
-            
-            // Classiques
-            "rocky": "Rocky", "eye of the tiger": "Rocky", "gonna fly": "Rocky",
-            "top gun": "Top Gun", "danger zone": "Top Gun",
-            "ghostbusters": "S.O.S Fantômes",
-            "back to future": "Retour vers le Futur",
-            "bodyguard": "Bodyguard", "i will always": "Bodyguard",
-            "flashdance": "Flashdance",
-            "breakfast club": "Breakfast Club"
-        };
-
-        function detectMovie(title, artist) {
-            const searchText = `${title} ${artist}`.toLowerCase();
-            
-            for (const [keyword, movie] of Object.entries(FILM_KEYWORDS)) {
-                if (searchText.includes(keyword.toLowerCase())) {
-                    return movie;
-                }
-            }
-            return null;
-        }
-
-        function analyzeMoviePlaylist(tracks) {
-            console.log('🎬 Analyse de', tracks.length, 'morceaux...');
-            
-            const results = tracks.map(track => {
-                const movie = detectMovie(track.title, track.artist);
-                
-                if (movie) {
-                    console.log(`  ✅ "${track.title}" → ${movie}`);
-                    return {
-                        ...track,
-                        movieTitle: movie,
-                        isMovie: true
-                    };
-                } else {
-                    console.log(`  ❌ "${track.title}" → Non détecté`);
-                    return {
-                        ...track,
-                        movieTitle: track.title,
-                        isMovie: false
-                    };
-                }
-            });
-            
-            const detected = results.filter(r => r.isMovie);
-            console.log(`🎬 RÉSULTAT: ${detected.length} films détectés sur ${tracks.length}`);
-            
-            return detected;
-        }
 
         // ===========================================
         // DEEZER API
@@ -162,18 +36,6 @@
                         if (i === this.proxies.length - 1) throw error;
                     }
                 }
-            }
-
-            async searchTracks(query, limit = 50) {
-                const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
-                const data = await this.fetchWithProxy(url);
-                return data.data.map(track => ({
-                    id: track.id,
-                    title: track.title,
-                    artist: track.artist.name,
-                    cover: track.album.cover_big || track.album.cover_medium,
-                    preview: track.preview
-                }));
             }
 
             async getPlaylistTracks(playlistId) {
@@ -205,7 +67,7 @@
         // UTILITAIRES
         // ===========================================
         const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-        const genCode = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6 chiffres
+        const genCode = () => Math.floor(100000 + Math.random() * 900000).toString();
         
         const storage = {
             get: key => {
@@ -222,7 +84,7 @@
             }
         };
 
-        const prepareQuestions = (mode, musicDB, numQuestions, movieMusicDB = []) => {
+        const prepareQuestions = (mode, musicDB, numQuestions) => {
             const music = shuffle(musicDB);
 
             if (mode === 'soiree') {
@@ -231,12 +93,6 @@
                     ...music.slice(0, half).map(q => ({ ...q, type: 'qcm' })),
                     ...music.slice(half, numQuestions).map(q => ({ ...q, type: 'writing' }))
                 ];
-            }
-            if (mode === 'cinema') {
-                return shuffle(movieMusicDB).slice(0, numQuestions).map(q => ({ 
-                    ...q, 
-                    type: 'cinema'
-                }));
             }
             return music.slice(0, numQuestions).map(q => ({ ...q, type: mode }));
         };
@@ -265,18 +121,15 @@
         // ===========================================
         // ÉCRAN HOME
         // ===========================================
-        const HomeScreen = ({ onStart, onLoadDeezerData, onLoadMovieMusic }) => {
+        const HomeScreen = ({ onStart, onLoadDeezer }) => {
             const [name, setName] = useState('');
-            const [searchQuery, setSearchQuery] = useState('');
             const [playlistUrl, setPlaylistUrl] = useState('');
-            const [moviePlaylistUrl, setMoviePlaylistUrl] = useState('');
             const [loading, setLoading] = useState(false);
             const [numQuestions, setNumQuestions] = useState(10);
 
-            const handleSearch = async () => {
-                if (!searchQuery.trim()) return;
+            const handleTopChart = async () => {
                 setLoading(true);
-                await onLoadDeezerData('search', searchQuery);
+                await onLoadDeezer('chart');
                 setLoading(false);
             };
 
@@ -287,24 +140,7 @@
                     return;
                 }
                 setLoading(true);
-                await onLoadDeezerData('playlist', match[1]);
-                setLoading(false);
-            };
-
-            const handleMoviePlaylist = async () => {
-                const match = moviePlaylistUrl.match(/playlist\/(\d+)/);
-                if (!match) {
-                    alert('❌ URL invalide !');
-                    return;
-                }
-                setLoading(true);
-                await onLoadMovieMusic(match[1]);
-                setLoading(false);
-            };
-
-            const handleTopChart = async () => {
-                setLoading(true);
-                await onLoadDeezerData('chart');
+                await onLoadDeezer('playlist', match[1]);
                 setLoading(false);
             };
 
@@ -312,61 +148,31 @@
                 <div className="screen">
                     <div className="logo">
                         <h1 className="title">QUIZ PARTY</h1>
-                        <p className="subtitle">🎵 Musique & Cinéma 🎬</p>
+                        <p className="subtitle">🎵 Blind Test Musical 🎵</p>
                     </div>
 
                     <div className="deezer-banner">
-                        <h3>🤖 Powered by Deezer + Gemini AI</h3>
-                        <p>Détection automatique des films activée !</p>
+                        <h3>🎵 Charger des morceaux</h3>
                         
                         <div className="deezer-options">
                             <div className="deezer-option">
-                                <h4>🔥 Top Chart</h4>
+                                <h4>🔥 Top 50 Mondial</h4>
                                 <Button onClick={handleTopChart} disabled={loading}>
-                                    {loading ? '⏳' : '🎵'} Top 50
+                                    {loading ? '⏳ Chargement...' : '🎵 Charger Top 50'}
                                 </Button>
                             </div>
 
                             <div className="deezer-option">
-                                <h4>🔍 Recherche</h4>
+                                <h4>📋 Playlist Deezer</h4>
                                 <input
                                     type="text"
                                     className="deezer-input"
-                                    placeholder="Artiste, chanson..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                />
-                                <Button onClick={handleSearch} disabled={loading || !searchQuery.trim()}>
-                                    {loading ? '⏳' : '🔍'} Rechercher
-                                </Button>
-                            </div>
-
-                            <div className="deezer-option">
-                                <h4>📋 Playlist Musique</h4>
-                                <input
-                                    type="text"
-                                    className="deezer-input"
-                                    placeholder="URL Deezer..."
+                                    placeholder="https://www.deezer.com/playlist/..."
                                     value={playlistUrl}
                                     onChange={(e) => setPlaylistUrl(e.target.value)}
                                 />
                                 <Button onClick={handlePlaylist} disabled={loading || !playlistUrl.trim()}>
-                                    {loading ? '⏳' : '📋'} Charger
-                                </Button>
-                            </div>
-
-                            <div className="deezer-option cinema">
-                                <h4>🎬 Playlist Films</h4>
-                                <input
-                                    type="text"
-                                    className="deezer-input"
-                                    placeholder="URL playlist BO..."
-                                    value={moviePlaylistUrl}
-                                    onChange={(e) => setMoviePlaylistUrl(e.target.value)}
-                                />
-                                <Button onClick={handleMoviePlaylist} disabled={loading || !moviePlaylistUrl.trim()}>
-                                    {loading ? '⏳' : '🎬'} Charger BO
+                                    {loading ? '⏳ Chargement...' : '📋 Charger Playlist'}
                                 </Button>
                             </div>
                         </div>
@@ -397,10 +203,25 @@
                     </div>
 
                     <div className="mode-grid">
-                        <ModeCard icon="🎯" title="Mode QCM" desc="Choix multiples" onClick={() => name && onStart('qcm', name, numQuestions)} />
-                        <ModeCard icon="✍️" title="Mode Écriture" desc="Titre + Artiste" onClick={() => name && onStart('writing', name, numQuestions)} />
-                        <ModeCard icon="🎬" title="Mode Cinéma" desc="Devine le film !" onClick={() => name && onStart('cinema', name, numQuestions)} />
-                        <ModeCard icon="🎉" title="Mode Soirée" desc="QCM + Écriture !" onClick={() => name && onStart('soiree', name, numQuestions)} special />
+                        <ModeCard 
+                            icon="🎯" 
+                            title="Mode QCM" 
+                            desc="Choix multiples" 
+                            onClick={() => name && onStart('qcm', name, numQuestions)} 
+                        />
+                        <ModeCard 
+                            icon="✍️" 
+                            title="Mode Écriture" 
+                            desc="Titre + Artiste" 
+                            onClick={() => name && onStart('writing', name, numQuestions)} 
+                        />
+                        <ModeCard 
+                            icon="🎉" 
+                            title="Mode Soirée" 
+                            desc="QCM + Écriture !" 
+                            onClick={() => name && onStart('soiree', name, numQuestions)} 
+                            special 
+                        />
                     </div>
 
                     {!name && <p className="warning">⚠️ Entre ton pseudo</p>}
@@ -437,7 +258,11 @@
                                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                                 maxLength={6}
                             />
-                            <Button variant="secondary" onClick={() => onJoinRoom(code)} disabled={code.length !== 6}>
+                            <Button 
+                                variant="secondary" 
+                                onClick={() => onJoinRoom(code)} 
+                                disabled={code.length !== 6}
+                            >
                                 👥 Rejoindre
                             </Button>
                         </div>
@@ -451,47 +276,37 @@
         // ===========================================
         // ÉCRAN LOBBY
         // ===========================================
-        const LobbyScreen = ({ room, isHost, onStart }) => {
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${room.code}`;
-
-            return (
-                <div className="screen">
-                    <h2 className="screen-title">Salle d'attente</h2>
-                    
-                    <div className="code-display-big">
-                        <div className="code-label">Code de la partie</div>
-                        <div className="code-value-big">{room.code}</div>
-                        <p className="code-instruction">📱 Entre ce code pour rejoindre !</p>
-                    </div>
-
-                    <div className="qr-box">
-                        <p className="qr-hint">Ou scanne ce QR Code :</p>
-                        <div className="qr-container">
-                            <img src={qrUrl} alt="QR Code" className="qr-code-big" />
-                        </div>
-                    </div>
-
-                    <div className="players-box">
-                        <h3>👥 Joueurs ({room.players.length})</h3>
-                        {room.players.map((p, i) => (
-                            <div key={i} className="player">
-                                <span className="player-num">{i + 1}</span>
-                                <span className="player-name">{p.name}</span>
-                                {p.name === room.host && <span>👑</span>}
-                            </div>
-                        ))}
-                    </div>
-
-                    {isHost ? (
-                        <Button large onClick={onStart}>▶️ Lancer la partie</Button>
-                    ) : (
-                        <div className="waiting">
-                            <p>⚡ En attente de l'hôte...</p>
-                        </div>
-                    )}
+        const LobbyScreen = ({ room, isHost, onStart }) => (
+            <div className="screen">
+                <h2 className="screen-title">Salle d'attente</h2>
+                
+                <div className="code-display-big">
+                    <div className="code-label">Code de la partie</div>
+                    <div className="code-value-big">{room.code}</div>
+                    <p className="code-instruction">📱 Partage ce code !</p>
                 </div>
-            );
-        };
+
+                <div className="players-box">
+                    <h3>👥 Joueurs ({room.players.length})</h3>
+                    {room.players.map((p, i) => (
+                        <div key={i} className="player">
+                            <span className="player-num">{i + 1}</span>
+                            <span className="player-name">{p.name}</span>
+                            {p.name === room.host && <span>👑</span>}
+                        </div>
+                    ))}
+                </div>
+
+                {isHost ? (
+                    <Button large onClick={onStart}>▶️ Lancer la partie</Button>
+                ) : (
+                    <div className="waiting">
+                        <div className="spinner"></div>
+                        <p>En attente de l'hôte...</p>
+                    </div>
+                )}
+            </div>
+        );
 
         // ===========================================
         // ÉCRAN GAME
@@ -502,7 +317,7 @@
             const [options, setOptions] = useState([]);
             const [correctAns, setCorrectAns] = useState('');
             const [qText, setQText] = useState('');
-            const [inputs, setInputs] = useState({ title: '', artist: '', movie: '' });
+            const [inputs, setInputs] = useState({ title: '', artist: '' });
             const [result, setResult] = useState(null);
 
             const audioRef = useRef(null);
@@ -518,7 +333,7 @@
                 setTime(20);
                 setAnswered(false);
                 setResult(null);
-                setInputs({ title: '', artist: '', movie: '' });
+                setInputs({ title: '', artist: '' });
                 autoSubmitRef.current = false;
 
                 if (audioRef.current) {
@@ -598,15 +413,6 @@
                     } else {
                         msg = `❌ C'était : ${q.title} - ${q.artist}`;
                     }
-                } else if (q.type === 'cinema') {
-                    const movieInput = inputs.movie.toLowerCase().trim();
-                    const movieTitle = q.movieTitle.toLowerCase();
-                    correct = movieInput && (
-                        movieTitle.includes(movieInput) || 
-                        movieInput.includes(movieTitle.split(' ')[0])
-                    );
-                    points = correct ? (50 + timeWhenAnswered * 10) : 0;
-                    msg = correct ? `🎉 Bravo ! +${points} pts` : `❌ C'était : ${q.movieTitle}`;
                 }
 
                 setResult({ correct, msg });
@@ -683,20 +489,6 @@
                             </>
                         )}
 
-                        {q.type === 'cinema' && (
-                            <>
-                                <h3 className="q-text">🎬 De quel film vient cette musique ?</h3>
-                                <input
-                                    className="input"
-                                    placeholder="Titre du film"
-                                    value={inputs.movie}
-                                    onChange={(e) => setInputs({...inputs, movie: e.target.value})}
-                                    disabled={answered}
-                                />
-                                {!answered && <Button onClick={() => submit(null, time)}>Valider</Button>}
-                            </>
-                        )}
-
                         {result && (
                             <div className={`result ${result.correct ? 'correct' : 'wrong'}`}>
                                 {result.msg}
@@ -711,15 +503,22 @@
         // ÉCRAN LEADERBOARD
         // ===========================================
         const LeaderboardScreen = ({ room, onRestart }) => {
+            console.log('🏆 LEADERBOARD - Room:', room);
+            console.log('🏆 Players:', room?.players);
+            
             if (!room || !room.players || room.players.length === 0) {
+                console.error('❌ Pas de room ou players!');
                 return (
                     <div className="screen">
-                        <h2 className="screen-title">Chargement...</h2>
+                        <h2 className="screen-title">Erreur</h2>
+                        <p>Impossible d'afficher le classement</p>
+                        <Button large onClick={onRestart}>🏠 Retour</Button>
                     </div>
                 );
             }
 
             const sorted = [...room.players].sort((a, b) => b.score - a.score);
+            console.log('🏆 Classement:', sorted);
 
             return (
                 <div className="screen">
@@ -763,7 +562,6 @@
             const [isHost, setIsHost] = useState(false);
             const [deezer] = useState(new DeezerAPI());
             const [musicDB, setMusicDB] = useState([]);
-            const [movieMusicDB, setMovieMusicDB] = useState([]);
 
             const pollRef = useRef(null);
 
@@ -772,35 +570,49 @@
                     pollRef.current = setInterval(() => {
                         const latest = storage.get(`room:${room.code}`);
                         if (latest) {
+                            console.log('📊 Polling update:', latest);
                             setRoom(latest);
+                            
                             if (latest.started && screen === 'lobby') {
+                                console.log('▶️ Partie lancée, passage au jeu');
                                 setScreen('game');
                             }
+                            
                             if (latest.currentQ >= latest.questions.length && screen === 'game') {
+                                console.log('🏁 Partie terminée, passage au leaderboard');
                                 clearInterval(pollRef.current);
-                                setTimeout(() => setScreen('leaderboard'), 1000);
+                                setTimeout(() => {
+                                    console.log('🏆 Affichage leaderboard avec:', latest.players);
+                                    setScreen('leaderboard');
+                                }, 1500);
                             }
                         }
                     }, 1000);
                 }
-                return () => clearInterval(pollRef.current);
+                return () => {
+                    if (pollRef.current) {
+                        clearInterval(pollRef.current);
+                    }
+                };
             }, [room?.code, screen]);
 
             const handleStart = (selectedMode, name, numQs) => {
+                if (musicDB.length === 0) {
+                    alert('⚠️ Charge des morceaux d\'abord !');
+                    return;
+                }
                 setMode(selectedMode);
                 setPlayerName(name);
                 setNumQuestions(numQs);
                 setScreen('join');
             };
 
-            const handleLoadDeezerData = async (type, param) => {
+            const handleLoadDeezer = async (type, param) => {
                 try {
                     let tracks = [];
                     
                     if (type === 'chart') {
                         tracks = await deezer.getChart(50);
-                    } else if (type === 'search') {
-                        tracks = await deezer.searchTracks(param, 50);
                     } else if (type === 'playlist') {
                         tracks = await deezer.getPlaylistTracks(param);
                     }
@@ -816,50 +628,19 @@
                 }
             };
 
-            const handleLoadMovieMusic = async (playlistId) => {
-                try {
-                    const tracks = await deezer.getPlaylistTracks(playlistId);
-                    if (tracks.length === 0) {
-                        alert('❌ Playlist vide');
-                        return;
-                    }
-
-                    console.log(`📀 ${tracks.length} morceaux chargés, analyse...`);
-                    const movies = analyzeMoviePlaylist(tracks);
-                    
-                    setMovieMusicDB(movies);
-                    
-                    if (movies.length > 0) {
-                        alert(`✅ ${movies.length} films détectés sur ${tracks.length} morceaux !`);
-                        console.log('🎬 Films:', movies.map(m => m.movieTitle));
-                    } else {
-                        alert('❌ Aucun film détecté dans cette playlist !\n\nEssaie une playlist avec des bandes originales de films.');
-                    }
-                } catch (error) {
-                    alert(`❌ Erreur : ${error.message}`);
-                }
-            };
-
             const createRoom = () => {
                 const code = genCode();
-                const questionsDB = mode === 'cinema' ? movieMusicDB : musicDB;
-                
-                if (questionsDB.length === 0) {
-                    alert('⚠️ Charge des morceaux d\'abord !');
-                    setScreen('home');
-                    return;
-                }
-
                 const newRoom = {
                     code,
                     mode,
                     host: playerName,
                     players: [{ name: playerName, score: 0 }],
-                    questions: prepareQuestions(mode, musicDB, numQuestions, movieMusicDB),
+                    questions: prepareQuestions(mode, musicDB, numQuestions),
                     currentQ: 0,
                     started: false
                 };
                 
+                console.log('🎮 Création room:', newRoom);
                 storage.set(`room:${code}`, newRoom);
                 setRoom(newRoom);
                 setPlayerIdx(0);
@@ -869,6 +650,8 @@
 
             const joinRoom = (code) => {
                 const existing = storage.get(`room:${code}`);
+                console.log('🔍 Recherche room:', code, existing);
+                
                 if (!existing) { 
                     alert('❌ Code invalide !'); 
                     return; 
@@ -879,6 +662,7 @@
                 }
 
                 existing.players.push({ name: playerName, score: 0 });
+                console.log('👥 Nouveau joueur, room:', existing);
                 storage.set(`room:${code}`, existing);
                 setRoom(existing);
                 setPlayerIdx(existing.players.length - 1);
@@ -888,6 +672,7 @@
 
             const startGame = () => {
                 const updated = { ...room, started: true };
+                console.log('▶️ Lancement partie:', updated);
                 storage.set(`room:${room.code}`, updated);
                 setRoom(updated);
                 setScreen('game');
@@ -898,15 +683,21 @@
                 updated.players[playerIdx].score += points;
                 updated.currentQ += 1;
                 
+                console.log('✅ Réponse validée, nouvelle room:', updated);
                 storage.set(`room:${room.code}`, updated);
                 setRoom(updated);
 
                 if (updated.currentQ >= updated.questions.length) {
-                    setTimeout(() => setScreen('leaderboard'), 1000);
+                    console.log('🏁 Dernière question, fin de partie');
+                    setTimeout(() => {
+                        console.log('🏆 Passage au leaderboard');
+                        setScreen('leaderboard');
+                    }, 1500);
                 }
             };
 
             const restart = () => {
+                console.log('🔄 Restart');
                 if (pollRef.current) clearInterval(pollRef.current);
                 setScreen('home');
                 setRoom(null);
@@ -920,8 +711,7 @@
                     {screen === 'home' && (
                         <HomeScreen 
                             onStart={handleStart}
-                            onLoadDeezerData={handleLoadDeezerData}
-                            onLoadMovieMusic={handleLoadMovieMusic}
+                            onLoadDeezer={handleLoadDeezer}
                         />
                     )}
                     {screen === 'join' && (
@@ -943,7 +733,7 @@
                             room={room}
                             playerIndex={playerIdx}
                             onAnswer={handleAnswer}
-                            musicDB={musicDB.length > 0 ? musicDB : movieMusicDB}
+                            musicDB={musicDB}
                         />
                     )}
                     {screen === 'leaderboard' && room && (
@@ -1034,50 +824,40 @@
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 2rem;
-            max-width: 1000px;
+            max-width: 900px;
             width: 100%;
         }
 
         .deezer-banner h3 {
             color: #ffbe0b;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-
-        .deezer-banner > p {
-            text-align: center;
-            color: #00ff64;
             margin-bottom: 1.5rem;
-            font-weight: 600;
+            text-align: center;
+            font-size: 1.5rem;
         }
 
         .deezer-options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
         }
 
         .deezer-option {
             background: rgba(0, 0, 0, 0.3);
-            padding: 1.2rem;
+            padding: 1.5rem;
             border-radius: 15px;
             border: 2px solid #8338ec;
         }
 
-        .deezer-option.cinema {
-            border-color: #ff006e;
-        }
-
         .deezer-option h4 {
             color: #ff006e;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
             font-size: 1.1rem;
         }
 
         .deezer-input {
             width: 100%;
-            padding: 0.7rem;
-            margin-bottom: 0.7rem;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #8338ec;
             border-radius: 10px;
@@ -1258,7 +1038,6 @@
             font-weight: 800;
             text-align: center;
             letter-spacing: 0.3em;
-            text-transform: uppercase;
         }
 
         .btn {
@@ -1333,31 +1112,6 @@
             margin-top: 1rem;
         }
 
-        .qr-box {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .qr-hint {
-            color: #aaa;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .qr-container {
-            background: white;
-            padding: 1rem;
-            border-radius: 20px;
-            display: inline-block;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .qr-code-big {
-            width: 300px;
-            height: 300px;
-            display: block;
-        }
-
         .players-box {
             background: #1a1f3a;
             border: 2px solid #8338ec;
@@ -1402,8 +1156,26 @@
         .waiting {
             text-align: center;
             margin-top: 2rem;
+        }
+
+        .waiting p {
             font-size: 1.2rem;
             color: #ffbe0b;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #ff006e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .game-header {
@@ -1643,6 +1415,7 @@
             .options { grid-template-columns: 1fr; }
             .join-grid { flex-direction: column; }
             .deezer-options { grid-template-columns: 1fr; }
+            .code-value-big { font-size: 3.5rem; }
         }
     </style>
 </body>
