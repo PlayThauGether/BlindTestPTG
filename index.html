@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -229,247 +229,193 @@
             padding: 2rem;
             width: 100%;
             max-width: 600px;
+            margin: 1rem 0;
+        }
+
+        .player-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #00f5ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-name { flex: 1; }
+        .player-score { color: #ffbe0b; font-size: 1.1rem; }
+
+        /* GAME */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+        }
+
+        .info-item { text-align: center; flex: 1; }
+        .info-label { color: #aaa; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .info-value { font-size: 2rem; font-weight: 800; }
+
+        #timer { color: #ff006e; }
+        #question-num { color: #00f5ff; }
+        #score { color: #ffbe0b; }
+
+        .album-cover {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 2rem auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .album-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.5s;
+        }
+
+        .question-box {
+            text-align: center;
+            margin: 2rem 0;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #question-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #00f5ff;
             margin-bottom: 2rem;
         }
 
-        .players-box h3 { color: #00f5ff; margin-bottom: 1rem; }
-
-        .player {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .player-num {
-            background: #8338ec;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-        }
-
-        .player-name { flex: 1; font-weight: 600; }
-
-        .waiting { text-align: center; margin-top: 2rem; }
-        .waiting p { font-size: 1.2rem; color: #ffbe0b; margin-top: 1rem; }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #ff006e;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* GAME */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 1.5rem;
-            background: #1a1f3a;
-            padding: 1rem 1.5rem;
-            border-radius: 15px;
-            border: 2px solid #8338ec;
-            font-weight: 800;
-        }
-
-        .timer { color: #ff006e; font-size: 1.3rem; }
-        .score { color: #ffbe0b; font-size: 1.3rem; }
-
-        .game-container {
-            display: flex;
-            gap: 2rem;
-            width: 100%;
-            max-width: 1200px;
-            align-items: flex-start;
-        }
-
-        .game-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .scoreboard-side {
-            width: 250px;
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
-            border-radius: 20px;
-            padding: 1.5rem;
-            position: sticky;
-            top: 20px;
-        }
-
-        .scoreboard-side h3 {
-            color: #00f5ff;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-
-        .score-item.me {
-            background: rgba(255, 190, 11, 0.2);
-            border: 1px solid #ffbe0b;
-        }
-
-        .score-name { font-weight: 600; }
-        .score-points { color: #ffbe0b; font-weight: 800; }
-
-        .img-box {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto 1.5rem;
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .cover {
-            width: 100%;
-            height: 400px;
-            object-fit: cover;
-            transition: filter 0.3s ease;
-        }
-
-        .answer-reveal {
-            text-align: center;
-            margin-top: 1rem;
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 15px;
-            border: 2px solid #00f5ff;
-        }
-
-        .answer-reveal h4 {
-            color: #00f5ff;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
-
-        .answer-reveal .answer-text {
-            color: #ffbe0b;
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-
-        .audio-box { text-align: center; margin: 1rem 0; }
-
-        .audio-btn {
-            background: linear-gradient(135deg, #ffbe0b, #ff006e);
-            color: white;
-            border: none;
-            padding: 0.8rem 2rem;
-            font-size: 1rem;
-            font-weight: 800;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        .question-box { width: 100%; max-width: 600px; margin: 0 auto; }
-
-        .q-text {
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #00f5ff;
-            margin-bottom: 1.5rem;
-        }
-
-        .options {
+        #options-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin-bottom: 1.5rem;
+            margin-top: 2rem;
         }
 
         .opt {
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid #8338ec;
-            padding: 1.5rem;
-            border-radius: 15px;
             color: white;
-            cursor: pointer;
+            padding: 1.2rem;
             font-size: 1.1rem;
             font-weight: 600;
+            border-radius: 15px;
+            cursor: pointer;
             transition: all 0.3s;
+            font-family: 'Montserrat', sans-serif;
         }
 
-        .opt:hover { background: rgba(131, 56, 236, 0.2); transform: scale(1.05); }
-        .opt.correct { background: rgba(0, 255, 100, 0.2); border-color: #00ff64; }
-        .opt.wrong { background: rgba(255, 0, 0, 0.2); border-color: #ff0033; }
-        .opt.disabled { cursor: not-allowed; opacity: 0.6; }
+        .opt:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
 
-        .result {
-            margin-top: 1.5rem;
-            padding: 1.5rem;
+        .opt.disabled { cursor: not-allowed; opacity: 0.6; }
+        .opt.correct { background: linear-gradient(135deg, #00f5a0, #00d9ff); border-color: #00f5a0; }
+        .opt.wrong { background: linear-gradient(135deg, #ff006e, #ff4444); border-color: #ff006e; }
+
+        #writing-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        #writing-container .input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #8338ec;
+        }
+
+        #result-container {
+            margin-top: 2rem;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        #result-container.correct {
+            background: linear-gradient(135deg, #00f5a0, #00d9ff);
+            color: #0a0e27;
+        }
+
+        #result-container.wrong {
+            background: linear-gradient(135deg, #ff006e, #ff4444);
+            color: white;
+        }
+
+        #answer-reveal {
+            margin-top: 2rem;
+            padding: 1.5rem 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffbe0b;
             border-radius: 15px;
             text-align: center;
-            font-size: 1.3rem;
-            font-weight: 800;
         }
 
-        .result.correct { background: rgba(0, 255, 100, 0.2); border: 2px solid #00ff64; color: #00ff64; }
-        .result.wrong { background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0033; color: #ff6b6b; }
-
-        /* LEADERBOARD */
-        .leaderboard-title {
-            font-size: 3rem;
+        #answer-text {
+            font-size: 1.5rem;
             font-weight: 800;
             color: #ffbe0b;
-            margin-bottom: 2rem;
-            text-shadow: 0 0 20px rgba(255, 190, 11, 0.5);
         }
 
-        .podium {
+        /* LEADERBOARD */
+        #podium-container {
             display: flex;
-            gap: 1rem;
             justify-content: center;
+            align-items: flex-end;
+            gap: 1rem;
             margin: 2rem 0;
             flex-wrap: wrap;
         }
 
         .podium-item {
-            background: #1a1f3a;
-            border: 3px solid #8338ec;
+            background: linear-gradient(135deg, #1a1f3a, #2a2f4a);
+            border: 3px solid;
             border-radius: 20px;
             padding: 2rem 1.5rem;
             text-align: center;
-            min-width: 150px;
+            min-width: 180px;
         }
 
-        .medal { font-size: 3rem; margin-bottom: 0.5rem; }
-        .p-name { font-weight: 800; font-size: 1.2rem; color: #ffbe0b; margin: 0.5rem 0; }
-        .p-score { font-size: 1.5rem; font-weight: 800; color: #ff006e; }
+        .podium-item:nth-child(1) {
+            border-color: #ffbe0b;
+            order: 2;
+            min-height: 250px;
+        }
 
-        .leaderboard {
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
-            border-radius: 20px;
-            padding: 1.5rem;
+        .podium-item:nth-child(2) {
+            border-color: #c0c0c0;
+            order: 1;
+            min-height: 200px;
+        }
+
+        .podium-item:nth-child(3) {
+            border-color: #cd7f32;
+            order: 3;
+            min-height: 180px;
+        }
+
+        .medal { font-size: 3rem; margin-bottom: 1rem; }
+        .p-name { font-size: 1.2rem; font-weight: 800; color: #00f5ff; margin-bottom: 0.5rem; }
+        .p-score { font-size: 1.5rem; font-weight: 800; color: #ffbe0b; }
+
+        #leaderboard-container {
             width: 100%;
             max-width: 600px;
             margin: 2rem 0;
@@ -477,258 +423,267 @@
 
         .lb-row {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem;
             background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 1.5rem;
             border-radius: 10px;
             margin-bottom: 0.5rem;
         }
 
-        .rank {
-            background: #8338ec;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-        }
+        .rank { color: #aaa; font-weight: 800; width: 50px; }
+        .name { flex: 1; font-weight: 600; color: #00f5ff; }
+        .pts { color: #ffbe0b; font-weight: 800; }
 
-        .name { flex: 1; font-weight: 600; }
-        .pts { font-weight: 800; color: #ffbe0b; font-size: 1.2rem; }
-
-        /* LOADING */
-        .loading-overlay {
+        /* LEVEL TRANSITION */
+        .level-transition {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: linear-gradient(135deg, #8338ec, #ff006e);
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            z-index: 9999;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s;
         }
 
-        .loading-text {
-            color: #ffbe0b;
-            font-size: 1.5rem;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .level-transition h1 {
+            font-size: 5rem;
             font-weight: 800;
-            margin-top: 2rem;
-        }
-
-        /* BOUTON SECOURS */
-        .emergency-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 0, 0, 0.8);
             color: white;
-            border: none;
-            padding: 1rem 1.5rem;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 800;
-            z-index: 9999;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            font-family: 'Montserrat', sans-serif;
+            text-shadow: 0 0 50px rgba(255, 255, 255, 0.5);
+            margin-bottom: 1rem;
+            animation: scaleIn 0.5s;
         }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.5); }
+            to { transform: scale(1); }
+        }
+
+        .level-transition p {
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* ALL-TIME LEADERBOARD */
+        .leaderboard-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #8338ec;
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            border-color: #ff006e;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #alltime-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem 0;
+        }
+
+        .alltime-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid;
+        }
+
+        .alltime-row:nth-child(1) { border-left-color: #ffbe0b; }
+        .alltime-row:nth-child(2) { border-left-color: #c0c0c0; }
+        .alltime-row:nth-child(3) { border-left-color: #cd7f32; }
+        .alltime-row:nth-child(n+4) { border-left-color: #8338ec; }
 
         @media (max-width: 768px) {
             .title { font-size: 2.5rem; }
-            .options { grid-template-columns: 1fr; }
-            .cover { height: 300px; }
+            .subtitle { font-size: 0.9rem; }
             .code-value { font-size: 3rem; }
-            .game-container { flex-direction: column; }
-            .scoreboard-side { width: 100%; position: relative; }
+            #options-container { grid-template-columns: 1fr; }
+            .album-cover { width: 250px; height: 250px; }
         }
     </style>
 </head>
 <body>
+    <div class="bg"></div>
     <div class="app">
-        <div class="bg"></div>
-
-        <!-- LOADING -->
-        <div id="loading-overlay" class="loading-overlay hidden">
-            <div class="spinner"></div>
-            <div class="loading-text" id="loading-text">Chargement...</div>
-        </div>
-
-        <!-- MENU -->
+        <!-- MENU PRINCIPAL -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <h1 class="title">BLIND TEST 🎵</h1>
-                <p class="subtitle">By Play Thau'Gether</p>
+                <h1 class="title">QUIZ PARTY</h1>
+                <p class="subtitle">Blind Test Musical</p>
             </div>
             <div class="menu-buttons">
-                <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
-                <button class="btn large secondary" onclick="goToJoin()">👥 Rejoindre une partie</button>
-                <button class="btn" onclick="goToPlaylists()">📋 Gérer Playlists</button>
+                <button class="btn large" onclick="goToHost()">🎮 Créer une partie</button>
+                <button class="btn large secondary" onclick="goToJoin()">🎯 Rejoindre</button>
             </div>
         </div>
 
-        <!-- PLAYLISTS -->
-        <div id="playlists-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">📋 Mes Playlists</h2>
-            
-            <div class="playlists-box">
-                <h3 style="color: #00f5ff; margin-bottom: 1rem;">Playlists enregistrées</h3>
-                <div id="playlists-list"></div>
-                <button class="btn" onclick="showAddPlaylist()" style="margin-top: 1rem;">➕ Ajouter une playlist</button>
-            </div>
+        <!-- CRÉER UNE PARTIE (HÔTE) -->
+        <div id="host-screen" class="screen hidden">
+            <h2 style="color: #00f5ff; margin-bottom: 2rem; font-size: 2rem;">🎮 Configuration de la partie</h2>
 
-            <div id="add-playlist-form" class="section hidden">
-                <h3>Nouvelle Playlist</h3>
-                <input id="new-playlist-name" class="input" placeholder="Nom de la playlist">
-                <input id="new-playlist-url" class="input" placeholder="URL Deezer">
-                <button class="btn" onclick="savePlaylist()">💾 Enregistrer</button>
-            </div>
-
-            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
-        </div>
-
-        <!-- CREATE -->
-        <div id="create-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">🎮 Créer une partie</h2>
-            
-            <input id="create-name" class="input" placeholder="Ton pseudo" maxlength="20">
-            
             <div class="section">
-                <h3>🎯 Mode de jeu</h3>
-                <select id="create-mode" class="select">
-                    <option value="qcm">QCM (Choix multiples)</option>
-                    <option value="writing">Écriture (Titre + Artiste)</option>
-                    <option value="title-only">Titres uniquement</option>
-                    <option value="soiree">Soirée (Mix QCM + Écriture)</option>
+                <h3>👤 Ton pseudo</h3>
+                <input type="text" id="host-name" class="input" placeholder="Entre ton pseudo" maxlength="20">
+            </div>
+
+            <div class="section">
+                <h3>🎵 Nombre de questions</h3>
+                <div class="num-grid" id="num-questions-grid"></div>
+            </div>
+
+            <div class="section">
+                <h3>🎮 Mode de jeu</h3>
+                <select id="game-mode" class="select">
+                    <option value="qcm">QCM</option>
+                    <option value="writing">Écriture</option>
+                    <option value="party">Soirée (Mix)</option>
                 </select>
             </div>
 
             <div class="section">
-                <h3>⚙️ Options</h3>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="host-mode">
-                    <span>Mode Hôte (Affichage seulement)</span>
-                </label>
                 <label class="checkbox-label">
                     <input type="checkbox" id="distance-mode">
-                    <span>Mode Distance (Son sur tous les appareils)</span>
+                    <span>🌍 Mode Distance (chacun écoute de son côté)</span>
                 </label>
             </div>
 
             <div class="section">
-                <h3>🔢 Nombre de questions</h3>
-                <div class="num-grid">
-                    <button class="num-btn" onclick="selectNumQ(5)">5</button>
-                    <button class="num-btn active" onclick="selectNumQ(10)">10</button>
-                    <button class="num-btn" onclick="selectNumQ(15)">15</button>
-                    <button class="num-btn" onclick="selectNumQ(20)">20</button>
-                    <button class="num-btn" onclick="selectNumQ(30)">30</button>
-                </div>
+                <h3>📋 Playlists Spotify</h3>
+                <input type="text" id="playlist-name" class="input" placeholder="Nom de la playlist">
+                <input type="text" id="playlist-url" class="input" placeholder="URL Spotify">
+                <button class="btn secondary" onclick="addPlaylist()">➕ Ajouter</button>
             </div>
 
-            <div class="section">
-                <h3>🎵 Choisir une playlist</h3>
-                <select id="playlist-select" class="select">
-                    <option value="">-- Sélectionner --</option>
-                </select>
-                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
-                    Ou ajouter une URL personnalisée :
-                </p>
-                <input id="custom-playlist-url" class="input" placeholder="URL Playlist Deezer">
-                <button class="btn large" onclick="loadAndCreate()">🚀 Créer la partie</button>
-            </div>
+            <div class="playlists-box" id="playlists-list"></div>
 
-            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
+            <button class="btn large" onclick="createRoom()" id="create-room-btn" disabled>🚀 Lancer la partie</button>
+            <button class="btn" onclick="goToMenu()">← Retour</button>
         </div>
 
-        <!-- JOIN -->
+        <!-- REJOINDRE UNE PARTIE -->
         <div id="join-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Rejoindre</h2>
-            <input id="join-name" class="input" placeholder="Ton pseudo" maxlength="20">
-            <input id="join-code" class="input code-input" placeholder="123456" type="tel" maxlength="6">
-            <button class="btn large" onclick="joinRoom()">▶️ Rejoindre</button>
-            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
+            <h2 style="color: #00f5ff; margin-bottom: 2rem; font-size: 2rem;">🎯 Rejoindre une partie</h2>
+            
+            <input type="text" id="player-name" class="input" placeholder="Entre ton pseudo" maxlength="20">
+            <input type="text" id="room-code" class="input code-input" placeholder="CODE" maxlength="4" style="text-transform: uppercase;">
+            
+            <button class="btn large" onclick="joinRoom()">✅ Rejoindre</button>
+            <button class="btn" onclick="goToMenu()">← Retour</button>
         </div>
 
-        <!-- LOBBY -->
+        <!-- LOBBY (ATTENTE) -->
         <div id="lobby-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">Salle d'attente</h2>
-            
             <div class="code-display">
-                <div class="code-label">Code de la partie</div>
-                <div class="code-value" id="lobby-code">000000</div>
+                <p class="code-label">Code de la partie</p>
+                <p class="code-value" id="room-code-display">----</p>
             </div>
 
             <div class="players-box">
-                <h3>👥 Joueurs (<span id="player-count">0</span>)</h3>
+                <h3 style="color: #00f5ff; margin-bottom: 1rem; text-align: center;">👥 Joueurs connectés</h3>
                 <div id="players-list"></div>
             </div>
 
-            <button id="start-btn" class="btn large hidden" onclick="startGame()">▶️ Lancer la partie</button>
-            <div id="waiting-div" class="waiting hidden">
-                <div class="spinner"></div>
-                <p>En attente de l'hôte...</p>
-            </div>
+            <button class="btn large" id="start-game-btn" onclick="startGame()" style="display: none;">🎮 Démarrer le jeu</button>
+            <button class="btn danger" onclick="leaveRoom()">❌ Quitter</button>
         </div>
 
-        <!-- GAME -->
+        <!-- JEU -->
         <div id="game-screen" class="screen hidden">
-            <div class="game-header">
-                <div class="timer">⏱️ <span id="timer">20</span>s</div>
-                <div>Q <span id="current-q">1</span>/<span id="total-q">10</span></div>
-                <div class="score">🏆 <span id="player-score">0</span></div>
+            <div class="game-info">
+                <div class="info-item">
+                    <p class="info-label">Temps</p>
+                    <p class="info-value" id="timer">20</p>
+                </div>
+                <div class="info-item">
+                    <p class="info-label">Question</p>
+                    <p class="info-value" id="question-num">1/10</p>
+                </div>
+                <div class="info-item">
+                    <p class="info-label">Score</p>
+                    <p class="info-value" id="score">0</p>
+                </div>
             </div>
 
-            <div class="game-container">
-                <!-- SCOREBOARD TEMPS RÉEL -->
-                <div id="scoreboard-side" class="scoreboard-side">
-                    <h3>🏆 Scores</h3>
-                    <div id="live-scores"></div>
+            <div class="album-cover" id="cover-container">
+                <img id="cover-img" src="" alt="Cover">
+            </div>
+
+            <audio id="audio-player" style="display: none;"></audio>
+            
+            <button class="btn" onclick="toggleAudio()" id="audio-toggle-btn" style="display: none;">🎵 Play</button>
+
+            <div class="question-box">
+                <p id="question-text">Quel est ce titre ?</p>
+                
+                <div id="options-container" class="hidden"></div>
+
+                <div id="writing-container" class="hidden">
+                    <input type="text" id="input-artist" class="input" placeholder="Artiste">
+                    <input type="text" id="input-title" class="input" placeholder="Titre">
+                    <input type="number" id="input-year" class="input hidden" placeholder="Année de sortie">
+                    <button class="btn large" onclick="submitWriting()">✅ Valider</button>
                 </div>
 
-                <!-- GAME PRINCIPAL -->
-                <div class="game-main">
-                    <div class="img-box">
-                        <img id="cover-img" class="cover" src="" alt="Cover">
-                        <div id="answer-reveal" class="answer-reveal hidden">
-                            <h4>Réponse :</h4>
-                            <div class="answer-text" id="answer-text"></div>
-                        </div>
-                    </div>
-
-                    <div id="audio-box" class="audio-box hidden">
-                        <audio id="audio-player" loop></audio>
-                        <button class="audio-btn" onclick="toggleAudio()">🎵 Play</button>
-                    </div>
-
-                    <div class="question-box">
-                        <h3 id="question-text" class="q-text"></h3>
-                        <div id="options-container" class="options hidden"></div>
-                        <div id="writing-container" class="hidden">
-                            <input id="input-title" class="input" placeholder="Titre">
-                            <input id="input-artist" class="input" placeholder="Artiste">
-                            <button class="btn" onclick="submitWriting()">Valider</button>
-                        </div>
-                        <div id="result-container" class="result hidden"></div>
-                    </div>
+                <div id="result-container" class="hidden"></div>
+                <div id="answer-reveal" class="hidden">
+                    <p id="answer-text"></p>
                 </div>
             </div>
         </div>
 
         <!-- LEADERBOARD -->
         <div id="leaderboard-screen" class="screen hidden">
-            <h1 class="leaderboard-title">🏆 CLASSEMENT FINAL 🏆</h1>
-            <div id="podium-container" class="podium"></div>
-            <div id="leaderboard-container" class="leaderboard"></div>
-            <button class="btn large" onclick="restartGame()">🏠 Nouvelle partie</button>
-        </div>
+            <h2 style="color: #00f5ff; margin-bottom: 2rem; font-size: 2.5rem;">🏆 Classement</h2>
 
-        <!-- BOUTON SECOURS -->
-        <button id="emergency-btn" class="emergency-btn hidden" onclick="emergencyReset()">🏠 MENU</button>
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" onclick="switchLeaderboardTab('game')">Cette partie</button>
+                <button class="tab-btn" onclick="switchLeaderboardTab('alltime')">Tous les temps</button>
+            </div>
+
+            <div id="game-leaderboard">
+                <div id="podium-container"></div>
+                <div id="leaderboard-container"></div>
+            </div>
+
+            <div id="alltime-leaderboard" class="hidden">
+                <div id="alltime-container"></div>
+            </div>
+
+            <button class="btn large" onclick="restartGame()">🔄 Nouvelle partie</button>
+        </div>
     </div>
 
     <!-- FIREBASE -->
@@ -737,626 +692,570 @@
 
     <script>
         // ===========================================
-        // CONFIG (À déplacer dans variables d'environnement pour production)
+        // FIREBASE CONFIG
         // ===========================================
-        const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyAWA-Zfs_hljCFz1wc0Rg2LJWZPINWONnU",
-            authDomain: "quizz-party-ptg.firebaseapp.com",
-            databaseURL: "https://quizz-party-ptg-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "quizz-party-ptg",
-            storageBucket: "quizz-party-ptg.firebasestorage.app",
-            messagingSenderId: "352511986737",
-            appId: "1:352511986737:web:7318d807b4d3f3b6b29910"
+        const firebaseConfig = {
+            apiKey: "AIzaSyAQTbZe3gqS5d0YGb6_kT5OYZLgBnKlLHU",
+            authDomain: "quiz-party-7eab2.firebaseapp.com",
+            databaseURL: "https://quiz-party-7eab2-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "quiz-party-7eab2",
+            storageBucket: "quiz-party-7eab2.firebasestorage.app",
+            messagingSenderId: "878623844089",
+            appId: "1:878623844089:web:db28e9d7d39c2bac42bdb7"
         };
 
-        firebase.initializeApp(FIREBASE_CONFIG);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // ===========================================
-        // ÉTAT GLOBAL
+        // STATE
         // ===========================================
-        let currentScreen = 'menu';
-        let gameState = {
+        const gameState = {
+            playlists: [],
             room: null,
-            playerIndex: 0,
+            playerIndex: -1,
             isHost: false,
-            numQuestions: 10,
-            musicDB: [],
+            distanceMode: false,
             currentTime: 20,
             timerInterval: null,
-            answered: false,
             roomRef: null,
-            audioPlaying: false,
-            hostDisplayOnly: false,
-            distanceMode: false
+            answered: false,
+            correctAnswer: '',
+            usedArtistsForOptions: [], // Pour éviter de répéter les mêmes artistes
+            currentLevel: 1,
+            questionsPerLevel: [],
+            autoCheckInterval: null // Pour la détection automatique en mode écriture
         };
 
         // ===========================================
-        // DEEZER API
+        // SCREENS
         // ===========================================
-        const proxies = ['', 'https://corsproxy.io/?', 'https://api.codetabs.com/v1/proxy?quest='];
-
-        async function fetchWithProxy(url) {
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    const finalUrl = proxies[i] + encodeURIComponent(url);
-                    const response = await fetch(finalUrl);
-                    if (!response.ok) throw new Error('Erreur');
-                    return await response.json();
-                } catch (error) {
-                    if (i === proxies.length - 1) throw error;
-                }
-            }
-        }
-
-        async function getDeezerPlaylist(id) {
-            const data = await fetchWithProxy(`https://api.deezer.com/playlist/${id}`);
-            return data.tracks.data
-                .filter(t => t.preview && t.album && t.album.cover_big)
-                .map(t => ({
-                    title: t.title,
-                    artist: t.artist.name,
-                    cover: t.album.cover_big,
-                    preview: t.preview
-                }));
-        }
-
-        // Tester si une preview fonctionne
-        async function testPreview(url) {
-            return new Promise((resolve) => {
-                const audio = new Audio(url);
-                audio.addEventListener('canplaythrough', () => resolve(true), { once: true });
-                audio.addEventListener('error', () => resolve(false), { once: true });
-                audio.load();
-                setTimeout(() => resolve(false), 3000); // Timeout 3s
-            });
-        }
-
-        // Filtrer les musiques cassées
-        async function filterWorkingTracks(tracks) {
-            showLoading('Test des musiques...');
-            const results = [];
-            
-            for (let i = 0; i < tracks.length; i++) {
-                updateLoading(`Test ${i + 1}/${tracks.length}...`);
-                const works = await testPreview(tracks[i].preview);
-                if (works) {
-                    results.push(tracks[i]);
-                }
-            }
-            
-            hideLoading();
-            return results;
-        }
-
-        // ===========================================
-        // UTILS
-        // ===========================================
-        function shuffle(arr) {
-            return [...arr].sort(() => Math.random() - 0.5);
-        }
-
-        function genCode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
-
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
-            currentScreen = screenId.replace('-screen', '');
-            
-            const emergency = document.getElementById('emergency-btn');
-            if (screenId === 'menu-screen' || screenId === 'leaderboard-screen') {
-                emergency.classList.add('hidden');
-            } else {
-                emergency.classList.remove('hidden');
-            }
         }
 
-        function showLoading(text) {
-            document.getElementById('loading-text').textContent = text;
-            document.getElementById('loading-overlay').classList.remove('hidden');
-        }
-
-        function updateLoading(text) {
-            document.getElementById('loading-text').textContent = text;
-        }
-
-        function hideLoading() {
-            document.getElementById('loading-overlay').classList.add('hidden');
-        }
-
-        // Fonction pour vérifier similarité (tolérance 1 lettre)
-        function isSimilar(a, b) {
-            a = a.toLowerCase().trim();
-            b = b.toLowerCase().trim();
-            
-            if (a === b) return true;
-            if (Math.abs(a.length - b.length) > 1) return false;
-            
-            let diff = 0;
-            const maxLen = Math.max(a.length, b.length);
-            
-            for (let i = 0; i < maxLen; i++) {
-                if (a[i] !== b[i]) diff++;
-                if (diff > 1) return false;
-            }
-            
-            return diff <= 1;
-        }
-
-        // ===========================================
-        // NAVIGATION
-        // ===========================================
         function goToMenu() {
-            if (gameState.roomRef) gameState.roomRef.off();
-            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-            gameState = {
-                room: null,
-                playerIndex: 0,
-                isHost: false,
-                numQuestions: 10,
-                musicDB: [],
-                currentTime: 20,
-                timerInterval: null,
-                answered: false,
-                roomRef: null,
-                audioPlaying: false,
-                hostDisplayOnly: false,
-                distanceMode: false
-            };
+            if (gameState.roomRef) {
+                gameState.roomRef.off();
+                gameState.roomRef = null;
+            }
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            if (gameState.autoCheckInterval) {
+                clearInterval(gameState.autoCheckInterval);
+            }
+            gameState.room = null;
+            gameState.playerIndex = -1;
+            gameState.isHost = false;
+            gameState.usedArtistsForOptions = [];
             showScreen('menu-screen');
         }
 
-        function goToCreate() {
-            loadPlaylistsSelect();
-            showScreen('create-screen');
+        function goToHost() {
+            showScreen('host-screen');
+            renderNumGrid();
         }
 
         function goToJoin() {
             showScreen('join-screen');
         }
 
-        function goToPlaylists() {
-            loadPlaylists();
-            showScreen('playlists-screen');
+        // ===========================================
+        // NUM GRID
+        // ===========================================
+        function renderNumGrid() {
+            const grid = document.getElementById('num-questions-grid');
+            grid.innerHTML = '';
+            for (let i = 5; i <= 50; i += 5) {
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.textContent = i;
+                btn.onclick = () => selectNumQuestions(i, btn);
+                grid.appendChild(btn);
+            }
         }
 
-        function emergencyReset() {
-            if (confirm('Retour au menu ? La partie en cours sera perdue.')) {
-                goToMenu();
-            }
+        function selectNumQuestions(num, btn) {
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            gameState.numQuestions = num;
+            updateCreateButton();
         }
 
         // ===========================================
         // PLAYLISTS
         // ===========================================
-        async function loadPlaylists() {
-            const snapshot = await db.ref('playlists').once('value');
-            const playlists = snapshot.val() || {};
-            
-            const container = document.getElementById('playlists-list');
-            container.innerHTML = '';
-            
-            if (Object.keys(playlists).length === 0) {
-                container.innerHTML = '<p style="color: #aaa; text-align: center;">Aucune playlist enregistrée</p>';
-                return;
-            }
-            
-            Object.entries(playlists).forEach(([id, playlist]) => {
-                const div = document.createElement('div');
-                div.className = 'playlist-item';
-                div.innerHTML = `
-                    <span class="playlist-name">${playlist.name}</span>
-                    <span class="playlist-url">${playlist.url}</span>
-                    <button class="btn danger" onclick="deletePlaylist('${id}')">🗑️</button>
-                `;
-                container.appendChild(div);
-            });
-        }
+        function addPlaylist() {
+            const name = document.getElementById('playlist-name').value.trim();
+            const url = document.getElementById('playlist-url').value.trim();
 
-        async function loadPlaylistsSelect() {
-            const snapshot = await db.ref('playlists').once('value');
-            const playlists = snapshot.val() || {};
-            
-            const select = document.getElementById('playlist-select');
-            select.innerHTML = '<option value="">-- Sélectionner --</option>';
-            
-            Object.entries(playlists).forEach(([id, playlist]) => {
-                const option = document.createElement('option');
-                option.value = playlist.url;
-                option.textContent = playlist.name;
-                select.appendChild(option);
-            });
-        }
-
-        function showAddPlaylist() {
-            document.getElementById('add-playlist-form').classList.remove('hidden');
-        }
-
-        async function savePlaylist() {
-            const name = document.getElementById('new-playlist-name').value.trim();
-            const url = document.getElementById('new-playlist-url').value.trim();
-            
             if (!name || !url) {
-                alert('⚠️ Remplis tous les champs !');
+                alert('⚠️ Remplis le nom et l\'URL !');
                 return;
             }
-            
-            const match = url.match(/playlist\/(\d+)/);
-            if (!match) {
-                alert('❌ URL Deezer invalide !');
+
+            if (!url.includes('spotify.com/playlist/')) {
+                alert('⚠️ URL Spotify invalide !');
                 return;
             }
-            
-            await db.ref('playlists').push({
-                name,
-                url,
-                createdAt: Date.now()
-            });
-            
-            alert('✅ Playlist enregistrée !');
-            document.getElementById('new-playlist-name').value = '';
-            document.getElementById('new-playlist-url').value = '';
-            document.getElementById('add-playlist-form').classList.add('hidden');
-            loadPlaylists();
+
+            gameState.playlists.push({ name, url });
+            document.getElementById('playlist-name').value = '';
+            document.getElementById('playlist-url').value = '';
+            renderPlaylists();
+            updateCreateButton();
         }
 
-        async function deletePlaylist(id) {
-            if (confirm('Supprimer cette playlist ?')) {
-                await db.ref(`playlists/${id}`).remove();
-                loadPlaylists();
+        function renderPlaylists() {
+            const container = document.getElementById('playlists-list');
+            if (gameState.playlists.length === 0) {
+                container.innerHTML = '<p style="color: #aaa; text-align: center;">Aucune playlist ajoutée</p>';
+                return;
             }
+
+            container.innerHTML = gameState.playlists.map((p, i) => `
+                <div class="playlist-item">
+                    <span class="playlist-name">${p.name}</span>
+                    <span class="playlist-url">${p.url}</span>
+                    <button class="btn danger" style="padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="removePlaylist(${i})">❌</button>
+                </div>
+            `).join('');
+        }
+
+        function removePlaylist(index) {
+            gameState.playlists.splice(index, 1);
+            renderPlaylists();
+            updateCreateButton();
+        }
+
+        function updateCreateButton() {
+            const btn = document.getElementById('create-room-btn');
+            btn.disabled = !(gameState.numQuestions && gameState.playlists.length > 0);
         }
 
         // ===========================================
-        // CREATE
+        // CREATE ROOM
         // ===========================================
-        function selectNumQ(num) {
-            gameState.numQuestions = num;
-            document.querySelectorAll('.num-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        async function loadAndCreate() {
-            const name = document.getElementById('create-name').value.trim();
-            const mode = document.getElementById('create-mode').value;
-            const hostMode = document.getElementById('host-mode').checked;
-            const distanceMode = document.getElementById('distance-mode').checked;
-            
-            let url = document.getElementById('playlist-select').value;
-            if (!url) {
-                url = document.getElementById('custom-playlist-url').value.trim();
-            }
-            
-            if (!name) {
+        async function createRoom() {
+            const hostName = document.getElementById('host-name').value.trim();
+            if (!hostName) {
                 alert('⚠️ Entre ton pseudo !');
                 return;
             }
+
+            const gameMode = document.getElementById('game-mode').value;
+            const distanceMode = document.getElementById('distance-mode').checked;
+
+            const code = Math.random().toString(36).substr(2, 4).toUpperCase();
             
-            if (!url) {
-                alert('⚠️ Choisis une playlist !');
-                return;
-            }
-            
-            const match = url.match(/playlist\/(\d+)/);
-            if (!match) {
-                alert('❌ URL invalide !');
-                return;
-            }
-            
+            console.log('🎮 Création de la room:', code);
+
             try {
-                showLoading('Chargement des musiques...');
-                let tracks = await getDeezerPlaylist(match[1]);
+                const questions = await fetchQuestions();
                 
-                showLoading(`${tracks.length} musiques chargées. Filtrage...`);
-                tracks = await filterWorkingTracks(tracks);
-                
-                if (tracks.length < gameState.numQuestions) {
-                    alert(`⚠️ Seulement ${tracks.length} musiques valides. Ajuste le nombre de questions.`);
-                    hideLoading();
+                if (questions.length < gameState.numQuestions) {
+                    alert(`⚠️ Pas assez de questions trouvées (${questions.length}/${gameState.numQuestions})`);
                     return;
                 }
-                
-                alert(`✅ ${tracks.length} musiques prêtes !`);
-                hideLoading();
-                
-                createRoom(name, mode, tracks, hostMode, distanceMode);
-            } catch (e) {
-                hideLoading();
-                alert('❌ Erreur : ' + e.message);
-            }
-        }
 
-        function createRoom(name, mode, tracks, hostMode, distanceMode) {
-            const code = genCode();
-            
-            gameState.musicDB = tracks;
-            gameState.hostDisplayOnly = hostMode;
-            gameState.distanceMode = distanceMode;
-            
-            const shuffled = shuffle(tracks);
-            let questions;
-            
-            if (mode === 'soiree') {
-                const half = Math.floor(gameState.numQuestions / 2);
-                questions = [
-                    ...shuffled.slice(0, half).map(q => ({
-                        ...q,
-                        type: 'qcm',
-                        qType: Math.random() > 0.5 ? 'artist' : 'title'
-                    })),
-                    ...shuffled.slice(half, gameState.numQuestions).map(q => ({
-                        ...q,
-                        type: 'writing'
-                    }))
-                ];
-            } else if (mode === 'qcm') {
-                questions = shuffled.slice(0, gameState.numQuestions).map(q => ({
-                    ...q,
-                    type: 'qcm',
-                    qType: Math.random() > 0.5 ? 'artist' : 'title'
-                }));
-            } else if (mode === 'title-only') {
-                questions = shuffled.slice(0, gameState.numQuestions).map(q => ({
-                    ...q,
-                    type: 'qcm',
-                    qType: 'title'
-                }));
-            } else {
-                questions = shuffled.slice(0, gameState.numQuestions).map(q => ({
-                    ...q,
-                    type: mode
-                }));
-            }
+                const room = {
+                    code,
+                    host: hostName,
+                    players: [{ name: hostName, score: 0 }],
+                    questions: questions.slice(0, gameState.numQuestions),
+                    gameMode,
+                    distanceMode,
+                    currentQ: 0,
+                    started: false
+                };
 
-            const room = {
-                code,
-                host: name,
-                hostMode: hostMode,
-                distanceMode: distanceMode,
-                players: [{ name, score: 0, isHost: true }],
-                questions,
-                currentQ: 0,
-                started: false
-            };
-
-            db.ref(`rooms/${code}`).set(room);
-            
-            gameState.room = room;
-            gameState.playerIndex = 0;
-            gameState.isHost = true;
-            
-            goToLobby();
-        }
-
-        // ===========================================
-        // JOIN
-        // ===========================================
-        function joinRoom() {
-            const name = document.getElementById('join-name').value.trim();
-            const code = document.getElementById('join-code').value.trim();
-
-            if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
-            if (code.length !== 6) { alert('⚠️ Code invalide !'); return; }
-
-            db.ref(`rooms/${code}`).once('value', snapshot => {
-                const room = snapshot.val();
-                
-                if (!room) { alert('❌ Code invalide !'); return; }
-                if (room.started) { alert('❌ Partie déjà lancée !'); return; }
-
-                room.players.push({ name, score: 0 });
-                db.ref(`rooms/${code}`).update({ players: room.players });
+                await db.ref(`rooms/${code}`).set(room);
 
                 gameState.room = room;
-                gameState.playerIndex = room.players.length - 1;
-                gameState.isHost = false;
-                gameState.distanceMode = room.distanceMode || false;
-                gameState.musicDB = room.questions;
+                gameState.isHost = true;
+                gameState.distanceMode = distanceMode;
+                gameState.playerIndex = 0;
 
-                goToLobby();
-            });
-        }
-
-        // ===========================================
-        // LOBBY
-        // ===========================================
-        function goToLobby() {
-            showScreen('lobby-screen');
-            
-            document.getElementById('lobby-code').textContent = gameState.room.code;
-            
-            if (gameState.isHost) {
-                document.getElementById('start-btn').classList.remove('hidden');
-                document.getElementById('waiting-div').classList.add('hidden');
-            } else {
-                document.getElementById('start-btn').classList.add('hidden');
-                document.getElementById('waiting-div').classList.remove('hidden');
+                listenToRoom(code);
+                showScreen('lobby-screen');
+                document.getElementById('room-code-display').textContent = code;
+                document.getElementById('start-game-btn').style.display = 'block';
+            } catch (error) {
+                console.error('❌ Erreur création room:', error);
+                alert('❌ Erreur lors de la création de la partie');
             }
-
-            updatePlayersList();
-            listenToRoom();
-        }
-
-        function updatePlayersList() {
-            const list = document.getElementById('players-list');
-            const count = document.getElementById('player-count');
-            
-            list.innerHTML = '';
-            count.textContent = gameState.room.players.length;
-            
-            gameState.room.players.forEach((p, i) => {
-                const div = document.createElement('div');
-                div.className = 'player';
-                div.innerHTML = `
-                    <span class="player-num">${i + 1}</span>
-                    <span class="player-name">${p.name}</span>
-                    ${p.name === gameState.room.host ? '<span>👑</span>' : ''}
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        function listenToRoom() {
-            if (gameState.roomRef) gameState.roomRef.off();
-            
-            const ref = db.ref(`rooms/${gameState.room.code}`);
-            gameState.roomRef = ref;
-
-            ref.on('value', snapshot => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                const oldCurrentQ = gameState.room ? gameState.room.currentQ : -1;
-                gameState.room = data;
-
-                if (currentScreen === 'lobby') {
-                    updatePlayersList();
-                    if (data.started) {
-                        goToGame();
-                    }
-                }
-
-                if (currentScreen === 'game') {
-                    updateScoreboard();
-                    
-                    if (data.currentQ !== oldCurrentQ && data.currentQ < data.questions.length) {
-                        console.log('📢 Nouvelle question:', data.currentQ);
-                        loadQuestion();
-                    }
-                    
-                    if (data.currentQ >= data.questions.length) {
-                        console.log('🏁 Fin du jeu !');
-                        goToLeaderboard();
-                    }
-                }
-            });
-        }
-
-        function startGame() {
-            db.ref(`rooms/${gameState.room.code}`).update({ started: true });
         }
 
         // ===========================================
-        // GAME
+        // FETCH QUESTIONS
         // ===========================================
-        function goToGame() {
-            showScreen('game-screen');
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            const q = gameState.room.questions[gameState.room.currentQ];
-            const player = gameState.room.players[gameState.playerIndex];
-
-            gameState.currentTime = 20;
-            gameState.answered = false;
-            gameState.audioPlaying = false;
-
-            document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
-            document.getElementById('total-q').textContent = gameState.room.questions.length;
-            document.getElementById('player-score').textContent = player.score || 0;
-            document.getElementById('timer').textContent = '20';
+        async function fetchQuestions() {
+            console.log('🎵 Récupération des questions...');
             
-            document.getElementById('cover-img').src = q.cover;
-            document.getElementById('cover-img').style.filter = 'blur(25px)';
-
-            document.getElementById('answer-reveal').classList.add('hidden');
-            document.getElementById('result-container').classList.add('hidden');
-
-            updateScoreboard();
-
-            // Audio
-            const audioBox = document.getElementById('audio-box');
-            const audio = document.getElementById('audio-player');
+            const allTracks = [];
             
-            // MODE DISTANCE : Audio pour tout le monde
-            // MODE NORMAL : Audio seulement pour l'hôte
-            if (gameState.distanceMode || gameState.isHost) {
-                audioBox.classList.remove('hidden');
-                audio.src = q.preview;
-                audio.load();
+            for (const playlist of gameState.playlists) {
+                const playlistId = playlist.url.split('/playlist/')[1].split('?')[0];
+                const embedUrl = `https://open.spotify.com/embed/playlist/${playlistId}`;
                 
-                setTimeout(() => {
-                    audio.play()
-                        .then(() => {
-                            console.log('✅ Audio lancé');
-                            gameState.audioPlaying = true;
-                        })
-                        .catch(err => {
-                            console.error('❌ Erreur audio:', err);
-                        });
-                }, 500);
-            } else {
-                audioBox.classList.add('hidden');
+                try {
+                    const response = await fetch(embedUrl);
+                    const html = await response.text();
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const scripts = doc.querySelectorAll('script');
+                    
+                    scripts.forEach(script => {
+                        const content = script.textContent;
+                        if (content.includes('"tracks"')) {
+                            try {
+                                const jsonMatch = content.match(/\{.*"tracks".*\}/s);
+                                if (jsonMatch) {
+                                    const data = JSON.parse(jsonMatch[0]);
+                                    if (data.tracks && data.tracks.items) {
+                                        data.tracks.items.forEach(item => {
+                                            if (item.track) {
+                                                const track = item.track;
+                                                allTracks.push({
+                                                    title: track.name,
+                                                    artist: track.artists.map(a => a.name).join(', '),
+                                                    preview: track.preview_url || '',
+                                                    cover: track.album.images[0]?.url || '',
+                                                    year: track.album.release_date ? new Date(track.album.release_date).getFullYear() : null
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Erreur parsing JSON:', e);
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erreur fetch playlist:', error);
+                }
             }
+            
+            const validTracks = allTracks.filter(t => t.preview && t.cover);
+            console.log(`✅ ${validTracks.length} questions valides trouvées`);
+            
+            return shuffle(validTracks);
+        }
 
-            // MODE HÔTE : ne pas afficher les questions
-            if (gameState.hostDisplayOnly) {
-                document.getElementById('options-container').classList.add('hidden');
-                document.getElementById('writing-container').classList.add('hidden');
-                document.getElementById('question-text').textContent = '🎮 Mode Affichage';
-                startTimer();
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // ===========================================
+        // JOIN ROOM
+        // ===========================================
+        async function joinRoom() {
+            const playerName = document.getElementById('player-name').value.trim();
+            const code = document.getElementById('room-code').value.trim().toUpperCase();
+
+            if (!playerName || !code) {
+                alert('⚠️ Remplis tous les champs !');
                 return;
             }
 
-            // Question normale
-            if (q.type === 'qcm') {
-                loadQCM(q);
-            } else {
-                loadWriting(q);
+            console.log('🎯 Tentative de rejoindre:', code);
+
+            try {
+                const snapshot = await db.ref(`rooms/${code}`).once('value');
+                const room = snapshot.val();
+
+                if (!room) {
+                    alert('❌ Code invalide !');
+                    return;
+                }
+
+                if (room.started) {
+                    alert('⚠️ La partie a déjà commencé !');
+                    return;
+                }
+
+                const players = room.players || [];
+                
+                if (players.some(p => p.name === playerName)) {
+                    alert('⚠️ Ce pseudo est déjà pris !');
+                    return;
+                }
+
+                players.push({ name: playerName, score: 0 });
+                await db.ref(`rooms/${code}/players`).set(players);
+
+                gameState.room = room;
+                gameState.playerIndex = players.length - 1;
+                gameState.isHost = false;
+                gameState.distanceMode = room.distanceMode;
+
+                listenToRoom(code);
+                showScreen('lobby-screen');
+                document.getElementById('room-code-display').textContent = code;
+            } catch (error) {
+                console.error('❌ Erreur join:', error);
+                alert('❌ Erreur lors de la connexion');
+            }
+        }
+
+        // ===========================================
+        // LISTEN TO ROOM
+        // ===========================================
+        function listenToRoom(code) {
+            gameState.roomRef = db.ref(`rooms/${code}`);
+            
+            gameState.roomRef.on('value', snapshot => {
+                const room = snapshot.val();
+                
+                if (!room) {
+                    alert('❌ La partie a été fermée');
+                    goToMenu();
+                    return;
+                }
+
+                gameState.room = room;
+                
+                if (room.started && document.getElementById('lobby-screen').classList.contains('hidden') === false) {
+                    // Calculer la distribution des questions par niveau
+                    calculateQuestionsPerLevel(room.gameMode, room.questions.length);
+                    showScreen('game-screen');
+                    loadQuestion();
+                }
+                
+                if (!room.started) {
+                    renderPlayers();
+                }
+                
+                if (room.currentQ !== undefined && room.started) {
+                    if (room.currentQ >= room.questions.length) {
+                        goToLeaderboard();
+                    } else if (room.currentQ !== gameState.currentQIndex) {
+                        gameState.currentQIndex = room.currentQ;
+                        loadQuestion();
+                    }
+                }
+            });
+        }
+
+        function renderPlayers() {
+            const container = document.getElementById('players-list');
+            const players = gameState.room?.players || [];
+            
+            if (players.length === 0) {
+                container.innerHTML = '<p style="color: #aaa; text-align: center;">Aucun joueur</p>';
+                return;
             }
 
+            container.innerHTML = players.map((p, i) => `
+                <div class="player-item">
+                    <span class="player-name">${i === 0 ? '👑 ' : ''}${p.name}</span>
+                    <span class="player-score">${p.score || 0} pts</span>
+                </div>
+            `).join('');
+        }
+
+        function leaveRoom() {
+            if (gameState.isHost) {
+                if (confirm('⚠️ En tant qu\'hôte, quitter fermera la partie pour tous. Continuer ?')) {
+                    db.ref(`rooms/${gameState.room.code}`).remove();
+                    goToMenu();
+                }
+            } else {
+                const players = [...gameState.room.players];
+                players.splice(gameState.playerIndex, 1);
+                db.ref(`rooms/${gameState.room.code}/players`).set(players);
+                goToMenu();
+            }
+        }
+
+        // ===========================================
+        // CALCULATE QUESTIONS PER LEVEL
+        // ===========================================
+        function calculateQuestionsPerLevel(gameMode, totalQuestions) {
+            gameState.questionsPerLevel = [];
+            
+            if (gameMode === 'party') {
+                // Mode soirée : 3 modes, prioriser niveau 2
+                const questionsPerMode = Math.floor(totalQuestions / 3);
+                
+                for (let mode of ['qcm', 'writing', 'qcm']) { // On alterne pour remplir
+                    const l1 = Math.floor(questionsPerMode * 0.25);
+                    const l3 = Math.floor(questionsPerMode * 0.25);
+                    const l2 = questionsPerMode - l1 - l3;
+                    
+                    for (let i = 0; i < l1; i++) gameState.questionsPerLevel.push({ mode, level: 1 });
+                    for (let i = 0; i < l2; i++) gameState.questionsPerLevel.push({ mode, level: 2 });
+                    for (let i = 0; i < l3; i++) gameState.questionsPerLevel.push({ mode, level: 3 });
+                }
+                
+                // Ajuster pour atteindre exactement totalQuestions
+                while (gameState.questionsPerLevel.length < totalQuestions) {
+                    gameState.questionsPerLevel.push({ mode: 'qcm', level: 2 });
+                }
+                gameState.questionsPerLevel = gameState.questionsPerLevel.slice(0, totalQuestions);
+                
+            } else {
+                // Mode unique : QCM ou Écriture
+                const l1 = Math.floor(totalQuestions * 0.25);
+                const l3 = Math.floor(totalQuestions * 0.25);
+                const l2 = totalQuestions - l1 - l3;
+                
+                for (let i = 0; i < l1; i++) gameState.questionsPerLevel.push({ mode: gameMode, level: 1 });
+                for (let i = 0; i < l2; i++) gameState.questionsPerLevel.push({ mode: gameMode, level: 2 });
+                for (let i = 0; i < l3; i++) gameState.questionsPerLevel.push({ mode: gameMode, level: 3 });
+            }
+        }
+
+        // ===========================================
+        // START GAME
+        // ===========================================
+        function startGame() {
+            if (!gameState.isHost) return;
+            
+            console.log('🚀 Démarrage du jeu');
+            
+            db.ref(`rooms/${gameState.room.code}/started`).set(true);
+        }
+
+        // ===========================================
+        // LOAD QUESTION
+        // ===========================================
+        function loadQuestion() {
+            console.log('📝 Chargement question', gameState.room.currentQ);
+            
+            const q = gameState.room.questions[gameState.room.currentQ];
+            const currentQuestionConfig = gameState.questionsPerLevel[gameState.room.currentQ];
+            
+            // Vérifier si on change de niveau
+            const previousConfig = gameState.room.currentQ > 0 ? 
+                gameState.questionsPerLevel[gameState.room.currentQ - 1] : null;
+            
+            if (previousConfig && 
+                (previousConfig.level !== currentQuestionConfig.level || 
+                 previousConfig.mode !== currentQuestionConfig.mode)) {
+                showLevelTransition(currentQuestionConfig.level, currentQuestionConfig.mode);
+            }
+            
+            gameState.currentLevel = currentQuestionConfig.level;
+            gameState.currentMode = currentQuestionConfig.mode;
+            gameState.answered = false;
+            gameState.currentTime = 20;
+            
+            document.getElementById('question-num').textContent = 
+                `${gameState.room.currentQ + 1}/${gameState.room.questions.length}`;
+            document.getElementById('score').textContent = 
+                gameState.room.players[gameState.playerIndex].score || 0;
+            document.getElementById('timer').textContent = gameState.currentTime;
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('answer-reveal').classList.add('hidden');
+            
+            // Cover - masquer pour les non-hôtes en mode distance
+            const coverContainer = document.getElementById('cover-container');
+            if (gameState.distanceMode && !gameState.isHost) {
+                coverContainer.style.display = 'none';
+            } else {
+                coverContainer.style.display = 'block';
+                document.getElementById('cover-img').src = q.cover;
+                document.getElementById('cover-img').style.filter = 'blur(25px)';
+            }
+            
+            // Audio
+            const audio = document.getElementById('audio-player');
+            const audioToggleBtn = document.getElementById('audio-toggle-btn');
+            
+            if (gameState.distanceMode) {
+                audio.src = q.preview;
+                audioToggleBtn.style.display = 'block';
+                audioToggleBtn.textContent = '🎵 Play';
+                audio.pause();
+            } else if (gameState.isHost) {
+                audio.src = q.preview;
+                audio.currentTime = 0;
+                
+                // Précharger l'audio pour réduire le décalage
+                audio.load();
+                audio.addEventListener('canplaythrough', function playWhenReady() {
+                    audio.play();
+                    audio.removeEventListener('canplaythrough', playWhenReady);
+                }, { once: true });
+                
+                audioToggleBtn.style.display = 'none';
+            } else {
+                audioToggleBtn.style.display = 'none';
+            }
+            
+            // Charger le bon mode selon le niveau
+            if (currentQuestionConfig.mode === 'qcm') {
+                loadQCM(q, currentQuestionConfig.level);
+            } else {
+                loadWriting(q, currentQuestionConfig.level);
+            }
+            
             startTimer();
         }
 
-        function updateScoreboard() {
-            const container = document.getElementById('live-scores');
-            const scoreboard = document.getElementById('scoreboard-side');
+        // ===========================================
+        // LEVEL TRANSITION
+        // ===========================================
+        function showLevelTransition(level, mode) {
+            const transition = document.createElement('div');
+            transition.className = 'level-transition';
             
-            // Scoreboard visible SEULEMENT pour l'hôte ET si pas en mode distance
-            if (!gameState.isHost || gameState.distanceMode) {
-                scoreboard.style.display = 'none';
-                return;
-            }
+            const modeText = mode === 'qcm' ? 'QCM' : 'ÉCRITURE';
+            const levelText = `NIVEAU ${level}`;
             
-            scoreboard.style.display = 'block';
-            container.innerHTML = '';
-
-            const sorted = [...gameState.room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
-
-            sorted.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'score-item';
-                if (p.name === gameState.room.players[gameState.playerIndex].name) {
-                    div.classList.add('me');
-                }
-                div.innerHTML = `
-                    <span class="score-name">${p.name}</span>
-                    <span class="score-points">${p.score || 0}</span>
-                `;
-                container.appendChild(div);
-            });
+            transition.innerHTML = `
+                <h1>${levelText}</h1>
+                <p>${modeText}</p>
+            `;
+            
+            document.body.appendChild(transition);
+            
+            setTimeout(() => {
+                transition.remove();
+            }, 2000);
         }
 
-        function loadQCM(q) {
-            const type = q.qType || 'title';
-            const correct = q[type];
+        // ===========================================
+        // QCM
+        // ===========================================
+        function loadQCM(q, level) {
+            let questionText = '';
+            let options = [];
+            let correct = '';
             
-            document.getElementById('question-text').textContent = 
-                type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?";
-
-            const allTracks = gameState.musicDB;
-            const wrongPool = shuffle(allTracks.filter(t => t[type] !== correct));
-            
-            const options = [correct];
-            while (options.length < 4 && wrongPool.length > 0) {
-                const val = wrongPool.pop()[type];
-                if (val && !options.includes(val)) {
-                    options.push(val);
-                }
+            if (level === 1) {
+                // Niveau 1 : 2 propositions d'artistes
+                questionText = "Qui chante ce titre ?";
+                correct = q.artist;
+                options = getRandomOptions(q, 'artist', 1, level);
+                options.push(correct);
+                
+            } else if (level === 2) {
+                // Niveau 2 : 4 propositions d'artistes
+                questionText = "Qui chante ce titre ?";
+                correct = q.artist;
+                options = getRandomOptions(q, 'artist', 3, level);
+                options.push(correct);
+                
+            } else {
+                // Niveau 3 : 4 orthographes différentes de l'artiste
+                questionText = "Quelle est la bonne orthographe ?";
+                correct = q.artist;
+                options = generateSpellingVariants(q.artist);
+                options.push(correct);
             }
+            
+            document.getElementById('question-text').textContent = questionText;
 
             const shuffledOptions = shuffle(options);
 
@@ -1376,14 +1275,251 @@
             gameState.correctAnswer = correct;
         }
 
-        function loadWriting(q) {
-            document.getElementById('question-text').textContent = "Écris le titre et l'artiste";
+        function getRandomOptions(currentQ, field, count, level) {
+            const allQuestions = gameState.room.questions;
+            const options = [];
+            const attempts = [];
+            
+            // Filtrer les questions qui ne sont pas la question actuelle
+            let availableQuestions = allQuestions.filter(q => 
+                q[field] !== currentQ[field]
+            );
+            
+            // Éviter les artistes déjà utilisés récemment
+            availableQuestions = availableQuestions.filter(q => 
+                !gameState.usedArtistsForOptions.includes(q[field])
+            );
+            
+            // Si on n'a plus assez d'options, réinitialiser la liste des artistes utilisés
+            if (availableQuestions.length < count) {
+                gameState.usedArtistsForOptions = [];
+                availableQuestions = allQuestions.filter(q => q[field] !== currentQ[field]);
+            }
+            
+            // Mélanger vraiment aléatoirement
+            const shuffled = shuffle(availableQuestions);
+            
+            // Prendre les premières options uniques
+            const usedValues = new Set();
+            for (const q of shuffled) {
+                if (!usedValues.has(q[field]) && options.length < count) {
+                    options.push(q[field]);
+                    usedValues.add(q[field]);
+                    gameState.usedArtistsForOptions.push(q[field]);
+                    
+                    // Limiter la taille de l'historique
+                    if (gameState.usedArtistsForOptions.length > 20) {
+                        gameState.usedArtistsForOptions.shift();
+                    }
+                }
+                if (options.length >= count) break;
+            }
+            
+            return options;
+        }
+
+        function generateSpellingVariants(artist) {
+            // Générer 3 variantes incorrectes de l'orthographe
+            const variants = [];
+            const original = artist;
+            
+            // Variante 1 : Changer la casse
+            variants.push(original.toUpperCase());
+            
+            // Variante 2 : Ajouter/retirer des espaces ou tirets
+            if (original.includes(' ')) {
+                variants.push(original.replace(/ /g, '-'));
+            } else {
+                variants.push(original.replace(/-/g, ' '));
+            }
+            
+            // Variante 3 : Inverser deux lettres
+            if (original.length > 3) {
+                const chars = original.split('');
+                const pos = Math.floor(Math.random() * (chars.length - 1));
+                [chars[pos], chars[pos + 1]] = [chars[pos + 1], chars[pos]];
+                variants.push(chars.join(''));
+            } else {
+                variants.push(original.split('').reverse().join(''));
+            }
+            
+            // S'assurer qu'on a 3 variantes uniques différentes de l'original
+            const uniqueVariants = [...new Set(variants)].filter(v => v !== original);
+            
+            // Si pas assez de variantes, en générer d'autres
+            while (uniqueVariants.length < 3) {
+                const random = original.split('');
+                const pos1 = Math.floor(Math.random() * random.length);
+                const pos2 = Math.floor(Math.random() * random.length);
+                [random[pos1], random[pos2]] = [random[pos2], random[pos1]];
+                const variant = random.join('');
+                if (variant !== original && !uniqueVariants.includes(variant)) {
+                    uniqueVariants.push(variant);
+                }
+            }
+            
+            return uniqueVariants.slice(0, 3);
+        }
+
+        // ===========================================
+        // WRITING
+        // ===========================================
+        function loadWriting(q, level) {
+            const yearInput = document.getElementById('input-year');
+            
+            if (level === 1) {
+                // Niveau 1 : Seulement l'artiste
+                document.getElementById('question-text').textContent = "Qui chante ce titre ?";
+                document.getElementById('input-title').style.display = 'none';
+                document.getElementById('input-artist').style.display = 'block';
+                yearInput.classList.add('hidden');
+                
+            } else if (level === 2) {
+                // Niveau 2 : Titre + Artiste
+                document.getElementById('question-text').textContent = "Écris le titre et l'artiste";
+                document.getElementById('input-title').style.display = 'block';
+                document.getElementById('input-artist').style.display = 'block';
+                yearInput.classList.add('hidden');
+                
+            } else {
+                // Niveau 3 : Titre + Artiste + Année
+                document.getElementById('question-text').textContent = "Écris le titre, l'artiste et l'année (±5 ans)";
+                document.getElementById('input-title').style.display = 'block';
+                document.getElementById('input-artist').style.display = 'block';
+                yearInput.classList.remove('hidden');
+            }
+            
             document.getElementById('options-container').classList.add('hidden');
             document.getElementById('writing-container').classList.remove('hidden');
             document.getElementById('input-title').value = '';
             document.getElementById('input-artist').value = '';
+            document.getElementById('input-year').value = '';
+            
+            // Auto-check en temps réel
+            startAutoCheck();
         }
 
+        function startAutoCheck() {
+            // Nettoyer l'ancien interval si existe
+            if (gameState.autoCheckInterval) {
+                clearInterval(gameState.autoCheckInterval);
+            }
+            
+            gameState.autoCheckInterval = setInterval(() => {
+                if (gameState.answered || gameState.currentTime <= 0) {
+                    clearInterval(gameState.autoCheckInterval);
+                    return;
+                }
+                
+                const q = gameState.room.questions[gameState.room.currentQ];
+                const titleInput = document.getElementById('input-title').value.toLowerCase().trim();
+                const artistInput = document.getElementById('input-artist').value.toLowerCase().trim();
+                const yearInput = parseInt(document.getElementById('input-year').value);
+                
+                let titleOk = false;
+                let artistOk = false;
+                let yearOk = false;
+                
+                // Vérifier selon le niveau
+                if (gameState.currentLevel === 1) {
+                    // Niveau 1 : Seulement artiste
+                    artistOk = checkArtist(artistInput, q.artist);
+                    if (artistOk && artistInput.length > 0) {
+                        submitWriting();
+                    }
+                    
+                } else if (gameState.currentLevel === 2) {
+                    // Niveau 2 : Titre + Artiste
+                    titleOk = checkTitle(titleInput, q.title);
+                    artistOk = checkArtist(artistInput, q.artist);
+                    if (titleOk && artistOk && titleInput.length > 0 && artistInput.length > 0) {
+                        submitWriting();
+                    }
+                    
+                } else {
+                    // Niveau 3 : Titre + Artiste + Année
+                    titleOk = checkTitle(titleInput, q.title);
+                    artistOk = checkArtist(artistInput, q.artist);
+                    yearOk = checkYear(yearInput, q.year);
+                    if (titleOk && artistOk && yearOk && 
+                        titleInput.length > 0 && artistInput.length > 0 && !isNaN(yearInput)) {
+                        submitWriting();
+                    }
+                }
+            }, 500); // Vérifier toutes les 500ms
+        }
+
+        function checkTitle(input, correct) {
+            if (!input) return false;
+            
+            const titleWords = correct.toLowerCase().split(' ');
+            return titleWords.some(word => 
+                word.length > 2 && (
+                    input.includes(word) || 
+                    isSimilar(input, word) ||
+                    titleWords.join(' ').includes(input)
+                )
+            );
+        }
+
+        function checkArtist(input, correct) {
+            if (!input) return false;
+            
+            const artistNames = correct.toLowerCase()
+                .replace(/ feat\.? /gi, ',')
+                .replace(/ & /g, ',')
+                .split(',')
+                .map(a => a.trim());
+
+            return artistNames.some(artist => {
+                const artistWords = artist.split(' ');
+                return artistWords.some(word => 
+                    word.length > 2 && (
+                        input.includes(word) || 
+                        isSimilar(input, word) ||
+                        artist.includes(input)
+                    )
+                );
+            });
+        }
+
+        function checkYear(input, correct) {
+            if (!correct || isNaN(input)) return false;
+            return Math.abs(input - correct) <= 5;
+        }
+
+        function isSimilar(a, b) {
+            const distance = levenshteinDistance(a, b);
+            return distance <= 2;
+        }
+
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        // ===========================================
+        // TIMER
+        // ===========================================
         function startTimer() {
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 
@@ -1391,22 +1527,32 @@
                 gameState.currentTime--;
                 document.getElementById('timer').textContent = gameState.currentTime;
 
-                if (!gameState.answered) {
+                if (!gameState.answered && (!gameState.distanceMode || gameState.isHost)) {
                     const blur = (gameState.currentTime / 20) * 25;
-                    document.getElementById('cover-img').style.filter = `blur(${blur}px)`;
+                    const coverImg = document.getElementById('cover-img');
+                    if (coverImg) {
+                        coverImg.style.filter = `blur(${blur}px)`;
+                    }
                 }
 
                 if (gameState.currentTime <= 0) {
                     clearInterval(gameState.timerInterval);
+                    if (gameState.autoCheckInterval) {
+                        clearInterval(gameState.autoCheckInterval);
+                    }
                     
-                    document.getElementById('cover-img').style.filter = 'blur(0px)';
+                    const coverImg = document.getElementById('cover-img');
+                    if (coverImg) {
+                        coverImg.style.filter = 'blur(0px)';
+                    }
                     
                     const q = gameState.room.questions[gameState.room.currentQ];
                     document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
                     document.getElementById('answer-reveal').classList.remove('hidden');
                     
                     if (gameState.distanceMode || gameState.isHost) {
-                        document.getElementById('audio-player').pause();
+                        const audio = document.getElementById('audio-player');
+                        if (audio) audio.pause();
                     }
 
                     if (gameState.isHost && !gameState.answered) {
@@ -1425,6 +1571,9 @@
             }, 1000);
         }
 
+        // ===========================================
+        // SUBMIT
+        // ===========================================
         function submitQCM(answer, correct) {
             if (gameState.answered) return;
             gameState.answered = true;
@@ -1449,54 +1598,112 @@
         function submitWriting() {
             if (gameState.answered) return;
             gameState.answered = true;
+            
+            // Arrêter l'auto-check
+            if (gameState.autoCheckInterval) {
+                clearInterval(gameState.autoCheckInterval);
+            }
 
             const q = gameState.room.questions[gameState.room.currentQ];
             const titleInput = document.getElementById('input-title').value.toLowerCase().trim();
             const artistInput = document.getElementById('input-artist').value.toLowerCase().trim();
+            const yearInput = parseInt(document.getElementById('input-year').value);
 
-            const titleWords = q.title.toLowerCase().split(' ');
-            const titleOk = titleWords.some(word => 
-                word.length > 2 && (
-                    titleInput.includes(word) || 
-                    isSimilar(titleInput, word) ||
-                    titleWords.join(' ').includes(titleInput)
-                )
-            );
-
-            const artistNames = q.artist.toLowerCase()
-                .replace(/ feat\.? /gi, ',')
-                .replace(/ & /g, ',')
-                .split(',')
-                .map(a => a.trim());
-
-            const artistOk = artistNames.some(artist => {
-                const artistWords = artist.split(' ');
-                return artistWords.some(word => 
-                    word.length > 2 && (
-                        artistInput.includes(word) || 
-                        isSimilar(artistInput, word) ||
-                        artist.includes(artistInput)
-                    )
-                );
-            });
+            let titleOk = false;
+            let artistOk = false;
+            let yearOk = false;
+            
+            // Vérifier selon le niveau
+            if (gameState.currentLevel === 1) {
+                // Niveau 1 : Seulement artiste
+                artistOk = checkArtist(artistInput, q.artist);
+                
+                // Validation : ne pas accepter de réponse vide
+                if (!artistInput || artistInput.length === 0) {
+                    artistOk = false;
+                }
+                
+            } else if (gameState.currentLevel === 2) {
+                // Niveau 2 : Titre + Artiste
+                titleOk = checkTitle(titleInput, q.title);
+                artistOk = checkArtist(artistInput, q.artist);
+                
+                // Validation : ne pas accepter de réponses vides
+                if (!titleInput || titleInput.length === 0) titleOk = false;
+                if (!artistInput || artistInput.length === 0) artistOk = false;
+                
+            } else {
+                // Niveau 3 : Titre + Artiste + Année
+                titleOk = checkTitle(titleInput, q.title);
+                artistOk = checkArtist(artistInput, q.artist);
+                yearOk = checkYear(yearInput, q.year);
+                
+                // Validation : ne pas accepter de réponses vides
+                if (!titleInput || titleInput.length === 0) titleOk = false;
+                if (!artistInput || artistInput.length === 0) artistOk = false;
+                if (isNaN(yearInput)) yearOk = false;
+            }
 
             let isCorrect = false;
             let pts = 0;
             let feedback = '';
 
-            if (titleOk && artistOk) {
-                isCorrect = true;
-                pts = 50 + gameState.currentTime * 10;
-                feedback = 'Parfait !';
-            } else if (titleOk) {
-                pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
-                feedback = 'Bon titre ! (50%)';
-            } else if (artistOk) {
-                pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
-                feedback = 'Bon artiste ! (50%)';
+            if (gameState.currentLevel === 1) {
+                // Niveau 1 : Juste artiste
+                if (artistOk) {
+                    isCorrect = true;
+                    pts = 50 + gameState.currentTime * 10;
+                    feedback = 'Parfait !';
+                }
+                
+            } else if (gameState.currentLevel === 2) {
+                // Niveau 2 : Titre + Artiste
+                if (titleOk && artistOk) {
+                    isCorrect = true;
+                    pts = 50 + gameState.currentTime * 10;
+                    feedback = 'Parfait !';
+                } else if (titleOk) {
+                    pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
+                    feedback = 'Bon titre ! (50%)';
+                } else if (artistOk) {
+                    pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
+                    feedback = 'Bon artiste ! (50%)';
+                }
+                
+            } else {
+                // Niveau 3 : Titre + Artiste + Année
+                const baseScore = 50 + gameState.currentTime * 10;
+                
+                if (titleOk && artistOk && yearOk) {
+                    isCorrect = true;
+                    pts = baseScore;
+                    feedback = 'Parfait !';
+                } else if (titleOk && artistOk) {
+                    pts = Math.floor(baseScore * 0.66);
+                    feedback = 'Titre & Artiste ! (66%)';
+                } else if (titleOk && yearOk) {
+                    pts = Math.floor(baseScore * 0.5);
+                    feedback = 'Titre & Année ! (50%)';
+                } else if (artistOk && yearOk) {
+                    pts = Math.floor(baseScore * 0.5);
+                    feedback = 'Artiste & Année ! (50%)';
+                } else if (titleOk) {
+                    pts = Math.floor(baseScore * 0.33);
+                    feedback = 'Bon titre ! (33%)';
+                } else if (artistOk) {
+                    pts = Math.floor(baseScore * 0.33);
+                    feedback = 'Bon artiste ! (33%)';
+                } else if (yearOk) {
+                    pts = Math.floor(baseScore * 0.33);
+                    feedback = 'Bonne année ! (33%)';
+                }
             }
 
-            showResult(isCorrect || (titleOk || artistOk), pts, `${q.title} - ${q.artist}`, feedback);
+            const answerText = gameState.currentLevel === 3 && q.year ? 
+                `${q.title} - ${q.artist} (${q.year})` : 
+                `${q.title} - ${q.artist}`;
+            
+            showResult(isCorrect || pts > 0, pts, answerText, feedback);
             updateScore(pts);
         }
 
@@ -1539,12 +1746,16 @@
             console.log('🏆 LEADERBOARD');
             
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            if (gameState.autoCheckInterval) clearInterval(gameState.autoCheckInterval);
             if (gameState.roomRef) gameState.roomRef.off();
 
             showScreen('leaderboard-screen');
 
             const players = gameState.room.players || [];
             const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+
+            // Sauvegarder dans le leaderboard permanent
+            saveToAllTimeLeaderboard(sorted[0]);
 
             const podium = document.getElementById('podium-container');
             podium.innerHTML = '';
@@ -1573,6 +1784,85 @@
                 `;
                 list.appendChild(div);
             });
+            
+            // Afficher aussi le leaderboard permanent
+            displayAllTimeLeaderboard();
+        }
+
+        // ===========================================
+        // ALL-TIME LEADERBOARD
+        // ===========================================
+        async function saveToAllTimeLeaderboard(winner) {
+            if (!winner || !winner.score) return;
+            
+            try {
+                const snapshot = await db.ref('allTimeLeaderboard').once('value');
+                let leaderboard = snapshot.val() || [];
+                
+                // Ajouter le nouveau score
+                leaderboard.push({
+                    name: winner.name,
+                    score: winner.score,
+                    date: new Date().toISOString()
+                });
+                
+                // Trier par score décroissant
+                leaderboard.sort((a, b) => b.score - a.score);
+                
+                // Garder seulement les 10 meilleurs
+                leaderboard = leaderboard.slice(0, 10);
+                
+                // Sauvegarder
+                await db.ref('allTimeLeaderboard').set(leaderboard);
+                
+                console.log('✅ Score sauvegardé dans le leaderboard permanent');
+            } catch (error) {
+                console.error('❌ Erreur sauvegarde leaderboard:', error);
+            }
+        }
+
+        async function displayAllTimeLeaderboard() {
+            try {
+                const snapshot = await db.ref('allTimeLeaderboard').once('value');
+                const leaderboard = snapshot.val() || [];
+                
+                const container = document.getElementById('alltime-container');
+                container.innerHTML = '';
+                
+                if (leaderboard.length === 0) {
+                    container.innerHTML = '<p style="color: #aaa; text-align: center;">Aucun score enregistré</p>';
+                    return;
+                }
+                
+                leaderboard.forEach((entry, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'alltime-row';
+                    const date = new Date(entry.date).toLocaleDateString('fr-FR');
+                    div.innerHTML = `
+                        <span class="rank">#${i + 1}</span>
+                        <span class="name">${entry.name}</span>
+                        <span class="pts">${entry.score} pts</span>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                console.error('❌ Erreur chargement leaderboard:', error);
+            }
+        }
+
+        function switchLeaderboardTab(tab) {
+            // Changer l'onglet actif
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'game') {
+                document.getElementById('game-leaderboard').classList.remove('hidden');
+                document.getElementById('alltime-leaderboard').classList.add('hidden');
+            } else {
+                document.getElementById('game-leaderboard').classList.add('hidden');
+                document.getElementById('alltime-leaderboard').classList.remove('hidden');
+                displayAllTimeLeaderboard();
+            }
         }
 
         function restartGame() {
@@ -1582,7 +1872,7 @@
         // ===========================================
         // INIT
         // ===========================================
-        console.log('✅ Quiz Party V1 chargé !');
+        console.log('✅ Quiz Party V2 FIXED chargé !');
     </script>
 </body>
 </html>
