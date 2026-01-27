@@ -9,11 +9,8 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-    <!-- React -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -21,7 +18,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // FIREBASE CONFIG
+        // FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyAWA-Zfs_hljCFz1wc0Rg2LJWZPINWONnU",
             authDomain: "quizz-party-ptg.firebaseapp.com",
@@ -31,29 +28,26 @@
             messagingSenderId: "352511986737",
             appId: "1:352511986737:web:7318d807b4d3f3b6b29910"
         };
-
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const db = firebase.database();
 
-        // DEEZER API
+        // DEEZER
         class DeezerAPI {
             constructor() {
                 this.proxies = ['', 'https://corsproxy.io/?', 'https://api.codetabs.com/v1/proxy?quest='];
             }
-
             async fetchWithProxy(url) {
                 for (let i = 0; i < this.proxies.length; i++) {
                     try {
                         const finalUrl = this.proxies[i] + encodeURIComponent(url);
-                        const response = await fetch(finalUrl);
-                        if (!response.ok) throw new Error('Erreur');
-                        return await response.json();
-                    } catch (error) {
-                        if (i === this.proxies.length - 1) throw error;
+                        const res = await fetch(finalUrl);
+                        if (!res.ok) throw new Error('Erreur');
+                        return await res.json();
+                    } catch (e) {
+                        if (i === this.proxies.length - 1) throw e;
                     }
                 }
             }
-
             async getChart() {
                 const data = await this.fetchWithProxy('https://api.deezer.com/chart/0/tracks?limit=50');
                 return data.data.map(t => ({
@@ -61,9 +55,8 @@
                     artist: t.artist.name,
                     cover: t.album.cover_big || 'https://via.placeholder.com/400',
                     preview: t.preview
-                })).filter(t => t.preview);
+                })).filter(t => t.preview && t.cover);
             }
-
             async getPlaylist(id) {
                 const data = await this.fetchWithProxy(`https://api.deezer.com/playlist/${id}`);
                 return data.tracks.data.map(t => ({
@@ -71,32 +64,29 @@
                     artist: t.artist.name,
                     cover: t.album.cover_big || 'https://via.placeholder.com/400',
                     preview: t.preview
-                })).filter(t => t.preview);
+                })).filter(t => t.preview && t.cover);
             }
         }
 
-        // UTILS
         const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
         const genCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
         // MENU
-        const Menu = ({ onCreateParty, onJoinParty }) => (
+        const Menu = ({ onCreate, onJoin }) => (
             <div className="screen">
-                <h1 className="title">QUIZ PARTY</h1>
-                <p className="subtitle">🎵 Blind Test Musical</p>
-                <div className="menu-buttons">
-                    <button className="btn large" onClick={onCreateParty}>
-                        🎮 Créer une partie
-                    </button>
-                    <button className="btn large secondary" onClick={onJoinParty}>
-                        👥 Rejoindre une partie
-                    </button>
+                <div className="logo">
+                    <h1 className="title">QUIZ PARTY</h1>
+                    <p className="subtitle">🎵 Blind Test Musical</p>
+                </div>
+                <div className="menu-btns">
+                    <button className="btn large" onClick={onCreate}>🎮 Créer</button>
+                    <button className="btn large secondary" onClick={onJoin}>👥 Rejoindre</button>
                 </div>
             </div>
         );
 
-        // CRÉATION
-        const CreateScreen = ({ onStart }) => {
+        // CREATE
+        const Create = ({ onStart }) => {
             const [deezer] = useState(new DeezerAPI());
             const [name, setName] = useState('');
             const [playlist, setPlaylist] = useState('');
@@ -104,47 +94,34 @@
             const [mode, setMode] = useState('qcm');
             const [loading, setLoading] = useState(false);
 
-            const loadTop50 = async () => {
-                if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
+            const load = async (type) => {
+                if (!name) { alert('⚠️ Entre ton pseudo'); return; }
                 setLoading(true);
                 try {
-                    const tracks = await deezer.getChart();
-                    alert(`✅ ${tracks.length} morceaux !`);
+                    let tracks;
+                    if (type === 'chart') {
+                        tracks = await deezer.getChart();
+                    } else {
+                        const match = playlist.match(/playlist\/(\d+)/);
+                        if (!match) { alert('❌ URL invalide'); return; }
+                        tracks = await deezer.getPlaylist(match[1]);
+                    }
+                    if (tracks.length < numQ) {
+                        alert(`⚠️ Seulement ${tracks.length} morceaux disponibles`);
+                    }
+                    alert(`✅ ${tracks.length} morceaux chargés`);
                     onStart(name, mode, numQ, tracks);
                 } catch (e) {
-                    alert('❌ Erreur: ' + e.message);
-                }
-                setLoading(false);
-            };
-
-            const loadPlaylist = async () => {
-                if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
-                const match = playlist.match(/playlist\/(\d+)/);
-                if (!match) { alert('❌ URL invalide'); return; }
-                
-                setLoading(true);
-                try {
-                    const tracks = await deezer.getPlaylist(match[1]);
-                    alert(`✅ ${tracks.length} morceaux !`);
-                    onStart(name, mode, numQ, tracks);
-                } catch (e) {
-                    alert('❌ Erreur: ' + e.message);
+                    alert('❌ ' + e.message);
                 }
                 setLoading(false);
             };
 
             return (
                 <div className="screen">
-                    <h2>🎮 Créer une partie</h2>
+                    <h2 className="screen-title">🎮 Créer une partie</h2>
+                    <input className="input" placeholder="Ton pseudo" value={name} onChange={e => setName(e.target.value)} maxLength={20} />
                     
-                    <input 
-                        className="input" 
-                        placeholder="Ton pseudo" 
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        maxLength={20}
-                    />
-
                     <div className="section">
                         <h3>🎯 Mode</h3>
                         <select className="select" value={mode} onChange={e => setMode(e.target.value)}>
@@ -158,29 +135,18 @@
                         <h3>🔢 Questions</h3>
                         <div className="num-grid">
                             {[5,10,15,20,30].map(n => (
-                                <button 
-                                    key={n}
-                                    className={`num-btn ${numQ === n ? 'active' : ''}`}
-                                    onClick={() => setNumQ(n)}
-                                >
-                                    {n}
-                                </button>
+                                <button key={n} className={`num-btn ${numQ === n ? 'active' : ''}`} onClick={() => setNumQ(n)}>{n}</button>
                             ))}
                         </div>
                     </div>
 
                     <div className="section">
                         <h3>🎵 Musique</h3>
-                        <button className="btn" onClick={loadTop50} disabled={loading}>
+                        <button className="btn" onClick={() => load('chart')} disabled={loading}>
                             {loading ? '⏳' : '🔥'} Top 50
                         </button>
-                        <input 
-                            className="input" 
-                            placeholder="URL Playlist Deezer"
-                            value={playlist}
-                            onChange={e => setPlaylist(e.target.value)}
-                        />
-                        <button className="btn" onClick={loadPlaylist} disabled={!playlist || loading}>
+                        <input className="input" placeholder="URL Playlist Deezer" value={playlist} onChange={e => setPlaylist(e.target.value)} />
+                        <button className="btn" onClick={() => load('playlist')} disabled={!playlist || loading}>
                             {loading ? '⏳' : '📋'} Charger
                         </button>
                     </div>
@@ -188,36 +154,16 @@
             );
         };
 
-        // REJOINDRE
-        const JoinScreen = ({ onJoin }) => {
+        // JOIN
+        const Join = ({ onJoin }) => {
             const [name, setName] = useState('');
             const [code, setCode] = useState('');
-
             return (
                 <div className="screen">
-                    <h2>👥 Rejoindre</h2>
-                    <input 
-                        className="input" 
-                        placeholder="Ton pseudo"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        maxLength={20}
-                    />
-                    <input 
-                        className="input code-input" 
-                        placeholder="123456"
-                        type="tel"
-                        value={code}
-                        onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-                        maxLength={6}
-                    />
-                    <button 
-                        className="btn large"
-                        onClick={() => onJoin(name, code)}
-                        disabled={!name || code.length !== 6}
-                    >
-                        ▶️ Rejoindre
-                    </button>
+                    <h2 className="screen-title">👥 Rejoindre</h2>
+                    <input className="input" placeholder="Ton pseudo" value={name} onChange={e => setName(e.target.value)} maxLength={20} />
+                    <input className="input code-input" placeholder="123456" type="tel" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} maxLength={6} />
+                    <button className="btn large" onClick={() => onJoin(name, code)} disabled={!name || code.length !== 6}>▶️ Rejoindre</button>
                 </div>
             );
         };
@@ -225,28 +171,28 @@
         // LOBBY
         const Lobby = ({ room, isHost, onStart }) => (
             <div className="screen">
-                <h2>Salle d'attente</h2>
-                <div className="code-box">
-                    <div className="code-label">Code</div>
-                    <div className="code-big">{room.code}</div>
+                <h2 className="screen-title">Salle d'attente</h2>
+                <div className="code-display">
+                    <div className="code-label">Code de la partie</div>
+                    <div className="code-value">{room.code}</div>
                 </div>
-                <div className="players">
+                <div className="players-box">
                     <h3>👥 Joueurs ({room.players?.length || 0})</h3>
                     {room.players?.map((p, i) => (
                         <div key={i} className="player">
-                            <span>#{i+1}</span>
-                            <span>{p.name}</span>
+                            <span className="player-num">{i+1}</span>
+                            <span className="player-name">{p.name}</span>
                             {p.name === room.host && <span>👑</span>}
                         </div>
                     ))}
                 </div>
                 {isHost && <button className="btn large" onClick={onStart}>▶️ Lancer</button>}
-                {!isHost && <p className="waiting">⏳ En attente...</p>}
+                {!isHost && <div className="waiting"><div className="spinner"></div><p>En attente...</p></div>}
             </div>
         );
 
-        // JEU
-        const Game = ({ room, playerIdx, onAnswer, musicDB }) => {
+        // GAME
+        const Game = ({ room, playerIdx, onAnswer, isHost }) => {
             const [time, setTime] = useState(20);
             const [answered, setAnswered] = useState(false);
             const [options, setOptions] = useState([]);
@@ -257,10 +203,15 @@
 
             const audioRef = useRef(null);
             const timerRef = useRef(null);
-            const submitRef = useRef(false);
             
-            const q = room.questions[room.currentQ];
-            const player = room.players[playerIdx];
+            const q = room.questions?.[room.currentQ];
+            const player = room.players?.[playerIdx];
+            
+            // SÉCURITÉ
+            if (!q || !player) {
+                return <div className="screen"><h2>Chargement...</h2></div>;
+            }
+
             const blur = answered ? 0 : (time / 20) * 25;
 
             useEffect(() => {
@@ -268,9 +219,9 @@
                 setAnswered(false);
                 setResult(null);
                 setInputs({ title: '', artist: '' });
-                submitRef.current = false;
 
-                if (audioRef.current) {
+                // AUDIO SEULEMENT POUR L'HOTE
+                if (isHost && audioRef.current) {
                     audioRef.current.pause();
                     audioRef.current.currentTime = 0;
                     setTimeout(() => audioRef.current?.play().catch(() => {}), 200);
@@ -280,11 +231,12 @@
                     const type = Math.random() > 0.5 ? 'artist' : 'title';
                     const correctAns = q[type];
                     const opts = [correctAns];
-                    const pool = shuffle(musicDB.filter(m => m[type] !== correctAns));
+                    const allTracks = room.questions || [];
+                    const pool = shuffle(allTracks.filter(m => m[type] && m[type] !== correctAns));
                     
                     while (opts.length < 4 && pool.length > 0) {
                         const val = pool.pop()[type];
-                        if (!opts.includes(val)) opts.push(val);
+                        if (val && !opts.includes(val)) opts.push(val);
                     }
 
                     setOptions(shuffle(opts));
@@ -296,10 +248,6 @@
                     setTime(prev => {
                         if (prev <= 1) {
                             clearInterval(timerRef.current);
-                            if (!submitRef.current) {
-                                submitRef.current = true;
-                                handleSubmit(null, 0);
-                            }
                             return 0;
                         }
                         return prev - 1;
@@ -312,7 +260,7 @@
                 };
             }, [room.currentQ]);
 
-            const handleSubmit = (answer, t = time) => {
+            const submit = (answer, t = time) => {
                 if (answered) return;
                 setAnswered(true);
                 clearInterval(timerRef.current);
@@ -325,7 +273,7 @@
                 if (q.type === 'qcm') {
                     isCorrect = answer === correct;
                     pts = isCorrect ? (50 + t * 10) : 0;
-                    msg = isCorrect ? `🎉 +${pts} pts !` : `❌ ${q.title} - ${q.artist}`;
+                    msg = isCorrect ? `🎉 +${pts} pts` : `❌ ${q.title} - ${q.artist}`;
                 } else {
                     const title = inputs.title.toLowerCase().trim();
                     const artist = inputs.artist.toLowerCase().trim();
@@ -337,7 +285,6 @@
                         pts = 50 + t * 10;
                         msg = `🎉 +${pts} pts`;
                     } else if (titleOk || artistOk) {
-                        isCorrect = true;
                         pts = Math.floor((50 + t * 10) * 0.5);
                         msg = `👍 +${pts} pts (50%)`;
                     } else {
@@ -346,37 +293,43 @@
                 }
 
                 setResult({ isCorrect, msg });
-                setTimeout(() => onAnswer(pts), 2500);
+                setTimeout(() => onAnswer(pts), 2000);
             };
 
             return (
                 <div className="screen game">
                     <div className="game-header">
-                        <div>⏱️ {time}s</div>
+                        <div className="timer">⏱️ {time}s</div>
                         <div>Q {room.currentQ + 1}/{room.questions.length}</div>
-                        <div>🏆 {player.score}</div>
+                        <div className="score">🏆 {player.score || 0}</div>
                     </div>
 
-                    <img src={q.cover} className="cover" style={{ filter: `blur(${blur}px)` }} />
+                    <div className="img-box">
+                        <img src={q.cover} className="cover" style={{ filter: `blur(${blur}px)` }} />
+                    </div>
 
-                    <audio ref={audioRef} src={q.preview} loop />
-                    <button className="audio-btn" onClick={() => {
-                        if (audioRef.current?.paused) audioRef.current.play();
-                        else audioRef.current?.pause();
-                    }}>
-                        🎵 {answered ? 'Stop' : 'Play'}
-                    </button>
+                    {isHost && (
+                        <div className="audio-box">
+                            <audio ref={audioRef} src={q.preview} loop />
+                            <button className="audio-btn" onClick={() => {
+                                if (audioRef.current?.paused) audioRef.current.play();
+                                else audioRef.current?.pause();
+                            }}>
+                                🎵 {answered ? 'Stop' : 'Play'}
+                            </button>
+                        </div>
+                    )}
 
-                    <div className="question">
+                    <div className="question-box">
                         {q.type === 'qcm' && (
                             <>
-                                <h3>{qText}</h3>
+                                <h3 className="q-text">{qText}</h3>
                                 <div className="options">
                                     {options.map((opt, i) => (
                                         <button
                                             key={i}
                                             className={`opt ${result ? (opt === correct ? 'correct' : 'wrong') : ''}`}
-                                            onClick={() => handleSubmit(opt, time)}
+                                            onClick={() => submit(opt, time)}
                                             disabled={answered}
                                         >
                                             {opt}
@@ -388,22 +341,10 @@
 
                         {q.type === 'writing' && (
                             <>
-                                <h3>Écris le titre et l'artiste</h3>
-                                <input
-                                    className="input"
-                                    placeholder="Titre"
-                                    value={inputs.title}
-                                    onChange={e => setInputs({...inputs, title: e.target.value})}
-                                    disabled={answered}
-                                />
-                                <input
-                                    className="input"
-                                    placeholder="Artiste"
-                                    value={inputs.artist}
-                                    onChange={e => setInputs({...inputs, artist: e.target.value})}
-                                    disabled={answered}
-                                />
-                                {!answered && <button className="btn" onClick={() => handleSubmit(null, time)}>Valider</button>}
+                                <h3 className="q-text">Écris le titre et l'artiste</h3>
+                                <input className="input" placeholder="Titre" value={inputs.title} onChange={e => setInputs({...inputs, title: e.target.value})} disabled={answered} />
+                                <input className="input" placeholder="Artiste" value={inputs.artist} onChange={e => setInputs({...inputs, artist: e.target.value})} disabled={answered} />
+                                {!answered && <button className="btn" onClick={() => submit(null, time)}>Valider</button>}
                             </>
                         )}
 
@@ -417,44 +358,48 @@
             );
         };
 
-        // LEADERBOARD
+        // LEADERBOARD - GARANTI D'AFFICHER
         const Leaderboard = ({ room, onRestart }) => {
-            if (!room?.players) {
-                return (
-                    <div className="screen">
-                        <h2>Chargement...</h2>
-                        <button className="btn large" onClick={onRestart}>🏠 Menu</button>
-                    </div>
-                );
-            }
-
-            const sorted = [...room.players].sort((a, b) => b.score - a.score);
+            console.log('🏆 LEADERBOARD RENDU');
+            console.log('Room:', room);
+            
+            const players = room?.players || [];
+            const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
 
             return (
-                <div className="screen">
-                    <h1 className="leaderboard-title">🏆 CLASSEMENT 🏆</h1>
+                <div className="screen leaderboard-screen">
+                    <h1 className="leaderboard-title">🏆 CLASSEMENT FINAL 🏆</h1>
                     
-                    <div className="podium">
-                        {sorted.slice(0, 3).map((p, i) => (
-                            <div key={i} className="podium-item">
-                                <div className="medal">{['🥇','🥈','🥉'][i]}</div>
-                                <div className="p-name">{p.name}</div>
-                                <div className="p-score">{p.score} pts</div>
+                    {sorted.length > 0 ? (
+                        <>
+                            <div className="podium">
+                                {sorted.slice(0, 3).map((p, i) => (
+                                    <div key={i} className="podium-item">
+                                        <div className="medal">{['🥇','🥈','🥉'][i]}</div>
+                                        <div className="p-name">{p.name || 'Joueur'}</div>
+                                        <div className="p-score">{p.score || 0} pts</div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
 
-                    <div className="ranks">
-                        {sorted.map((p, i) => (
-                            <div key={i} className="rank-row">
-                                <span className="rank-num">#{i+1}</span>
-                                <span className="rank-name">{p.name}</span>
-                                <span className="rank-score">{p.score} pts</span>
+                            <div className="leaderboard">
+                                {sorted.map((p, i) => (
+                                    <div key={i} className="lb-row">
+                                        <span className="rank">#{i+1}</span>
+                                        <span className="name">{p.name || 'Joueur'}</span>
+                                        <span className="pts">{p.score || 0} pts</span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </>
+                    ) : (
+                        <div style={{padding: '2rem', color: '#ffbe0b'}}>
+                            <h2>Aucun joueur trouvé</h2>
+                            <p>Room: {JSON.stringify(room)}</p>
+                        </div>
+                    )}
 
-                    <button className="btn large" onClick={onRestart}>🏠 Menu</button>
+                    <button className="btn large" onClick={onRestart}>🏠 Nouvelle partie</button>
                 </div>
             );
         };
@@ -465,13 +410,12 @@
             const [room, setRoom] = useState(null);
             const [playerIdx, setPlayerIdx] = useState(0);
             const [isHost, setIsHost] = useState(false);
-            const [musicDB, setMusicDB] = useState([]);
 
             const roomRef = useRef(null);
 
             useEffect(() => {
                 if (room?.code) {
-                    const ref = database.ref(`rooms/${room.code}`);
+                    const ref = db.ref(`rooms/${room.code}`);
                     roomRef.current = ref;
 
                     ref.on('value', snapshot => {
@@ -483,8 +427,10 @@
                                 setScreen('game');
                             }
                             
+                            // FORCE LEADERBOARD
                             if (data.currentQ >= data.questions.length && screen === 'game') {
-                                setTimeout(() => setScreen('leaderboard'), 1500);
+                                console.log('🏁 FIN - PASSAGE AU LEADERBOARD');
+                                setScreen('leaderboard');
                             }
                         }
                     });
@@ -493,10 +439,8 @@
                 }
             }, [room?.code, screen]);
 
-            const createParty = (name, mode, numQ, tracks) => {
+            const create = (name, mode, numQ, tracks) => {
                 const code = genCode();
-                setMusicDB(tracks);
-                
                 const music = shuffle(tracks);
                 let questions;
                 
@@ -519,67 +463,61 @@
                     started: false
                 };
                 
-                database.ref(`rooms/${code}`).set(newRoom);
+                db.ref(`rooms/${code}`).set(newRoom);
                 setRoom(newRoom);
                 setPlayerIdx(0);
                 setIsHost(true);
                 setScreen('lobby');
             };
 
-            const joinParty = (name, code) => {
-                database.ref(`rooms/${code}`).once('value', snapshot => {
+            const join = (name, code) => {
+                db.ref(`rooms/${code}`).once('value', snapshot => {
                     const existing = snapshot.val();
-                    if (!existing) { 
-                        alert('❌ Code invalide'); 
-                        return; 
-                    }
-                    if (existing.started) { 
-                        alert('❌ Déjà lancée'); 
-                        return; 
-                    }
+                    if (!existing) { alert('❌ Code invalide'); return; }
+                    if (existing.started) { alert('❌ Déjà lancée'); return; }
 
-                    const newPlayer = { name, score: 0 };
-                    existing.players.push(newPlayer);
-                    
-                    database.ref(`rooms/${code}`).update({ players: existing.players });
+                    existing.players.push({ name, score: 0 });
+                    db.ref(`rooms/${code}`).update({ players: existing.players });
                     
                     setRoom(existing);
                     setPlayerIdx(existing.players.length - 1);
                     setIsHost(false);
-                    setMusicDB(existing.questions);
                     setScreen('lobby');
                 });
             };
 
-            const startGame = () => {
-                database.ref(`rooms/${room.code}`).update({ started: true });
+            const start = () => {
+                db.ref(`rooms/${room.code}`).update({ started: true });
             };
 
-            const handleAnswer = (pts) => {
+            const answer = (pts) => {
                 const updatedPlayers = [...room.players];
-                updatedPlayers[playerIdx].score += pts;
+                updatedPlayers[playerIdx].score = (updatedPlayers[playerIdx].score || 0) + pts;
                 
-                database.ref(`rooms/${room.code}`).update({
-                    players: updatedPlayers,
-                    currentQ: room.currentQ + 1
-                });
+                // ATTENDRE QUE TOUT LE MONDE AIT RÉPONDU (20s max)
+                setTimeout(() => {
+                    db.ref(`rooms/${room.code}`).update({
+                        players: updatedPlayers,
+                        currentQ: room.currentQ + 1
+                    });
+                }, 20000); // 20 secondes
             };
 
             const restart = () => {
                 if (roomRef.current) roomRef.current.off();
                 setScreen('menu');
                 setRoom(null);
-                setMusicDB([]);
             };
 
             return (
                 <div className="app">
-                    {screen === 'menu' && <Menu onCreateParty={() => setScreen('create')} onJoinParty={() => setScreen('join')} />}
-                    {screen === 'create' && <CreateScreen onStart={createParty} />}
-                    {screen === 'join' && <JoinScreen onJoin={joinParty} />}
-                    {screen === 'lobby' && room && <Lobby room={room} isHost={isHost} onStart={startGame} />}
-                    {screen === 'game' && room && <Game room={room} playerIdx={playerIdx} onAnswer={handleAnswer} musicDB={musicDB} />}
-                    {screen === 'leaderboard' && room && <Leaderboard room={room} onRestart={restart} />}
+                    <div className="bg"></div>
+                    {screen === 'menu' && <Menu onCreate={() => setScreen('create')} onJoin={() => setScreen('join')} />}
+                    {screen === 'create' && <Create onStart={create} />}
+                    {screen === 'join' && <Join onJoin={join} />}
+                    {screen === 'lobby' && room && <Lobby room={room} isHost={isHost} onStart={start} />}
+                    {screen === 'game' && room && <Game room={room} playerIdx={playerIdx} onAnswer={answer} isHost={isHost} />}
+                    {screen === 'leaderboard' && <Leaderboard room={room} onRestart={restart} />}
                 </div>
             );
         };
@@ -589,248 +527,292 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0e27;
             color: white;
-            min-height: 100vh;
         }
-
-        .app { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        
+        .app { min-height: 100vh; position: relative; }
+        .bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(131, 56, 236, 0.1), transparent 50%);
+            animation: pulse 8s infinite;
+            z-index: 0;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
         .screen {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 2rem;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-
-        .screen.game { max-width: 800px; }
-
+        .screen.game { justify-content: flex-start; padding-top: 1rem; }
+        .logo { text-align: center; margin-bottom: 2rem; }
         .title {
             font-family: 'Bungee Shade', cursive;
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
+            font-size: 4rem;
+            background: linear-gradient(45deg, #ff006e, #00f5ff, #ffbe0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        .subtitle { font-size: 1.2rem; opacity: 0.8; margin-bottom: 2rem; }
-
-        .menu-buttons { display: flex; flex-direction: column; gap: 1rem; }
-
+        .subtitle { font-size: 1.2rem; color: #00f5ff; letter-spacing: 0.2em; margin-top: 0.5rem; }
+        .menu-btns { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 400px; }
         .btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 50px;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
             color: white;
-            font-weight: 800;
+            border: none;
+            padding: 0.8rem 1.5rem;
             font-size: 1rem;
+            font-weight: 800;
+            border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
             font-family: 'Montserrat', sans-serif;
+            margin: 0.3rem;
         }
-
         .btn:hover:not(:disabled) { transform: translateY(-3px); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn.large { padding: 1.5rem 3rem; font-size: 1.2rem; margin: 0.5rem 0; }
-        .btn.secondary { background: linear-gradient(135deg, #00f5ff 0%, #667eea 100%); }
-
+        .btn.secondary { background: linear-gradient(135deg, #00f5ff, #ffbe0b); }
+        .btn.large { padding: 1.5rem 3rem; font-size: 1.3rem; margin-top: 2rem; }
+        .screen-title { font-size: 2.5rem; font-weight: 800; color: #ffbe0b; margin-bottom: 2rem; }
         .input, .select {
             width: 100%;
+            max-width: 400px;
             padding: 1rem;
             margin: 0.5rem 0;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
             border-radius: 10px;
             color: white;
             font-size: 1rem;
             font-family: 'Montserrat', sans-serif;
         }
-
-        .input::placeholder { color: rgba(255, 255, 255, 0.5); }
-        .input:focus, .select:focus { outline: none; border-color: #f5576c; }
+        .input:focus, .select:focus { outline: none; border-color: #ff006e; }
         .code-input { font-size: 2rem; text-align: center; letter-spacing: 0.5em; }
-
-        .section { margin: 1.5rem 0; }
-        .section h3 { margin-bottom: 1rem; font-size: 1.2rem; }
-
-        .num-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 0.5rem;
-        }
-
+        .section { margin: 1.5rem 0; text-align: center; }
+        .section h3 { color: #00f5ff; margin-bottom: 1rem; }
+        .num-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; max-width: 400px; }
         .num-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 0.8rem;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #8338ec;
             color: white;
+            padding: 0.8rem;
+            font-size: 1.1rem;
             font-weight: 800;
+            border-radius: 10px;
             cursor: pointer;
             font-family: 'Montserrat', sans-serif;
-            transition: all 0.2s;
         }
-
-        .num-btn:hover { background: rgba(255, 255, 255, 0.2); }
-        .num-btn.active {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-color: #f5576c;
-        }
-
-        .code-box {
-            background: rgba(255, 255, 255, 0.1);
+        .num-btn.active { background: linear-gradient(135deg, #ff006e, #8338ec); border-color: #ff006e; }
+        .code-display {
+            text-align: center;
+            background: linear-gradient(135deg, #1a1f3a, #2a2f4a);
+            border: 3px solid #ffbe0b;
+            border-radius: 25px;
             padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
+            margin-bottom: 2rem;
         }
-
-        .code-label { opacity: 0.7; margin-bottom: 0.5rem; }
-        .code-big { font-size: 3rem; font-weight: 800; letter-spacing: 0.2em; }
-
-        .players {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin: 2rem 0;
+        .code-label { color: #aaa; font-size: 1rem; margin-bottom: 1rem; }
+        .code-value {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #ffbe0b;
+            letter-spacing: 0.3em;
+            text-shadow: 0 0 30px rgba(255, 190, 11, 0.6);
         }
-
+        .players-box {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+        .players-box h3 { color: #00f5ff; margin-bottom: 1rem; }
         .player {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
             border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
         }
-
-        .waiting { font-size: 1.2rem; margin-top: 2rem; opacity: 0.8; }
-
+        .player-num {
+            background: #8338ec;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+        .player-name { flex: 1; font-weight: 600; }
+        .waiting { text-align: center; margin-top: 2rem; }
+        .waiting p { font-size: 1.2rem; color: #ffbe0b; margin-top: 1rem; }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #ff006e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         .game-header {
             display: flex;
             justify-content: space-between;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            margin-bottom: 1rem;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 1.5rem;
+            background: #1a1f3a;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #8338ec;
             font-weight: 800;
-            font-size: 1.1rem;
         }
-
-        .cover {
+        .timer { color: #ff006e; font-size: 1.3rem; }
+        .score { color: #ffbe0b; font-size: 1.3rem; }
+        .img-box {
             width: 100%;
             max-width: 400px;
+            margin: 0 auto 1.5rem;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .cover {
+            width: 100%;
             height: 400px;
             object-fit: cover;
-            border-radius: 15px;
-            margin: 1rem 0;
-            transition: filter 0.3s;
+            transition: filter 0.3s ease;
         }
-
+        .audio-box { text-align: center; margin: 1rem 0; }
         .audio-btn {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 50px;
+            background: linear-gradient(135deg, #ffbe0b, #ff006e);
             color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
             font-weight: 800;
+            border-radius: 50px;
             cursor: pointer;
-            margin: 1rem 0;
             font-family: 'Montserrat', sans-serif;
         }
-
-        .question { margin-top: 2rem; }
-        .question h3 { margin-bottom: 1.5rem; font-size: 1.3rem; }
-
+        .question-box { width: 100%; max-width: 600px; margin: 0 auto; }
+        .q-text {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00f5ff;
+            margin-bottom: 1.5rem;
+        }
         .options {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-
         .opt {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #8338ec;
             padding: 1.5rem;
-            border-radius: 10px;
+            border-radius: 15px;
             color: white;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s;
         }
-
-        .opt:hover:not(:disabled) { transform: scale(1.05); background: rgba(255, 255, 255, 0.2); }
-        .opt.correct { background: rgba(0, 255, 0, 0.3); border-color: #00ff00; }
-        .opt.wrong { background: rgba(255, 0, 0, 0.3); border-color: #ff0000; }
-
+        .opt:hover:not(:disabled) { background: rgba(131, 56, 236, 0.2); transform: scale(1.05); }
+        .opt.correct { background: rgba(0, 255, 100, 0.2); border-color: #00ff64; }
+        .opt.wrong { background: rgba(255, 0, 0, 0.2); border-color: #ff0033; }
         .result {
             margin-top: 1.5rem;
             padding: 1.5rem;
-            border-radius: 10px;
-            font-size: 1.2rem;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3rem;
             font-weight: 800;
         }
-
-        .result.correct { background: rgba(0, 255, 0, 0.3); border: 2px solid #00ff00; }
-        .result.wrong { background: rgba(255, 0, 0, 0.3); border: 2px solid #ff0000; }
-
+        .result.correct { background: rgba(0, 255, 100, 0.2); border: 2px solid #00ff64; color: #00ff64; }
+        .result.wrong { background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0033; color: #ff6b6b; }
+        .leaderboard-screen { min-height: 100vh; }
         .leaderboard-title {
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 800;
+            color: #ffbe0b;
             margin-bottom: 2rem;
-            color: #fee140;
+            text-shadow: 0 0 20px rgba(255, 190, 11, 0.5);
         }
-
         .podium {
             display: flex;
-            justify-content: center;
             gap: 1rem;
+            justify-content: center;
             margin: 2rem 0;
             flex-wrap: wrap;
         }
-
         .podium-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            border-radius: 15px;
-            min-width: 120px;
+            background: #1a1f3a;
+            border: 3px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            min-width: 150px;
         }
-
         .medal { font-size: 3rem; margin-bottom: 0.5rem; }
-        .p-name { font-weight: 800; margin: 0.5rem 0; }
-        .p-score { font-size: 1.5rem; color: #fee140; font-weight: 800; }
-
-        .ranks {
-            background: rgba(0, 0, 0, 0.2);
+        .p-name { font-weight: 800; font-size: 1.2rem; color: #ffbe0b; margin-bottom: 0.5rem; }
+        .p-score { font-size: 1.5rem; font-weight: 800; color: #ff006e; }
+        .leaderboard {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
             padding: 1.5rem;
-            border-radius: 15px;
+            width: 100%;
+            max-width: 600px;
             margin: 2rem 0;
         }
-
-        .rank-row {
+        .lb-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
-            background: rgba(255, 255, 255, 0.1);
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
+            margin-bottom: 0.5rem;
         }
-
-        .rank-num { font-weight: 800; }
-        .rank-name { flex: 1; text-align: center; }
-        .rank-score { font-weight: 800; color: #fee140; }
-
+        .rank {
+            background: #8338ec;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+        .name { flex: 1; font-weight: 600; }
+        .pts { font-weight: 800; color: #ffbe0b; font-size: 1.2rem; }
         @media (max-width: 768px) {
-            .title { font-size: 2rem; }
+            .title { font-size: 2.5rem; }
             .options { grid-template-columns: 1fr; }
             .cover { height: 300px; }
-            .code-big { font-size: 2rem; }
+            .code-value { font-size: 3rem; }
         }
     </style>
 </body>
