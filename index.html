@@ -5,592 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div id="root"></div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        // FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyAWA-Zfs_hljCFz1wc0Rg2LJWZPINWONnU",
-            authDomain: "quizz-party-ptg.firebaseapp.com",
-            databaseURL: "https://quizz-party-ptg-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "quizz-party-ptg",
-            storageBucket: "quizz-party-ptg.firebasestorage.app",
-            messagingSenderId: "352511986737",
-            appId: "1:352511986737:web:7318d807b4d3f3b6b29910"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // DEEZER
-        class DeezerAPI {
-            constructor() {
-                this.proxies = ['', 'https://corsproxy.io/?', 'https://api.codetabs.com/v1/proxy?quest='];
-            }
-            async fetchWithProxy(url) {
-                for (let i = 0; i < this.proxies.length; i++) {
-                    try {
-                        const finalUrl = this.proxies[i] + encodeURIComponent(url);
-                        const res = await fetch(finalUrl);
-                        if (!res.ok) throw new Error('Erreur');
-                        return await res.json();
-                    } catch (e) {
-                        if (i === this.proxies.length - 1) throw e;
-                    }
-                }
-            }
-            async getChart() {
-                const data = await this.fetchWithProxy('https://api.deezer.com/chart/0/tracks?limit=50');
-                return data.data.map(t => ({
-                    title: t.title,
-                    artist: t.artist.name,
-                    cover: t.album.cover_big || 'https://via.placeholder.com/400',
-                    preview: t.preview
-                })).filter(t => t.preview && t.cover);
-            }
-            async getPlaylist(id) {
-                const data = await this.fetchWithProxy(`https://api.deezer.com/playlist/${id}`);
-                return data.tracks.data.map(t => ({
-                    title: t.title,
-                    artist: t.artist.name,
-                    cover: t.album.cover_big || 'https://via.placeholder.com/400',
-                    preview: t.preview
-                })).filter(t => t.preview && t.cover);
-            }
-        }
-
-        const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-        const genCode = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-        // MENU
-        const Menu = ({ onCreate, onJoin }) => (
-            <div className="screen">
-                <div className="logo">
-                    <h1 className="title">QUIZ PARTY</h1>
-                    <p className="subtitle">🎵 Blind Test Musical</p>
-                </div>
-                <div className="menu-btns">
-                    <button className="btn large" onClick={onCreate}>🎮 Créer</button>
-                    <button className="btn large secondary" onClick={onJoin}>👥 Rejoindre</button>
-                </div>
-            </div>
-        );
-
-        // CREATE
-        const Create = ({ onStart }) => {
-            const [deezer] = useState(new DeezerAPI());
-            const [name, setName] = useState('');
-            const [playlist, setPlaylist] = useState('');
-            const [numQ, setNumQ] = useState(10);
-            const [mode, setMode] = useState('qcm');
-            const [loading, setLoading] = useState(false);
-
-            const load = async (type) => {
-                if (!name) { alert('⚠️ Entre ton pseudo'); return; }
-                setLoading(true);
-                try {
-                    let tracks;
-                    if (type === 'chart') {
-                        tracks = await deezer.getChart();
-                    } else {
-                        const match = playlist.match(/playlist\/(\d+)/);
-                        if (!match) { alert('❌ URL invalide'); return; }
-                        tracks = await deezer.getPlaylist(match[1]);
-                    }
-                    if (tracks.length < numQ) {
-                        alert(`⚠️ Seulement ${tracks.length} morceaux disponibles`);
-                    }
-                    alert(`✅ ${tracks.length} morceaux chargés`);
-                    onStart(name, mode, numQ, tracks);
-                } catch (e) {
-                    alert('❌ ' + e.message);
-                }
-                setLoading(false);
-            };
-
-            return (
-                <div className="screen">
-                    <h2 className="screen-title">🎮 Créer une partie</h2>
-                    <input className="input" placeholder="Ton pseudo" value={name} onChange={e => setName(e.target.value)} maxLength={20} />
-                    
-                    <div className="section">
-                        <h3>🎯 Mode</h3>
-                        <select className="select" value={mode} onChange={e => setMode(e.target.value)}>
-                            <option value="qcm">QCM</option>
-                            <option value="writing">Écriture</option>
-                            <option value="soiree">Soirée</option>
-                        </select>
-                    </div>
-
-                    <div className="section">
-                        <h3>🔢 Questions</h3>
-                        <div className="num-grid">
-                            {[5,10,15,20,30].map(n => (
-                                <button key={n} className={`num-btn ${numQ === n ? 'active' : ''}`} onClick={() => setNumQ(n)}>{n}</button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="section">
-                        <h3>🎵 Musique</h3>
-                        <button className="btn" onClick={() => load('chart')} disabled={loading}>
-                            {loading ? '⏳' : '🔥'} Top 50
-                        </button>
-                        <input className="input" placeholder="URL Playlist Deezer" value={playlist} onChange={e => setPlaylist(e.target.value)} />
-                        <button className="btn" onClick={() => load('playlist')} disabled={!playlist || loading}>
-                            {loading ? '⏳' : '📋'} Charger
-                        </button>
-                    </div>
-                </div>
-            );
-        };
-
-        // JOIN
-        const Join = ({ onJoin }) => {
-            const [name, setName] = useState('');
-            const [code, setCode] = useState('');
-            return (
-                <div className="screen">
-                    <h2 className="screen-title">👥 Rejoindre</h2>
-                    <input className="input" placeholder="Ton pseudo" value={name} onChange={e => setName(e.target.value)} maxLength={20} />
-                    <input className="input code-input" placeholder="123456" type="tel" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} maxLength={6} />
-                    <button className="btn large" onClick={() => onJoin(name, code)} disabled={!name || code.length !== 6}>▶️ Rejoindre</button>
-                </div>
-            );
-        };
-
-        // LOBBY
-        const Lobby = ({ room, isHost, onStart }) => (
-            <div className="screen">
-                <h2 className="screen-title">Salle d'attente</h2>
-                <div className="code-display">
-                    <div className="code-label">Code de la partie</div>
-                    <div className="code-value">{room.code}</div>
-                </div>
-                <div className="players-box">
-                    <h3>👥 Joueurs ({room.players?.length || 0})</h3>
-                    {room.players?.map((p, i) => (
-                        <div key={i} className="player">
-                            <span className="player-num">{i+1}</span>
-                            <span className="player-name">{p.name}</span>
-                            {p.name === room.host && <span>👑</span>}
-                        </div>
-                    ))}
-                </div>
-                {isHost && <button className="btn large" onClick={onStart}>▶️ Lancer</button>}
-                {!isHost && <div className="waiting"><div className="spinner"></div><p>En attente...</p></div>}
-            </div>
-        );
-
-        // GAME
-        const Game = ({ room, playerIdx, onAnswer, isHost }) => {
-            const [time, setTime] = useState(20);
-            const [answered, setAnswered] = useState(false);
-            const [options, setOptions] = useState([]);
-            const [correct, setCorrect] = useState('');
-            const [qText, setQText] = useState('');
-            const [inputs, setInputs] = useState({ title: '', artist: '' });
-            const [result, setResult] = useState(null);
-
-            const audioRef = useRef(null);
-            const timerRef = useRef(null);
-            
-            const q = room.questions?.[room.currentQ];
-            const player = room.players?.[playerIdx];
-            
-            // SÉCURITÉ
-            if (!q || !player) {
-                return <div className="screen"><h2>Chargement...</h2></div>;
-            }
-
-            const blur = answered ? 0 : (time / 20) * 25;
-
-            useEffect(() => {
-                setTime(20);
-                setAnswered(false);
-                setResult(null);
-                setInputs({ title: '', artist: '' });
-
-                // AUDIO SEULEMENT POUR L'HOTE
-                if (isHost && audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current.currentTime = 0;
-                    setTimeout(() => audioRef.current?.play().catch(() => {}), 200);
-                }
-
-                if (q.type === 'qcm') {
-                    // Utiliser le type décidé par l'hôte !
-                    const type = q.qType || 'title';
-                    const correctAns = q[type];
-                    const opts = [correctAns];
-                    const allTracks = room.questions || [];
-                    const pool = shuffle(allTracks.filter(m => m[type] && m[type] !== correctAns));
-                    
-                    while (opts.length < 4 && pool.length > 0) {
-                        const val = pool.pop()[type];
-                        if (val && !opts.includes(val)) opts.push(val);
-                    }
-
-                    setOptions(shuffle(opts));
-                    setCorrect(correctAns);
-                    setQText(type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
-                }
-
-                timerRef.current = setInterval(() => {
-                    setTime(prev => {
-                        if (prev <= 1) {
-                            clearInterval(timerRef.current);
-                            
-                            // ARRÊTER LA MUSIQUE maintenant
-                            if (audioRef.current) audioRef.current.pause();
-                            
-                            // L'HÔTE passe à la question suivante
-                            if (isHost) {
-                                setTimeout(() => {
-                                    db.ref(`rooms/${room.code}/currentQ`).set(room.currentQ + 1);
-                                }, 2500); // Laisser 2.5s pour voir le résultat
-                            }
-                            
-                            return 0;
-                        }
-                        return prev - 1;
-                    });
-                }, 1000);
-
-                return () => {
-                    clearInterval(timerRef.current);
-                    if (audioRef.current) audioRef.current.pause();
-                };
-            }, [room.currentQ]);
-
-            const submit = (answer, t = time) => {
-                if (answered) return;
-                setAnswered(true);
-                // NE PAS CLEAR LE TIMER - on laisse arriver à 0
-                // NE PAS ARRÊTER LA MUSIQUE - elle continue pour tout le monde !
-
-                let isCorrect = false;
-                let pts = 0;
-                let msg = '';
-
-                if (q.type === 'qcm') {
-                    isCorrect = answer === correct;
-                    pts = isCorrect ? (50 + t * 10) : 0;
-                    msg = isCorrect ? `🎉 +${pts} pts` : `❌ ${q.title} - ${q.artist}`;
-                } else {
-                    const title = inputs.title.toLowerCase().trim();
-                    const artist = inputs.artist.toLowerCase().trim();
-                    const titleOk = title && q.title.toLowerCase().includes(title.split(' ')[0]);
-                    const artistOk = artist && q.artist.toLowerCase().includes(artist.split(' ')[0]);
-                    
-                    if (titleOk && artistOk) {
-                        isCorrect = true;
-                        pts = 50 + t * 10;
-                        msg = `🎉 +${pts} pts`;
-                    } else if (titleOk || artistOk) {
-                        pts = Math.floor((50 + t * 10) * 0.5);
-                        msg = `👍 +${pts} pts (50%)`;
-                    } else {
-                        msg = `❌ ${q.title} - ${q.artist}`;
-                    }
-                }
-
-                setResult({ isCorrect, msg });
-                setTimeout(() => onAnswer(pts), 100); // Enregistrer le score immédiatement
-            };
-
-            return (
-                <div className="screen game">
-                    <div className="game-header">
-                        <div className="timer">⏱️ {time}s</div>
-                        <div>Q {room.currentQ + 1}/{room.questions.length}</div>
-                        <div className="score">🏆 {player.score || 0}</div>
-                    </div>
-
-                    <div className="img-box">
-                        <img src={q.cover} className="cover" style={{ filter: `blur(${blur}px)` }} />
-                    </div>
-
-                    {isHost && (
-                        <div className="audio-box">
-                            <audio 
-                                ref={audioRef} 
-                                src={q.preview} 
-                                loop 
-                                onError={() => {
-                                    console.error('❌ Impossible de charger:', q.preview);
-                                    alert(`⚠️ Musique "${q.title}" non disponible. Question suivante !`);
-                                    if (isHost) {
-                                        setTimeout(() => {
-                                            db.ref(`rooms/${room.code}/currentQ`).set(room.currentQ + 1);
-                                        }, 1000);
-                                    }
-                                }}
-                            />
-                            <button className="audio-btn" onClick={() => {
-                                if (audioRef.current?.paused) audioRef.current.play();
-                                else audioRef.current?.pause();
-                            }}>
-                                🎵 {answered ? 'Stop' : 'Play'}
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="question-box">
-                        {q.type === 'qcm' && (
-                            <>
-                                <h3 className="q-text">{qText}</h3>
-                                <div className="options">
-                                    {options.map((opt, i) => (
-                                        <button
-                                            key={i}
-                                            className={`opt ${result ? (opt === correct ? 'correct' : 'wrong') : ''}`}
-                                            onClick={() => submit(opt, time)}
-                                            disabled={answered}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-
-                        {q.type === 'writing' && (
-                            <>
-                                <h3 className="q-text">Écris le titre et l'artiste</h3>
-                                <input className="input" placeholder="Titre" value={inputs.title} onChange={e => setInputs({...inputs, title: e.target.value})} disabled={answered} />
-                                <input className="input" placeholder="Artiste" value={inputs.artist} onChange={e => setInputs({...inputs, artist: e.target.value})} disabled={answered} />
-                                {!answered && <button className="btn" onClick={() => submit(null, time)}>Valider</button>}
-                            </>
-                        )}
-
-                        {result && (
-                            <div className={`result ${result.isCorrect ? 'correct' : 'wrong'}`}>
-                                {result.msg}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        // LEADERBOARD - GARANTI D'AFFICHER
-        const Leaderboard = ({ room, onRestart }) => {
-            console.log('🏆 LEADERBOARD RENDU');
-            console.log('Room:', room);
-            
-            const players = room?.players || [];
-            const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
-
-            return (
-                <div className="screen leaderboard-screen">
-                    <h1 className="leaderboard-title">🏆 CLASSEMENT FINAL 🏆</h1>
-                    
-                    {sorted.length > 0 ? (
-                        <>
-                            <div className="podium">
-                                {sorted.slice(0, 3).map((p, i) => (
-                                    <div key={i} className="podium-item">
-                                        <div className="medal">{['🥇','🥈','🥉'][i]}</div>
-                                        <div className="p-name">{p.name || 'Joueur'}</div>
-                                        <div className="p-score">{p.score || 0} pts</div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="leaderboard">
-                                {sorted.map((p, i) => (
-                                    <div key={i} className="lb-row">
-                                        <span className="rank">#{i+1}</span>
-                                        <span className="name">{p.name || 'Joueur'}</span>
-                                        <span className="pts">{p.score || 0} pts</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{padding: '2rem', color: '#ffbe0b'}}>
-                            <h2>Aucun joueur trouvé</h2>
-                            <p>Room: {JSON.stringify(room)}</p>
-                        </div>
-                    )}
-
-                    <button className="btn large" onClick={onRestart}>🏠 Nouvelle partie</button>
-                </div>
-            );
-        };
-
-        // APP
-        const App = () => {
-            const [screen, setScreen] = useState('menu');
-            const [room, setRoom] = useState(null);
-            const [playerIdx, setPlayerIdx] = useState(0);
-            const [isHost, setIsHost] = useState(false);
-
-            const roomRef = useRef(null);
-
-            useEffect(() => {
-                if (room?.code) {
-                    const ref = db.ref(`rooms/${room.code}`);
-                    roomRef.current = ref;
-
-                    ref.on('value', snapshot => {
-                        const data = snapshot.val();
-                        if (data) {
-                            setRoom(data);
-                            
-                            if (data.started && screen === 'lobby') {
-                                setScreen('game');
-                            }
-                            
-                            // FORCE LEADERBOARD
-                            if (data.currentQ >= data.questions.length && screen === 'game') {
-                                console.log('🏁 FIN - PASSAGE AU LEADERBOARD');
-                                setScreen('leaderboard');
-                            }
-                        }
-                    });
-
-                    return () => ref.off();
-                }
-            }, [room?.code, screen]);
-
-            const create = (name, mode, numQ, tracks) => {
-                const code = genCode();
-                const music = shuffle(tracks);
-                let questions;
-                
-                if (mode === 'soiree') {
-                    const half = Math.floor(numQ / 2);
-                    questions = [
-                        ...music.slice(0, half).map(q => ({ 
-                            ...q, 
-                            type: 'qcm',
-                            qType: Math.random() > 0.5 ? 'artist' : 'title' // L'hôte décide !
-                        })),
-                        ...music.slice(half, numQ).map(q => ({ ...q, type: 'writing' }))
-                    ];
-                } else if (mode === 'qcm') {
-                    questions = music.slice(0, numQ).map(q => ({ 
-                        ...q, 
-                        type: 'qcm',
-                        qType: Math.random() > 0.5 ? 'artist' : 'title' // L'hôte décide !
-                    }));
-                } else {
-                    questions = music.slice(0, numQ).map(q => ({ ...q, type: mode }));
-                }
-
-                const newRoom = {
-                    code,
-                    host: name,
-                    players: [{ name, score: 0 }],
-                    questions,
-                    currentQ: 0,
-                    started: false
-                };
-                
-                db.ref(`rooms/${code}`).set(newRoom);
-                setRoom(newRoom);
-                setPlayerIdx(0);
-                setIsHost(true);
-                setScreen('lobby');
-            };
-
-            const join = (name, code) => {
-                db.ref(`rooms/${code}`).once('value', snapshot => {
-                    const existing = snapshot.val();
-                    if (!existing) { alert('❌ Code invalide'); return; }
-                    if (existing.started) { alert('❌ Déjà lancée'); return; }
-
-                    existing.players.push({ name, score: 0 });
-                    db.ref(`rooms/${code}`).update({ players: existing.players });
-                    
-                    setRoom(existing);
-                    setPlayerIdx(existing.players.length - 1);
-                    setIsHost(false);
-                    setScreen('lobby');
-                });
-            };
-
-            const start = () => {
-                db.ref(`rooms/${room.code}`).update({ started: true });
-            };
-
-            const answer = (pts) => {
-                const updatedPlayers = [...room.players];
-                updatedPlayers[playerIdx].score = (updatedPlayers[playerIdx].score || 0) + pts;
-                
-                // Mettre à jour mon score immédiatement
-                db.ref(`rooms/${room.code}/players`).set(updatedPlayers);
-                
-                // L'HÔTE gère le passage à la question suivante
-                if (isHost) {
-                    // Attendre que le timer arrive à 0 (géré par le timer du Game)
-                }
-            };
-
-            const restart = () => {
-                if (roomRef.current) roomRef.current.off();
-                setScreen('menu');
-                setRoom(null);
-            };
-
-            return (
-                <div className="app">
-                    <div className="bg"></div>
-                    {screen === 'menu' && <Menu onCreate={() => setScreen('create')} onJoin={() => setScreen('join')} />}
-                    {screen === 'create' && <Create onStart={create} />}
-                    {screen === 'join' && <Join onJoin={join} />}
-                    {screen === 'lobby' && room && <Lobby room={room} isHost={isHost} onStart={start} />}
-                    {screen === 'game' && room && <Game room={room} playerIdx={playerIdx} onAnswer={answer} isHost={isHost} />}
-                    {screen === 'leaderboard' && <Leaderboard room={room} onRestart={restart} />}
-                    
-                    {/* BOUTON DE SECOURS - TOUJOURS VISIBLE */}
-                    {screen !== 'menu' && (
-                        <button 
-                            onClick={restart}
-                            style={{
-                                position: 'fixed',
-                                bottom: '20px',
-                                right: '20px',
-                                background: 'rgba(255, 0, 0, 0.8)',
-                                color: 'white',
-                                border: 'none',
-                                padding: '1rem 1.5rem',
-                                borderRadius: '50px',
-                                cursor: 'pointer',
-                                fontWeight: 800,
-                                zIndex: 9999,
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
-                            }}
-                        >
-                            🏠 MENU
-                        </button>
-                    )}
-                </div>
-            );
-        };
-
-        ReactDOM.render(<App />, document.getElementById('root'));
-    </script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Montserrat', sans-serif;
             background: #0a0e27;
             color: white;
+            min-height: 100vh;
         }
-        .app { min-height: 100vh; position: relative; }
+
+        .app {
+            min-height: 100vh;
+            position: relative;
+        }
+
         .bg {
             position: fixed;
             top: 0; left: 0;
@@ -601,10 +30,12 @@
             animation: pulse 8s infinite;
             z-index: 0;
         }
+
         @keyframes pulse {
             0%, 100% { opacity: 0.5; }
             50% { opacity: 0.8; }
         }
+
         .screen {
             position: relative;
             z-index: 1;
@@ -617,7 +48,10 @@
             align-items: center;
             justify-content: center;
         }
-        .screen.game { justify-content: flex-start; padding-top: 1rem; }
+
+        .hidden { display: none !important; }
+
+        /* MENU */
         .logo { text-align: center; margin-bottom: 2rem; }
         .title {
             font-family: 'Bungee Shade', cursive;
@@ -625,9 +59,25 @@
             background: linear-gradient(45deg, #ff006e, #00f5ff, #ffbe0b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .subtitle { font-size: 1.2rem; color: #00f5ff; letter-spacing: 0.2em; margin-top: 0.5rem; }
-        .menu-btns { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 400px; }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #00f5ff;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* BUTTONS */
         .btn {
             background: linear-gradient(135deg, #ff006e, #8338ec);
             color: white;
@@ -641,11 +91,13 @@
             font-family: 'Montserrat', sans-serif;
             margin: 0.3rem;
         }
+
         .btn:hover:not(:disabled) { transform: translateY(-3px); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn.large { padding: 1.5rem 3rem; font-size: 1.3rem; }
         .btn.secondary { background: linear-gradient(135deg, #00f5ff, #ffbe0b); }
-        .btn.large { padding: 1.5rem 3rem; font-size: 1.3rem; margin-top: 2rem; }
-        .screen-title { font-size: 2.5rem; font-weight: 800; color: #ffbe0b; margin-bottom: 2rem; }
+
+        /* INPUTS */
         .input, .select {
             width: 100%;
             max-width: 400px;
@@ -658,11 +110,22 @@
             font-size: 1rem;
             font-family: 'Montserrat', sans-serif;
         }
+
+        .input::placeholder { color: rgba(255, 255, 255, 0.5); }
         .input:focus, .select:focus { outline: none; border-color: #ff006e; }
         .code-input { font-size: 2rem; text-align: center; letter-spacing: 0.5em; }
+
+        /* SECTIONS */
         .section { margin: 1.5rem 0; text-align: center; }
         .section h3 { color: #00f5ff; margin-bottom: 1rem; }
-        .num-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; max-width: 400px; }
+
+        .num-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            max-width: 400px;
+        }
+
         .num-btn {
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid #8338ec;
@@ -673,8 +136,13 @@
             border-radius: 10px;
             cursor: pointer;
             font-family: 'Montserrat', sans-serif;
+            transition: all 0.2s;
         }
+
+        .num-btn:hover { background: rgba(255, 255, 255, 0.1); }
         .num-btn.active { background: linear-gradient(135deg, #ff006e, #8338ec); border-color: #ff006e; }
+
+        /* LOBBY */
         .code-display {
             text-align: center;
             background: linear-gradient(135deg, #1a1f3a, #2a2f4a);
@@ -682,7 +150,9 @@
             border-radius: 25px;
             padding: 2rem;
             margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(255, 190, 11, 0.3);
         }
+
         .code-label { color: #aaa; font-size: 1rem; margin-bottom: 1rem; }
         .code-value {
             font-size: 5rem;
@@ -691,6 +161,7 @@
             letter-spacing: 0.3em;
             text-shadow: 0 0 30px rgba(255, 190, 11, 0.6);
         }
+
         .players-box {
             background: #1a1f3a;
             border: 2px solid #8338ec;
@@ -700,7 +171,9 @@
             max-width: 600px;
             margin-bottom: 2rem;
         }
+
         .players-box h3 { color: #00f5ff; margin-bottom: 1rem; }
+
         .player {
             background: rgba(0, 0, 0, 0.3);
             padding: 1rem;
@@ -710,6 +183,7 @@
             gap: 1rem;
             margin-bottom: 0.5rem;
         }
+
         .player-num {
             background: #8338ec;
             width: 30px;
@@ -720,9 +194,12 @@
             justify-content: center;
             font-weight: 800;
         }
+
         .player-name { flex: 1; font-weight: 600; }
+
         .waiting { text-align: center; margin-top: 2rem; }
         .waiting p { font-size: 1.2rem; color: #ffbe0b; margin-top: 1rem; }
+
         .spinner {
             width: 60px;
             height: 60px;
@@ -732,7 +209,10 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
+
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* GAME */
         .game-header {
             display: flex;
             justify-content: space-between;
@@ -745,8 +225,10 @@
             border: 2px solid #8338ec;
             font-weight: 800;
         }
+
         .timer { color: #ff006e; font-size: 1.3rem; }
         .score { color: #ffbe0b; font-size: 1.3rem; }
+
         .img-box {
             width: 100%;
             max-width: 400px;
@@ -754,13 +236,16 @@
             border-radius: 20px;
             overflow: hidden;
         }
+
         .cover {
             width: 100%;
             height: 400px;
             object-fit: cover;
             transition: filter 0.3s ease;
         }
+
         .audio-box { text-align: center; margin: 1rem 0; }
+
         .audio-btn {
             background: linear-gradient(135deg, #ffbe0b, #ff006e);
             color: white;
@@ -772,7 +257,9 @@
             cursor: pointer;
             font-family: 'Montserrat', sans-serif;
         }
+
         .question-box { width: 100%; max-width: 600px; margin: 0 auto; }
+
         .q-text {
             text-align: center;
             font-size: 1.5rem;
@@ -780,12 +267,14 @@
             color: #00f5ff;
             margin-bottom: 1.5rem;
         }
+
         .options {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
+
         .opt {
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid #8338ec;
@@ -797,9 +286,12 @@
             font-weight: 600;
             transition: all 0.3s;
         }
-        .opt:hover:not(:disabled) { background: rgba(131, 56, 236, 0.2); transform: scale(1.05); }
+
+        .opt:hover { background: rgba(131, 56, 236, 0.2); transform: scale(1.05); }
         .opt.correct { background: rgba(0, 255, 100, 0.2); border-color: #00ff64; }
         .opt.wrong { background: rgba(255, 0, 0, 0.2); border-color: #ff0033; }
+        .opt.disabled { cursor: not-allowed; opacity: 0.6; }
+
         .result {
             margin-top: 1.5rem;
             padding: 1.5rem;
@@ -808,9 +300,11 @@
             font-size: 1.3rem;
             font-weight: 800;
         }
+
         .result.correct { background: rgba(0, 255, 100, 0.2); border: 2px solid #00ff64; color: #00ff64; }
         .result.wrong { background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0033; color: #ff6b6b; }
-        .leaderboard-screen { min-height: 100vh; }
+
+        /* LEADERBOARD */
         .leaderboard-title {
             font-size: 3rem;
             font-weight: 800;
@@ -818,6 +312,7 @@
             margin-bottom: 2rem;
             text-shadow: 0 0 20px rgba(255, 190, 11, 0.5);
         }
+
         .podium {
             display: flex;
             gap: 1rem;
@@ -825,6 +320,7 @@
             margin: 2rem 0;
             flex-wrap: wrap;
         }
+
         .podium-item {
             background: #1a1f3a;
             border: 3px solid #8338ec;
@@ -833,9 +329,11 @@
             text-align: center;
             min-width: 150px;
         }
+
         .medal { font-size: 3rem; margin-bottom: 0.5rem; }
-        .p-name { font-weight: 800; font-size: 1.2rem; color: #ffbe0b; margin-bottom: 0.5rem; }
+        .p-name { font-weight: 800; font-size: 1.2rem; color: #ffbe0b; margin: 0.5rem 0; }
         .p-score { font-size: 1.5rem; font-weight: 800; color: #ff006e; }
+
         .leaderboard {
             background: #1a1f3a;
             border: 2px solid #8338ec;
@@ -845,6 +343,7 @@
             max-width: 600px;
             margin: 2rem 0;
         }
+
         .lb-row {
             display: flex;
             align-items: center;
@@ -854,6 +353,7 @@
             border-radius: 10px;
             margin-bottom: 0.5rem;
         }
+
         .rank {
             background: #8338ec;
             width: 40px;
@@ -864,8 +364,27 @@
             justify-content: center;
             font-weight: 800;
         }
+
         .name { flex: 1; font-weight: 600; }
         .pts { font-weight: 800; color: #ffbe0b; font-size: 1.2rem; }
+
+        /* BOUTON SECOURS */
+        .emergency-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 800;
+            z-index: 9999;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-family: 'Montserrat', sans-serif;
+        }
+
         @media (max-width: 768px) {
             .title { font-size: 2.5rem; }
             .options { grid-template-columns: 1fr; }
@@ -873,5 +392,738 @@
             .code-value { font-size: 3rem; }
         }
     </style>
+</head>
+<body>
+    <div class="app">
+        <div class="bg"></div>
+
+        <!-- MENU -->
+        <div id="menu-screen" class="screen">
+            <div class="logo">
+                <h1 class="title">QUIZ PARTY</h1>
+                <p class="subtitle">🎵 Blind Test Musical</p>
+            </div>
+            <div class="menu-buttons">
+                <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
+                <button class="btn large secondary" onclick="goToJoin()">👥 Rejoindre une partie</button>
+            </div>
+        </div>
+
+        <!-- CREATE -->
+        <div id="create-screen" class="screen hidden">
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">🎮 Créer une partie</h2>
+            
+            <input id="create-name" class="input" placeholder="Ton pseudo" maxlength="20">
+            
+            <div class="section">
+                <h3>🎯 Mode</h3>
+                <select id="create-mode" class="select">
+                    <option value="qcm">QCM (Choix multiples)</option>
+                    <option value="writing">Écriture (Titre + Artiste)</option>
+                    <option value="soiree">Soirée (Mix QCM + Écriture)</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h3>🔢 Questions</h3>
+                <div class="num-grid">
+                    <button class="num-btn" onclick="selectNumQ(5)">5</button>
+                    <button class="num-btn active" onclick="selectNumQ(10)">10</button>
+                    <button class="num-btn" onclick="selectNumQ(15)">15</button>
+                    <button class="num-btn" onclick="selectNumQ(20)">20</button>
+                    <button class="num-btn" onclick="selectNumQ(30)">30</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🎵 Musique</h3>
+                <button class="btn" onclick="loadTop50()">🔥 Top 50</button>
+                <input id="playlist-url" class="input" placeholder="URL Playlist Deezer">
+                <button class="btn" onclick="loadPlaylist()">📋 Charger Playlist</button>
+            </div>
+
+            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
+        </div>
+
+        <!-- JOIN -->
+        <div id="join-screen" class="screen hidden">
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Rejoindre</h2>
+            <input id="join-name" class="input" placeholder="Ton pseudo" maxlength="20">
+            <input id="join-code" class="input code-input" placeholder="123456" type="tel" maxlength="6">
+            <button class="btn large" onclick="joinRoom()">▶️ Rejoindre</button>
+            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
+        </div>
+
+        <!-- LOBBY -->
+        <div id="lobby-screen" class="screen hidden">
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">Salle d'attente</h2>
+            
+            <div class="code-display">
+                <div class="code-label">Code de la partie</div>
+                <div class="code-value" id="lobby-code">000000</div>
+            </div>
+
+            <div class="players-box">
+                <h3>👥 Joueurs (<span id="player-count">0</span>)</h3>
+                <div id="players-list"></div>
+            </div>
+
+            <button id="start-btn" class="btn large hidden" onclick="startGame()">▶️ Lancer la partie</button>
+            <div id="waiting-div" class="waiting hidden">
+                <div class="spinner"></div>
+                <p>En attente de l'hôte...</p>
+            </div>
+        </div>
+
+        <!-- GAME -->
+        <div id="game-screen" class="screen hidden">
+            <div class="game-header">
+                <div class="timer">⏱️ <span id="timer">20</span>s</div>
+                <div>Q <span id="current-q">1</span>/<span id="total-q">10</span></div>
+                <div class="score">🏆 <span id="player-score">0</span></div>
+            </div>
+
+            <div class="img-box">
+                <img id="cover-img" class="cover" src="" alt="Cover">
+            </div>
+
+            <div id="audio-box" class="audio-box hidden">
+                <audio id="audio-player" loop></audio>
+                <button class="audio-btn" onclick="toggleAudio()">🎵 Play</button>
+            </div>
+
+            <div class="question-box">
+                <h3 id="question-text" class="q-text"></h3>
+                <div id="options-container" class="options hidden"></div>
+                <div id="writing-container" class="hidden">
+                    <input id="input-title" class="input" placeholder="Titre">
+                    <input id="input-artist" class="input" placeholder="Artiste">
+                    <button class="btn" onclick="submitWriting()">Valider</button>
+                </div>
+                <div id="result-container" class="result hidden"></div>
+            </div>
+        </div>
+
+        <!-- LEADERBOARD -->
+        <div id="leaderboard-screen" class="screen hidden">
+            <h1 class="leaderboard-title">🏆 CLASSEMENT FINAL 🏆</h1>
+            <div id="podium-container" class="podium"></div>
+            <div id="leaderboard-container" class="leaderboard"></div>
+            <button class="btn large" onclick="restartGame()">🏠 Nouvelle partie</button>
+        </div>
+
+        <!-- BOUTON SECOURS -->
+        <button id="emergency-btn" class="emergency-btn hidden" onclick="emergencyReset()">🏠 MENU</button>
+    </div>
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // ===========================================
+        // FIREBASE INIT
+        // ===========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWA-Zfs_hljCFz1wc0Rg2LJWZPINWONnU",
+            authDomain: "quizz-party-ptg.firebaseapp.com",
+            databaseURL: "https://quizz-party-ptg-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "quizz-party-ptg",
+            storageBucket: "quizz-party-ptg.firebasestorage.app",
+            messagingSenderId: "352511986737",
+            appId: "1:352511986737:web:7318d807b4d3f3b6b29910"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ===========================================
+        // ÉTAT GLOBAL
+        // ===========================================
+        let currentScreen = 'menu';
+        let gameState = {
+            room: null,
+            playerIndex: 0,
+            isHost: false,
+            numQuestions: 10,
+            musicDB: [],
+            currentTime: 20,
+            timerInterval: null,
+            answered: false,
+            roomRef: null,
+            audioPlaying: false
+        };
+
+        // ===========================================
+        // DEEZER API
+        // ===========================================
+        const proxies = ['', 'https://corsproxy.io/?', 'https://api.codetabs.com/v1/proxy?quest='];
+
+        async function fetchWithProxy(url) {
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    const finalUrl = proxies[i] + encodeURIComponent(url);
+                    const response = await fetch(finalUrl);
+                    if (!response.ok) throw new Error('Erreur');
+                    return await response.json();
+                } catch (error) {
+                    if (i === proxies.length - 1) throw error;
+                }
+            }
+        }
+
+        async function getDeezerChart() {
+            const data = await fetchWithProxy('https://api.deezer.com/chart/0/tracks?limit=100');
+            return data.data
+                .filter(t => t.preview && t.album && t.album.cover_big)
+                .slice(0, 50) // Prendre seulement 50 pour éviter surcharge
+                .map(t => ({
+                    title: t.title,
+                    artist: t.artist.name,
+                    cover: t.album.cover_big,
+                    preview: t.preview
+                }));
+        }
+
+        async function getDeezerPlaylist(id) {
+            const data = await fetchWithProxy(`https://api.deezer.com/playlist/${id}`);
+            return data.tracks.data
+                .filter(t => t.preview && t.album && t.album.cover_big)
+                .map(t => ({
+                    title: t.title,
+                    artist: t.artist.name,
+                    cover: t.album.cover_big,
+                    preview: t.preview
+                }));
+        }
+
+        // ===========================================
+        // UTILS
+        // ===========================================
+        function shuffle(arr) {
+            return [...arr].sort(() => Math.random() - 0.5);
+        }
+
+        function genCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            currentScreen = screenId.replace('-screen', '');
+            
+            // Afficher bouton secours partout sauf menu et leaderboard
+            const emergency = document.getElementById('emergency-btn');
+            if (screenId === 'menu-screen' || screenId === 'leaderboard-screen') {
+                emergency.classList.add('hidden');
+            } else {
+                emergency.classList.remove('hidden');
+            }
+        }
+
+        // ===========================================
+        // NAVIGATION
+        // ===========================================
+        function goToMenu() {
+            if (gameState.roomRef) gameState.roomRef.off();
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            gameState = {
+                room: null,
+                playerIndex: 0,
+                isHost: false,
+                numQuestions: 10,
+                musicDB: [],
+                currentTime: 20,
+                timerInterval: null,
+                answered: false,
+                roomRef: null,
+                audioPlaying: false
+            };
+            showScreen('menu-screen');
+        }
+
+        function goToCreate() {
+            showScreen('create-screen');
+        }
+
+        function goToJoin() {
+            showScreen('join-screen');
+        }
+
+        function emergencyReset() {
+            if (confirm('Retour au menu ? La partie en cours sera perdue.')) {
+                goToMenu();
+            }
+        }
+
+        // ===========================================
+        // CREATE
+        // ===========================================
+        function selectNumQ(num) {
+            gameState.numQuestions = num;
+            document.querySelectorAll('.num-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function loadTop50() {
+            const name = document.getElementById('create-name').value.trim();
+            if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
+
+            const mode = document.getElementById('create-mode').value;
+            
+            try {
+                const tracks = await getDeezerChart();
+                alert(`✅ ${tracks.length} morceaux chargés !`);
+                createRoom(name, mode, tracks);
+            } catch (e) {
+                alert('❌ Erreur : ' + e.message);
+            }
+        }
+
+        async function loadPlaylist() {
+            const name = document.getElementById('create-name').value.trim();
+            const url = document.getElementById('playlist-url').value.trim();
+            
+            if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
+            if (!url) { alert('⚠️ Entre une URL !'); return; }
+
+            const match = url.match(/playlist\/(\d+)/);
+            if (!match) { alert('❌ URL invalide !'); return; }
+
+            const mode = document.getElementById('create-mode').value;
+            
+            try {
+                const tracks = await getDeezerPlaylist(match[1]);
+                alert(`✅ ${tracks.length} morceaux chargés !`);
+                createRoom(name, mode, tracks);
+            } catch (e) {
+                alert('❌ Erreur : ' + e.message);
+            }
+        }
+
+        function createRoom(name, mode, tracks) {
+            const code = genCode();
+            gameState.musicDB = tracks;
+            
+            // Préparer les questions
+            const shuffled = shuffle(tracks);
+            let questions;
+            
+            if (mode === 'soiree') {
+                const half = Math.floor(gameState.numQuestions / 2);
+                questions = [
+                    ...shuffled.slice(0, half).map(q => ({
+                        ...q,
+                        type: 'qcm',
+                        qType: Math.random() > 0.5 ? 'artist' : 'title'
+                    })),
+                    ...shuffled.slice(half, gameState.numQuestions).map(q => ({
+                        ...q,
+                        type: 'writing'
+                    }))
+                ];
+            } else if (mode === 'qcm') {
+                questions = shuffled.slice(0, gameState.numQuestions).map(q => ({
+                    ...q,
+                    type: 'qcm',
+                    qType: Math.random() > 0.5 ? 'artist' : 'title'
+                }));
+            } else {
+                questions = shuffled.slice(0, gameState.numQuestions).map(q => ({
+                    ...q,
+                    type: mode
+                }));
+            }
+
+            const room = {
+                code,
+                host: name,
+                players: [{ name, score: 0 }],
+                questions,
+                currentQ: 0,
+                started: false
+            };
+
+            db.ref(`rooms/${code}`).set(room);
+            
+            gameState.room = room;
+            gameState.playerIndex = 0;
+            gameState.isHost = true;
+            
+            goToLobby();
+        }
+
+        // ===========================================
+        // JOIN
+        // ===========================================
+        function joinRoom() {
+            const name = document.getElementById('join-name').value.trim();
+            const code = document.getElementById('join-code').value.trim();
+
+            if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
+            if (code.length !== 6) { alert('⚠️ Code invalide !'); return; }
+
+            db.ref(`rooms/${code}`).once('value', snapshot => {
+                const room = snapshot.val();
+                
+                if (!room) { alert('❌ Code invalide !'); return; }
+                if (room.started) { alert('❌ Partie déjà lancée !'); return; }
+
+                room.players.push({ name, score: 0 });
+                db.ref(`rooms/${code}`).update({ players: room.players });
+
+                gameState.room = room;
+                gameState.playerIndex = room.players.length - 1;
+                gameState.isHost = false;
+                gameState.musicDB = room.questions; // Pour les options
+
+                goToLobby();
+            });
+        }
+
+        // ===========================================
+        // LOBBY
+        // ===========================================
+        function goToLobby() {
+            showScreen('lobby-screen');
+            
+            document.getElementById('lobby-code').textContent = gameState.room.code;
+            
+            if (gameState.isHost) {
+                document.getElementById('start-btn').classList.remove('hidden');
+                document.getElementById('waiting-div').classList.add('hidden');
+            } else {
+                document.getElementById('start-btn').classList.add('hidden');
+                document.getElementById('waiting-div').classList.remove('hidden');
+            }
+
+            updatePlayersList();
+            listenToRoom();
+        }
+
+        function updatePlayersList() {
+            const list = document.getElementById('players-list');
+            const count = document.getElementById('player-count');
+            
+            list.innerHTML = '';
+            count.textContent = gameState.room.players.length;
+            
+            gameState.room.players.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.className = 'player';
+                div.innerHTML = `
+                    <span class="player-num">${i + 1}</span>
+                    <span class="player-name">${p.name}</span>
+                    ${p.name === gameState.room.host ? '<span>👑</span>' : ''}
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function listenToRoom() {
+            if (gameState.roomRef) gameState.roomRef.off();
+            
+            const ref = db.ref(`rooms/${gameState.room.code}`);
+            gameState.roomRef = ref;
+
+            ref.on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                gameState.room = data;
+
+                if (currentScreen === 'lobby') {
+                    updatePlayersList();
+                    if (data.started) {
+                        goToGame();
+                    }
+                }
+
+                if (currentScreen === 'game') {
+                    // Check si question suivante
+                    if (data.currentQ >= data.questions.length) {
+                        goToLeaderboard();
+                    }
+                }
+            });
+        }
+
+        function startGame() {
+            db.ref(`rooms/${gameState.room.code}`).update({ started: true });
+        }
+
+        // ===========================================
+        // GAME
+        // ===========================================
+        function goToGame() {
+            showScreen('game-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = gameState.room.questions[gameState.room.currentQ];
+            const player = gameState.room.players[gameState.playerIndex];
+
+            // Reset état
+            gameState.currentTime = 20;
+            gameState.answered = false;
+            gameState.audioPlaying = false;
+
+            // Update UI
+            document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
+            document.getElementById('total-q').textContent = gameState.room.questions.length;
+            document.getElementById('player-score').textContent = player.score || 0;
+            document.getElementById('timer').textContent = '20';
+            
+            // Image floue au max
+            document.getElementById('cover-img').src = q.cover;
+            document.getElementById('cover-img').style.filter = 'blur(25px)';
+
+            // Résultat caché
+            document.getElementById('result-container').classList.add('hidden');
+
+            // Audio (seulement pour hôte)
+            const audioBox = document.getElementById('audio-box');
+            const audio = document.getElementById('audio-player');
+            
+            if (gameState.isHost) {
+                audioBox.classList.remove('hidden');
+                audio.src = q.preview;
+                audio.load();
+                setTimeout(() => {
+                    audio.play().catch(() => console.error('Audio non disponible'));
+                    gameState.audioPlaying = true;
+                }, 500);
+            } else {
+                audioBox.classList.add('hidden');
+            }
+
+            // Question
+            if (q.type === 'qcm') {
+                loadQCM(q);
+            } else {
+                loadWriting(q);
+            }
+
+            // Timer
+            startTimer();
+        }
+
+        function loadQCM(q) {
+            const type = q.qType || 'title';
+            const correct = q[type];
+            
+            document.getElementById('question-text').textContent = 
+                type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?";
+
+            // Générer réponses ALÉATOIRES (pas dans les questions !)
+            const allTracks = gameState.musicDB;
+            const wrongPool = shuffle(allTracks.filter(t => t[type] !== correct));
+            
+            const options = [correct];
+            while (options.length < 4 && wrongPool.length > 0) {
+                const val = wrongPool.pop()[type];
+                if (val && !options.includes(val)) {
+                    options.push(val);
+                }
+            }
+
+            const shuffledOptions = shuffle(options);
+
+            // Afficher
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            container.classList.remove('hidden');
+            document.getElementById('writing-container').classList.add('hidden');
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'opt';
+                btn.textContent = opt;
+                btn.onclick = () => submitQCM(opt, correct);
+                container.appendChild(btn);
+            });
+
+            gameState.correctAnswer = correct;
+        }
+
+        function loadWriting(q) {
+            document.getElementById('question-text').textContent = "Écris le titre et l'artiste";
+            document.getElementById('options-container').classList.add('hidden');
+            document.getElementById('writing-container').classList.remove('hidden');
+            document.getElementById('input-title').value = '';
+            document.getElementById('input-artist').value = '';
+        }
+
+        function startTimer() {
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.currentTime--;
+                document.getElementById('timer').textContent = gameState.currentTime;
+
+                // Défloutage progressif SEULEMENT SI PAS RÉPONDU
+                if (!gameState.answered) {
+                    const blur = (gameState.currentTime / 20) * 25;
+                    document.getElementById('cover-img').style.filter = `blur(${blur}px)`;
+                }
+
+                if (gameState.currentTime <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    
+                    // Image défloute complètement
+                    document.getElementById('cover-img').style.filter = 'blur(0px)';
+                    
+                    // Stop audio
+                    if (gameState.isHost) {
+                        document.getElementById('audio-player').pause();
+                    }
+
+                    // Hôte passe à la question suivante
+                    if (gameState.isHost) {
+                        setTimeout(() => {
+                            db.ref(`rooms/${gameState.room.code}/currentQ`)
+                                .set(gameState.room.currentQ + 1);
+                        }, 2500);
+                    }
+                }
+            }, 1000);
+        }
+
+        function submitQCM(answer, correct) {
+            if (gameState.answered) return;
+            gameState.answered = true;
+
+            const isCorrect = answer === correct;
+            const pts = isCorrect ? (50 + gameState.currentTime * 10) : 0;
+            
+            // Désactiver tous les boutons
+            document.querySelectorAll('.opt').forEach(btn => {
+                btn.classList.add('disabled');
+                btn.onclick = null;
+                if (btn.textContent === correct) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            showResult(isCorrect, pts, `${gameState.room.questions[gameState.room.currentQ].title} - ${gameState.room.questions[gameState.room.currentQ].artist}`);
+            updateScore(pts);
+        }
+
+        function submitWriting() {
+            if (gameState.answered) return;
+            gameState.answered = true;
+
+            const q = gameState.room.questions[gameState.room.currentQ];
+            const title = document.getElementById('input-title').value.toLowerCase().trim();
+            const artist = document.getElementById('input-artist').value.toLowerCase().trim();
+
+            const titleOk = title && q.title.toLowerCase().includes(title.split(' ')[0]);
+            const artistOk = artist && q.artist.toLowerCase().includes(artist.split(' ')[0]);
+
+            let isCorrect = false;
+            let pts = 0;
+
+            if (titleOk && artistOk) {
+                isCorrect = true;
+                pts = 50 + gameState.currentTime * 10;
+            } else if (titleOk || artistOk) {
+                pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
+            }
+
+            showResult(isCorrect || (titleOk || artistOk), pts, `${q.title} - ${q.artist}`);
+            updateScore(pts);
+        }
+
+        function showResult(isCorrect, pts, answer) {
+            const container = document.getElementById('result-container');
+            container.classList.remove('hidden', 'correct', 'wrong');
+            container.classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            if (pts > 0) {
+                container.textContent = `🎉 +${pts} pts !`;
+            } else {
+                container.textContent = `❌ ${answer}`;
+            }
+        }
+
+        function updateScore(pts) {
+            const players = [...gameState.room.players];
+            players[gameState.playerIndex].score = (players[gameState.playerIndex].score || 0) + pts;
+            
+            db.ref(`rooms/${gameState.room.code}/players`).set(players);
+        }
+
+        function toggleAudio() {
+            const audio = document.getElementById('audio-player');
+            const btn = event.target;
+            
+            if (audio.paused) {
+                audio.play();
+                btn.textContent = '🎵 Stop';
+            } else {
+                audio.pause();
+                btn.textContent = '🎵 Play';
+            }
+        }
+
+        // ===========================================
+        // LEADERBOARD
+        // ===========================================
+        function goToLeaderboard() {
+            console.log('🏆 AFFICHAGE LEADERBOARD');
+            console.log('Room:', gameState.room);
+            
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            if (gameState.roomRef) gameState.roomRef.off();
+
+            showScreen('leaderboard-screen');
+
+            const players = gameState.room.players || [];
+            const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+
+            // Podium
+            const podium = document.getElementById('podium-container');
+            podium.innerHTML = '';
+            
+            sorted.slice(0, 3).forEach((p, i) => {
+                const div = document.createElement('div');
+                div.className = 'podium-item';
+                div.innerHTML = `
+                    <div class="medal">${['🥇','🥈','🥉'][i]}</div>
+                    <div class="p-name">${p.name}</div>
+                    <div class="p-score">${p.score || 0} pts</div>
+                `;
+                podium.appendChild(div);
+            });
+
+            // Liste complète
+            const list = document.getElementById('leaderboard-container');
+            list.innerHTML = '';
+            
+            sorted.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.className = 'lb-row';
+                div.innerHTML = `
+                    <span class="rank">#${i + 1}</span>
+                    <span class="name">${p.name}</span>
+                    <span class="pts">${p.score || 0} pts</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function restartGame() {
+            goToMenu();
+        }
+
+        // ===========================================
+        // INIT
+        // ===========================================
+        console.log('✅ Quiz Party Vanilla JS chargé !');
+    </script>
 </body>
 </html>
