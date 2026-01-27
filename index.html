@@ -228,7 +228,8 @@
                 }
 
                 if (q.type === 'qcm') {
-                    const type = Math.random() > 0.5 ? 'artist' : 'title';
+                    // Utiliser le type décidé par l'hôte !
+                    const type = q.qType || 'title';
                     const correctAns = q[type];
                     const opts = [correctAns];
                     const allTracks = room.questions || [];
@@ -248,6 +249,17 @@
                     setTime(prev => {
                         if (prev <= 1) {
                             clearInterval(timerRef.current);
+                            
+                            // ARRÊTER LA MUSIQUE maintenant
+                            if (audioRef.current) audioRef.current.pause();
+                            
+                            // L'HÔTE passe à la question suivante
+                            if (isHost) {
+                                setTimeout(() => {
+                                    db.ref(`rooms/${room.code}/currentQ`).set(room.currentQ + 1);
+                                }, 2500); // Laisser 2.5s pour voir le résultat
+                            }
+                            
                             return 0;
                         }
                         return prev - 1;
@@ -263,8 +275,8 @@
             const submit = (answer, t = time) => {
                 if (answered) return;
                 setAnswered(true);
-                clearInterval(timerRef.current);
-                if (audioRef.current) audioRef.current.pause();
+                // NE PAS CLEAR LE TIMER - on laisse arriver à 0
+                // NE PAS ARRÊTER LA MUSIQUE - elle continue pour tout le monde !
 
                 let isCorrect = false;
                 let pts = 0;
@@ -293,7 +305,7 @@
                 }
 
                 setResult({ isCorrect, msg });
-                setTimeout(() => onAnswer(pts), 2000);
+                setTimeout(() => onAnswer(pts), 100); // Enregistrer le score immédiatement
             };
 
             return (
@@ -310,7 +322,20 @@
 
                     {isHost && (
                         <div className="audio-box">
-                            <audio ref={audioRef} src={q.preview} loop />
+                            <audio 
+                                ref={audioRef} 
+                                src={q.preview} 
+                                loop 
+                                onError={() => {
+                                    console.error('❌ Impossible de charger:', q.preview);
+                                    alert(`⚠️ Musique "${q.title}" non disponible. Question suivante !`);
+                                    if (isHost) {
+                                        setTimeout(() => {
+                                            db.ref(`rooms/${room.code}/currentQ`).set(room.currentQ + 1);
+                                        }, 1000);
+                                    }
+                                }}
+                            />
                             <button className="audio-btn" onClick={() => {
                                 if (audioRef.current?.paused) audioRef.current.play();
                                 else audioRef.current?.pause();
@@ -447,9 +472,19 @@
                 if (mode === 'soiree') {
                     const half = Math.floor(numQ / 2);
                     questions = [
-                        ...music.slice(0, half).map(q => ({ ...q, type: 'qcm' })),
+                        ...music.slice(0, half).map(q => ({ 
+                            ...q, 
+                            type: 'qcm',
+                            qType: Math.random() > 0.5 ? 'artist' : 'title' // L'hôte décide !
+                        })),
                         ...music.slice(half, numQ).map(q => ({ ...q, type: 'writing' }))
                     ];
+                } else if (mode === 'qcm') {
+                    questions = music.slice(0, numQ).map(q => ({ 
+                        ...q, 
+                        type: 'qcm',
+                        qType: Math.random() > 0.5 ? 'artist' : 'title' // L'hôte décide !
+                    }));
                 } else {
                     questions = music.slice(0, numQ).map(q => ({ ...q, type: mode }));
                 }
@@ -494,13 +529,13 @@
                 const updatedPlayers = [...room.players];
                 updatedPlayers[playerIdx].score = (updatedPlayers[playerIdx].score || 0) + pts;
                 
-                // ATTENDRE QUE TOUT LE MONDE AIT RÉPONDU (20s max)
-                setTimeout(() => {
-                    db.ref(`rooms/${room.code}`).update({
-                        players: updatedPlayers,
-                        currentQ: room.currentQ + 1
-                    });
-                }, 20000); // 20 secondes
+                // Mettre à jour mon score immédiatement
+                db.ref(`rooms/${room.code}/players`).set(updatedPlayers);
+                
+                // L'HÔTE gère le passage à la question suivante
+                if (isHost) {
+                    // Attendre que le timer arrive à 0 (géré par le timer du Game)
+                }
             };
 
             const restart = () => {
@@ -518,6 +553,29 @@
                     {screen === 'lobby' && room && <Lobby room={room} isHost={isHost} onStart={start} />}
                     {screen === 'game' && room && <Game room={room} playerIdx={playerIdx} onAnswer={answer} isHost={isHost} />}
                     {screen === 'leaderboard' && <Leaderboard room={room} onRestart={restart} />}
+                    
+                    {/* BOUTON DE SECOURS - TOUJOURS VISIBLE */}
+                    {screen !== 'menu' && (
+                        <button 
+                            onClick={restart}
+                            style={{
+                                position: 'fixed',
+                                bottom: '20px',
+                                right: '20px',
+                                background: 'rgba(255, 0, 0, 0.8)',
+                                color: 'white',
+                                border: 'none',
+                                padding: '1rem 1.5rem',
+                                borderRadius: '50px',
+                                cursor: 'pointer',
+                                fontWeight: 800,
+                                zIndex: 9999,
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                            }}
+                        >
+                            🏠 MENU
+                        </button>
+                    )}
                 </div>
             );
         };
