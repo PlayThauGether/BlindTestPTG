@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -229,6 +229,55 @@
         .timer { color: #ff006e; font-size: 1.3rem; }
         .score { color: #ffbe0b; font-size: 1.3rem; }
 
+        .game-container {
+            display: flex;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            align-items: flex-start;
+        }
+
+        .game-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .scoreboard-side {
+            width: 250px;
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 1.5rem;
+            position: sticky;
+            top: 20px;
+        }
+
+        .scoreboard-side h3 {
+            color: #00f5ff;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .score-item.me {
+            background: rgba(255, 190, 11, 0.2);
+            border: 1px solid #ffbe0b;
+        }
+
+        .score-name { font-weight: 600; }
+        .score-points { color: #ffbe0b; font-weight: 800; }
+
         .img-box {
             width: 100%;
             max-width: 400px;
@@ -242,6 +291,28 @@
             height: 400px;
             object-fit: cover;
             transition: filter 0.3s ease;
+        }
+
+        .answer-reveal {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            border: 2px solid #00f5ff;
+        }
+
+        .answer-reveal h4 {
+            color: #00f5ff;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .answer-reveal .answer-text {
+            color: #ffbe0b;
+            font-size: 1.8rem;
+            font-weight: 800;
         }
 
         .audio-box { text-align: center; margin: 1rem 0; }
@@ -400,8 +471,8 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <h1 class="title">Blind Test 🎵</h1>
-                <p class="subtitle">By Play Thau'Gether</p>
+                <h1 class="title">QUIZ PARTY</h1>
+                <p class="subtitle">🎵 Blind Test Musical</p>
             </div>
             <div class="menu-buttons">
                 <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
@@ -422,6 +493,12 @@
                     <option value="writing">Écriture (Titre + Artiste)</option>
                     <option value="soiree">Soirée (Mix QCM + Écriture)</option>
                 </select>
+                <div style="margin-top: 1rem;">
+                    <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="host-mode" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="color: #00f5ff; font-weight: 600;">Mode Hôte (Affichage seulement)</span>
+                    </label>
+                </div>
             </div>
 
             <div class="section">
@@ -483,24 +560,39 @@
                 <div class="score">🏆 <span id="player-score">0</span></div>
             </div>
 
-            <div class="img-box">
-                <img id="cover-img" class="cover" src="" alt="Cover">
-            </div>
-
-            <div id="audio-box" class="audio-box hidden">
-                <audio id="audio-player" loop></audio>
-                <button class="audio-btn" onclick="toggleAudio()">🎵 Play</button>
-            </div>
-
-            <div class="question-box">
-                <h3 id="question-text" class="q-text"></h3>
-                <div id="options-container" class="options hidden"></div>
-                <div id="writing-container" class="hidden">
-                    <input id="input-title" class="input" placeholder="Titre">
-                    <input id="input-artist" class="input" placeholder="Artiste">
-                    <button class="btn" onclick="submitWriting()">Valider</button>
+            <div class="game-container">
+                <!-- SCOREBOARD TEMPS RÉEL -->
+                <div id="scoreboard-side" class="scoreboard-side">
+                    <h3>🏆 Scores</h3>
+                    <div id="live-scores"></div>
                 </div>
-                <div id="result-container" class="result hidden"></div>
+
+                <!-- GAME PRINCIPAL -->
+                <div class="game-main">
+                    <div class="img-box">
+                        <img id="cover-img" class="cover" src="" alt="Cover">
+                        <div id="answer-reveal" class="answer-reveal hidden">
+                            <h4>Réponse :</h4>
+                            <div class="answer-text" id="answer-text"></div>
+                        </div>
+                    </div>
+
+                    <div id="audio-box" class="audio-box hidden">
+                        <audio id="audio-player" loop></audio>
+                        <button class="audio-btn" onclick="toggleAudio()">🎵 Play</button>
+                    </div>
+
+                    <div class="question-box">
+                        <h3 id="question-text" class="q-text"></h3>
+                        <div id="options-container" class="options hidden"></div>
+                        <div id="writing-container" class="hidden">
+                            <input id="input-title" class="input" placeholder="Titre">
+                            <input id="input-artist" class="input" placeholder="Artiste">
+                            <button class="btn" onclick="submitWriting()">Valider</button>
+                        </div>
+                        <div id="result-container" class="result hidden"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -704,6 +796,8 @@
 
         function createRoom(name, mode, tracks) {
             const code = genCode();
+            const hostMode = document.getElementById('host-mode').checked;
+            
             gameState.musicDB = tracks;
             
             // Préparer les questions
@@ -739,7 +833,8 @@
             const room = {
                 code,
                 host: name,
-                players: [{ name, score: 0 }],
+                hostMode: hostMode, // Mode hôte activé ?
+                players: [{ name, score: 0, isHost: true }],
                 questions,
                 currentQ: 0,
                 started: false
@@ -750,6 +845,7 @@
             gameState.room = room;
             gameState.playerIndex = 0;
             gameState.isHost = true;
+            gameState.hostDisplayOnly = hostMode;
             
             goToLobby();
         }
@@ -842,6 +938,9 @@
                 }
 
                 if (currentScreen === 'game') {
+                    // Update scoreboard en temps réel
+                    updateScoreboard();
+                    
                     // Nouvelle question détectée
                     if (data.currentQ !== oldCurrentQ && data.currentQ < data.questions.length) {
                         console.log('📢 Nouvelle question détectée:', data.currentQ);
@@ -888,8 +987,12 @@
             document.getElementById('cover-img').src = q.cover;
             document.getElementById('cover-img').style.filter = 'blur(25px)';
 
-            // Résultat caché
+            // Cacher réponse
+            document.getElementById('answer-reveal').classList.add('hidden');
             document.getElementById('result-container').classList.add('hidden');
+
+            // Update scoreboard
+            updateScoreboard();
 
             // Audio (seulement pour hôte)
             const audioBox = document.getElementById('audio-box');
@@ -907,7 +1010,16 @@
                 audioBox.classList.add('hidden');
             }
 
-            // Question
+            // MODE HÔTE : ne pas afficher les questions
+            if (gameState.hostDisplayOnly) {
+                document.getElementById('options-container').classList.add('hidden');
+                document.getElementById('writing-container').classList.add('hidden');
+                document.getElementById('question-text').textContent = '🎮 Mode Affichage';
+                startTimer();
+                return;
+            }
+
+            // Question normale
             if (q.type === 'qcm') {
                 loadQCM(q);
             } else {
@@ -916,6 +1028,26 @@
 
             // Timer
             startTimer();
+        }
+
+        function updateScoreboard() {
+            const container = document.getElementById('live-scores');
+            container.innerHTML = '';
+
+            const sorted = [...gameState.room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
+
+            sorted.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'score-item';
+                if (p.name === gameState.room.players[gameState.playerIndex].name) {
+                    div.classList.add('me');
+                }
+                div.innerHTML = `
+                    <span class="score-name">${p.name}</span>
+                    <span class="score-points">${p.score || 0}</span>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function loadQCM(q) {
@@ -983,6 +1115,11 @@
                     // Image défloute complètement
                     document.getElementById('cover-img').style.filter = 'blur(0px)';
                     
+                    // AFFICHER LA RÉPONSE
+                    const q = gameState.room.questions[gameState.room.currentQ];
+                    document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
+                    document.getElementById('answer-reveal').classList.remove('hidden');
+                    
                     // Stop audio
                     if (gameState.isHost) {
                         document.getElementById('audio-player').pause();
@@ -1030,38 +1167,88 @@
             updateScore(pts);
         }
 
+        // Fonction pour vérifier similarité (tolérance 1 lettre)
+        function isSimilar(a, b) {
+            a = a.toLowerCase().trim();
+            b = b.toLowerCase().trim();
+            
+            if (a === b) return true;
+            if (Math.abs(a.length - b.length) > 1) return false;
+            
+            let diff = 0;
+            const maxLen = Math.max(a.length, b.length);
+            
+            for (let i = 0; i < maxLen; i++) {
+                if (a[i] !== b[i]) diff++;
+                if (diff > 1) return false;
+            }
+            
+            return diff <= 1;
+        }
+
         function submitWriting() {
             if (gameState.answered) return;
             gameState.answered = true;
 
             const q = gameState.room.questions[gameState.room.currentQ];
-            const title = document.getElementById('input-title').value.toLowerCase().trim();
-            const artist = document.getElementById('input-artist').value.toLowerCase().trim();
+            const titleInput = document.getElementById('input-title').value.toLowerCase().trim();
+            const artistInput = document.getElementById('input-artist').value.toLowerCase().trim();
 
-            const titleOk = title && q.title.toLowerCase().includes(title.split(' ')[0]);
-            const artistOk = artist && q.artist.toLowerCase().includes(artist.split(' ')[0]);
+            // Check TITRE
+            const titleWords = q.title.toLowerCase().split(' ');
+            const titleOk = titleWords.some(word => 
+                word.length > 2 && (
+                    titleInput.includes(word) || 
+                    isSimilar(titleInput, word) ||
+                    titleWords.join(' ').includes(titleInput)
+                )
+            );
+
+            // Check ARTISTE (gérer artistes multiples séparés par "&" ou "feat" ou ",")
+            const artistNames = q.artist.toLowerCase()
+                .replace(/ feat\.? /gi, ',')
+                .replace(/ & /g, ',')
+                .split(',')
+                .map(a => a.trim());
+
+            const artistOk = artistNames.some(artist => {
+                const artistWords = artist.split(' ');
+                return artistWords.some(word => 
+                    word.length > 2 && (
+                        artistInput.includes(word) || 
+                        isSimilar(artistInput, word) ||
+                        artist.includes(artistInput)
+                    )
+                );
+            });
 
             let isCorrect = false;
             let pts = 0;
+            let feedback = '';
 
             if (titleOk && artistOk) {
                 isCorrect = true;
                 pts = 50 + gameState.currentTime * 10;
-            } else if (titleOk || artistOk) {
+                feedback = 'Parfait !';
+            } else if (titleOk) {
                 pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
+                feedback = 'Bon titre ! (50%)';
+            } else if (artistOk) {
+                pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
+                feedback = 'Bon artiste ! (50%)';
             }
 
-            showResult(isCorrect || (titleOk || artistOk), pts, `${q.title} - ${q.artist}`);
+            showResult(isCorrect || (titleOk || artistOk), pts, `${q.title} - ${q.artist}`, feedback);
             updateScore(pts);
         }
 
-        function showResult(isCorrect, pts, answer) {
+        function showResult(isCorrect, pts, answer, feedback = '') {
             const container = document.getElementById('result-container');
             container.classList.remove('hidden', 'correct', 'wrong');
             container.classList.add(isCorrect ? 'correct' : 'wrong');
             
             if (pts > 0) {
-                container.textContent = `🎉 +${pts} pts !`;
+                container.textContent = `🎉 ${feedback} +${pts} pts`;
             } else {
                 container.textContent = `❌ ${answer}`;
             }
