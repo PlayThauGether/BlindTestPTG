@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -471,8 +471,8 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <h1 class="title">🎵 Blind Test 🎵</h1>
-                <p class="subtitle">By Play Thau'Gether</p>
+                <h1 class="title">QUIZ PARTY</h1>
+                <p class="subtitle">🎵 Blind Test Musical</p>
             </div>
             <div class="menu-buttons">
                 <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
@@ -998,16 +998,29 @@
             const audioBox = document.getElementById('audio-box');
             const audio = document.getElementById('audio-player');
             
+            console.log('🎵 Audio - isHost:', gameState.isHost, 'Preview:', q.preview);
+            
             if (gameState.isHost) {
                 audioBox.classList.remove('hidden');
                 audio.src = q.preview;
                 audio.load();
+                
+                console.log('🎵 Lancement audio dans 500ms...');
+                
                 setTimeout(() => {
-                    audio.play().catch(() => console.error('Audio non disponible'));
-                    gameState.audioPlaying = true;
+                    audio.play()
+                        .then(() => {
+                            console.log('✅ Audio lancé avec succès !');
+                            gameState.audioPlaying = true;
+                        })
+                        .catch(err => {
+                            console.error('❌ Erreur audio:', err);
+                            alert('⚠️ Audio non disponible pour cette musique');
+                        });
                 }, 500);
             } else {
                 audioBox.classList.add('hidden');
+                console.log('❌ Pas hôte, pas d\'audio');
             }
 
             // MODE HÔTE : ne pas afficher les questions
@@ -1032,6 +1045,15 @@
 
         function updateScoreboard() {
             const container = document.getElementById('live-scores');
+            const scoreboard = document.getElementById('scoreboard-side');
+            
+            // Scoreboard visible SEULEMENT pour l'hôte
+            if (!gameState.isHost) {
+                scoreboard.style.display = 'none';
+                return;
+            }
+            
+            scoreboard.style.display = 'block';
             container.innerHTML = '';
 
             const sorted = [...gameState.room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
