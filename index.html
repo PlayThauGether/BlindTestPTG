@@ -831,6 +831,7 @@
                 const data = snapshot.val();
                 if (!data) return;
 
+                const oldCurrentQ = gameState.room ? gameState.room.currentQ : -1;
                 gameState.room = data;
 
                 if (currentScreen === 'lobby') {
@@ -841,8 +842,15 @@
                 }
 
                 if (currentScreen === 'game') {
-                    // Check si question suivante
+                    // Nouvelle question détectée
+                    if (data.currentQ !== oldCurrentQ && data.currentQ < data.questions.length) {
+                        console.log('📢 Nouvelle question détectée:', data.currentQ);
+                        loadQuestion();
+                    }
+                    
+                    // Fin du jeu
                     if (data.currentQ >= data.questions.length) {
+                        console.log('🏁 Fin du jeu !');
                         goToLeaderboard();
                     }
                 }
@@ -981,12 +989,21 @@
                     }
 
                     // Hôte passe à la question suivante
-                    if (gameState.isHost) {
-                        setTimeout(() => {
-                            db.ref(`rooms/${gameState.room.code}/currentQ`)
-                                .set(gameState.room.currentQ + 1);
-                        }, 2500);
+                    if (gameState.isHost && !gameState.answered) {
+                        // Ne pas passer si déjà répondu (évite double passage)
+                        gameState.answered = true; // Marquer comme traité
                     }
+                    
+                    // TOUS les joueurs attendent 2.5s puis passent
+                    setTimeout(() => {
+                        if (gameState.isHost) {
+                            // Récupérer la valeur actuelle depuis Firebase
+                            db.ref(`rooms/${gameState.room.code}/currentQ`).once('value', snapshot => {
+                                const currentQ = snapshot.val();
+                                db.ref(`rooms/${gameState.room.code}/currentQ`).set(currentQ + 1);
+                            });
+                        }
+                    }, 2500);
                 }
             }, 1000);
         }
