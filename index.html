@@ -785,59 +785,35 @@
         // ===========================================
         // DEEZER API
         // ===========================================
-        // Proxies CORS multiples pour contourner les blocages
-        const proxies = [
-            '', // Direct d'abord
-            'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?',
-            'https://api.codetabs.com/v1/proxy?quest=',
-            'https://cors-anywhere.herokuapp.com/'
-        ];
+        // TON SERVEUR BACKEND !
+        const BACKEND_URL = 'https://blind-test-ptg.vercel.app';
 
         async function fetchWithProxy(url) {
-            let lastError = null;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    const proxyUrl = proxies[i] ? proxies[i] + encodeURIComponent(url) : url;
-                    console.log(`🔄 Tentative ${i + 1}/${proxies.length}:`, proxyUrl.substring(0, 100) + '...');
-                    
-                    const response = await fetch(proxyUrl, {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    const text = await response.text();
-                    
-                    // Vérifier si c'est du JSON valide
-                    if (text.trim().startsWith('<')) {
-                        throw new Error('HTML reçu au lieu de JSON');
-                    }
-                    
-                    const data = JSON.parse(text);
-                    console.log('✅ Données chargées avec proxy:', proxies[i] || 'direct');
-                    return data;
-                    
-                } catch (error) {
-                    console.warn(`❌ Proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    
-                    if (i === proxies.length - 1) {
-                        throw new Error(`Tous les proxies ont échoué. Dernière erreur: ${error.message}`);
-                    }
+            // Plus besoin de proxies ! On utilise TON serveur !
+            try {
+                console.log('🔄 Chargement via ton serveur...');
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
+                
+                const data = await response.json();
+                console.log('✅ Données chargées !');
+                return data;
+                
+            } catch (error) {
+                console.error('❌ Erreur:', error.message);
+                throw new Error(`Erreur de chargement: ${error.message}`);
             }
         }
 
         async function getDeezerPlaylist(id) {
             try {
-                console.log('🎵 Chargement playlist Deezer:', id);
-                const data = await fetchWithProxy(`https://api.deezer.com/playlist/${id}`);
+                console.log('🎵 Chargement playlist via TON serveur:', id);
+                
+                // Utiliser TON backend au lieu de l'API Deezer directement
+                const data = await fetchWithProxy(`${BACKEND_URL}/api/deezer/playlist/${id}`);
                 
                 // Vérifier que c'est un objet valide
                 if (!data || !data.tracks || !data.tracks.data) {
@@ -859,7 +835,7 @@
                 
             } catch (error) {
                 console.error('❌ Erreur Deezer:', error);
-                throw new Error(`Impossible de charger la playlist Deezer.\n\nDétails: ${error.message}\n\nEssaie :\n1. Une autre playlist\n2. Recharger la page\n3. Vérifier l'URL`);
+                throw new Error(`Impossible de charger la playlist.\n\nDétails: ${error.message}`);
             }
         }
 
