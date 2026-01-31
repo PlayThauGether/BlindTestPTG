@@ -561,7 +561,7 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <h1 class="title">QUIZ PARTY</h1>
+                <h1 class="title">Le Zizi de Mathou</h1>
                 <p class="subtitle">🎵 Blind Test Musical</p>
             </div>
             <div class="menu-buttons">
@@ -968,9 +968,12 @@
                 console.log('✅ Reconnexion réussie !');
                 gameState.room = room;
                 gameState.playerIndex = idx;
-                gameState.isHost = session.isHost;
                 gameState.distanceMode = room.distanceMode || false;
-                gameState.hostDisplayOnly = room.hostMode || false;
+
+                // Vérifier depuis Firebase si c'est vraiment l'hôte (pas la session)
+                gameState.isHost = (room.host === session.name);
+                // hostDisplayOnly UNIQUEMENT si c'est l'hôte ET que le mode hôte est activé
+                gameState.hostDisplayOnly = gameState.isHost && (room.hostMode || false);
 
                 if (room.started) {
                     // Partie en cours → on rejoint directement en game
