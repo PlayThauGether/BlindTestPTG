@@ -1671,6 +1671,17 @@
                         console.log('📢 Nouvelle question:', data.currentQ);
                         loadQuestion();
                     }
+
+                    // Si currentOptions arrive depuis Firebase et qu'on est sur une question QCM sans options affichées encore
+                    if (data.currentOptions && 
+                        data.currentOptions.questionIndex === data.currentQ &&
+                        data.questions[data.currentQ] &&
+                        data.questions[data.currentQ].type === 'qcm' &&
+                        document.getElementById('options-container').children.length === 0) {
+                        const q = data.questions[data.currentQ];
+                        const correct = q[q.qType || 'title'];
+                        renderQCMOptions(data.currentOptions.options, correct);
+                    }
                     
                     if (data.currentQ >= data.questions.length) {
                         console.log('🏁 Fin du jeu !');
@@ -1867,9 +1878,16 @@
             document.getElementById('question-text').textContent = 
                 (type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?") + levelText;
 
+            // Si on a déjà les options dans la room Firebase → on les utilise directement
+            const storedOptions = gameState.room.currentOptions;
+            if (storedOptions && storedOptions.questionIndex === gameState.room.currentQ) {
+                renderQCMOptions(storedOptions.options, correct);
+                return;
+            }
+
+            // Sinon on génère (normalement seul l'hôte arrive ici en premier)
             let options = [];
             
-            // Choix normaux (2 ou 4 selon niveau)
             const allTracks = gameState.musicDB;
             const usedValues = gameState.usedQCMValues || [];
             
@@ -1902,6 +1920,16 @@
 
             const shuffledOptions = shuffle(options);
 
+            // Sauvegarder dans Firebase pour que tous voient les mêmes options
+            db.ref(`rooms/${gameState.room.code}/currentOptions`).set({
+                questionIndex: gameState.room.currentQ,
+                options: shuffledOptions
+            });
+
+            renderQCMOptions(shuffledOptions, correct);
+        }
+
+        function renderQCMOptions(shuffledOptions, correct) {
             const container = document.getElementById('options-container');
             container.innerHTML = '';
             container.classList.remove('hidden');
