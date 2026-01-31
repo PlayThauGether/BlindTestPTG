@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵</title>
+    <title>PTG - Blind Test 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -561,8 +561,8 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <h1 class="title">QUIZ PARTY</h1>
-                <p class="subtitle">🎵 Blind Test Musical</p>
+                <h1 class="title">Blind Test 🎵</h1>
+                <p class="subtitle">by Play Thau'Gether</p>
             </div>
             <div class="menu-buttons">
                 <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
@@ -1749,6 +1749,12 @@
             const titleInput = document.getElementById('input-title');
             const artistInput = document.getElementById('input-artist');
             
+            // RÉINITIALISER les styles (enlever orange/vert/rouge)
+            titleInput.style.borderColor = '';
+            titleInput.style.background = '';
+            artistInput.style.borderColor = '';
+            artistInput.style.background = '';
+            
             if (askFor === 'artist') {
                 // LVL 1: Artiste seulement
                 document.getElementById('question-text').textContent = "Écris l'artiste (Facile)";
@@ -1825,6 +1831,32 @@
                     
                     // AFFICHER LE FEEDBACK (ÉCRITURE)
                     if (q.type === 'writing' && gameState.answered) {
+                        const titleInputEl = document.getElementById('input-title');
+                        const artistInputEl = document.getElementById('input-artist');
+                        const titleOk = gameState.pendingTitleOk;
+                        const artistOk = gameState.pendingArtistOk;
+                        
+                        // Changer ORANGE → VERT/ROUGE
+                        if (titleInputEl.value.trim()) {
+                            if (titleOk) {
+                                titleInputEl.style.borderColor = '#00ff64';
+                                titleInputEl.style.background = 'rgba(0, 255, 100, 0.2)';
+                            } else {
+                                titleInputEl.style.borderColor = '#ff0033';
+                                titleInputEl.style.background = 'rgba(255, 0, 51, 0.2)';
+                            }
+                        }
+                        
+                        if (artistInputEl.value.trim()) {
+                            if (artistOk) {
+                                artistInputEl.style.borderColor = '#00ff64';
+                                artistInputEl.style.background = 'rgba(0, 255, 100, 0.2)';
+                            } else {
+                                artistInputEl.style.borderColor = '#ff0033';
+                                artistInputEl.style.background = 'rgba(255, 0, 51, 0.2)';
+                            }
+                        }
+                        
                         const pts = gameState.pendingScore || 0;
                         const isCorrect = gameState.pendingCorrect || false;
                         const feedback = gameState.pendingFeedback || '';
@@ -1957,6 +1989,21 @@
             gameState.pendingScore = pts;
             gameState.pendingCorrect = isCorrect;
             gameState.pendingFeedback = feedback;
+            gameState.pendingTitleOk = titleOk;
+            gameState.pendingArtistOk = artistOk;
+            
+            // Mettre les inputs en ORANGE (attente)
+            const titleInputEl = document.getElementById('input-title');
+            const artistInputEl = document.getElementById('input-artist');
+            
+            if (titleInputEl.value.trim()) {
+                titleInputEl.style.borderColor = '#ff8c00';
+                titleInputEl.style.background = 'rgba(255, 140, 0, 0.1)';
+            }
+            if (artistInputEl.value.trim()) {
+                artistInputEl.style.borderColor = '#ff8c00';
+                artistInputEl.style.background = 'rgba(255, 140, 0, 0.1)';
+            }
             
             // PAS de feedback immédiat ! Attendre 0s
         }
