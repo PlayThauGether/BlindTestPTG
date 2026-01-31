@@ -1106,20 +1106,22 @@
             }
         }
 
-        // FONCTION: Créer questions avec niveaux
+        // FONCTION: Créer questions avec niveaux ORGANISÉS
         function createQuestionsWithLevels(tracks, numQuestions, mode) {
             const shuffled = shuffle(tracks);
             let questions = [];
             
-            // Répartition: 3-4-3 (prioriser niveau 2)
-            const lvl1Count = Math.floor(numQuestions * 0.3);
+            // RÉPARTITION INTELLIGENTE : priorité Niveau 2
+            const lvl1Count = Math.ceil(numQuestions * 0.3);
             const lvl3Count = Math.floor(numQuestions * 0.3);
             const lvl2Count = numQuestions - lvl1Count - lvl3Count;
+            
+            console.log(`📊 Répartition: ${lvl1Count} Lvl1 + ${lvl2Count} Lvl2 + ${lvl3Count} Lvl3`);
             
             let trackIndex = 0;
             
             if (mode === 'qcm') {
-                // LVL 1: 2 choix
+                // === NIVEAU 1 : 2 choix ===
                 for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
@@ -1129,7 +1131,8 @@
                         optionsCount: 2
                     });
                 }
-                // LVL 2: 4 choix
+                
+                // === NIVEAU 2 : 4 choix ===
                 for (let i = 0; i < lvl2Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
@@ -1139,7 +1142,8 @@
                         optionsCount: 4
                     });
                 }
-                // LVL 3: 4 orthographes
+                
+                // === NIVEAU 3 : Orthographes ===
                 for (let i = 0; i < lvl3Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
@@ -1149,8 +1153,9 @@
                         spellingChallenge: true
                     });
                 }
+                
             } else if (mode === 'writing') {
-                // LVL 1: Artiste seulement
+                // === NIVEAU 1 : Artiste seulement ===
                 for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
@@ -1159,7 +1164,8 @@
                         askFor: 'artist'
                     });
                 }
-                // LVL 2: Titre + Artiste
+                
+                // === NIVEAU 2 : Titre + Artiste ===
                 for (let i = 0; i < lvl2Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
@@ -1168,7 +1174,8 @@
                         askFor: 'both'
                     });
                 }
-                // LVL 3: Titre + Artiste + Année
+                
+                // === NIVEAU 3 : Titre + Artiste + Année ===
                 for (let i = 0; i < lvl3Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
@@ -1177,75 +1184,78 @@
                         askFor: 'both_year'
                     });
                 }
+                
             } else if (mode === 'soiree') {
-                // Mix QCM et Écriture avec niveaux
-                const qcmCount = Math.floor(numQuestions / 2);
-                const writingCount = numQuestions - qcmCount;
+                // MODE SOIRÉE : Mix QCM + Écriture PAR NIVEAU
                 
-                // QCM avec niveaux
-                const qcmL1 = Math.floor(qcmCount * 0.3);
-                const qcmL3 = Math.floor(qcmCount * 0.3);
-                const qcmL2 = qcmCount - qcmL1 - qcmL3;
-                
-                for (let i = 0; i < qcmL1 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'qcm',
-                        level: 1,
-                        qType: Math.random() > 0.5 ? 'artist' : 'title',
-                        optionsCount: 2
-                    });
-                }
-                for (let i = 0; i < qcmL2 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'qcm',
-                        level: 2,
-                        qType: Math.random() > 0.5 ? 'artist' : 'title',
-                        optionsCount: 4
-                    });
-                }
-                for (let i = 0; i < qcmL3 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'qcm',
-                        level: 3,
-                        qType: Math.random() > 0.5 ? 'artist' : 'title',
-                        spellingChallenge: true
-                    });
+                // === NIVEAU 1 ===
+                for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
+                    if (i % 2 === 0) {
+                        // QCM 2 choix
+                        questions.push({
+                            ...shuffled[trackIndex++],
+                            type: 'qcm',
+                            level: 1,
+                            qType: Math.random() > 0.5 ? 'artist' : 'title',
+                            optionsCount: 2
+                        });
+                    } else {
+                        // Écriture artiste
+                        questions.push({
+                            ...shuffled[trackIndex++],
+                            type: 'writing',
+                            level: 1,
+                            askFor: 'artist'
+                        });
+                    }
                 }
                 
-                // Écriture avec niveaux
-                const wL1 = Math.floor(writingCount * 0.3);
-                const wL3 = Math.floor(writingCount * 0.3);
-                const wL2 = writingCount - wL1 - wL3;
+                // === NIVEAU 2 ===
+                for (let i = 0; i < lvl2Count && trackIndex < shuffled.length; i++) {
+                    if (i % 2 === 0) {
+                        // QCM 4 choix
+                        questions.push({
+                            ...shuffled[trackIndex++],
+                            type: 'qcm',
+                            level: 2,
+                            qType: Math.random() > 0.5 ? 'artist' : 'title',
+                            optionsCount: 4
+                        });
+                    } else {
+                        // Écriture titre + artiste
+                        questions.push({
+                            ...shuffled[trackIndex++],
+                            type: 'writing',
+                            level: 2,
+                            askFor: 'both'
+                        });
+                    }
+                }
                 
-                for (let i = 0; i < wL1 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'writing',
-                        level: 1,
-                        askFor: 'artist'
-                    });
+                // === NIVEAU 3 ===
+                for (let i = 0; i < lvl3Count && trackIndex < shuffled.length; i++) {
+                    if (i % 2 === 0) {
+                        // QCM orthographes
+                        questions.push({
+                            ...shuffled[trackIndex++],
+                            type: 'qcm',
+                            level: 3,
+                            qType: Math.random() > 0.5 ? 'artist' : 'title',
+                            spellingChallenge: true
+                        });
+                    } else {
+                        // Écriture + année
+                        questions.push({
+                            ...shuffled[trackIndex++],
+                            type: 'writing',
+                            level: 3,
+                            askFor: 'both_year'
+                        });
+                    }
                 }
-                for (let i = 0; i < wL2 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'writing',
-                        level: 2,
-                        askFor: 'both'
-                    });
-                }
-                for (let i = 0; i < wL3 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'writing',
-                        level: 3,
-                        askFor: 'both_year'
-                    });
-                }
+                
             } else {
-                // title-only: pas de niveaux, juste normal
+                // title-only: Niveau 2 uniquement
                 questions = shuffled.slice(0, numQuestions).map(q => ({
                     ...q,
                     type: 'qcm',
@@ -1255,7 +1265,8 @@
                 }));
             }
             
-            return shuffle(questions); // Mélanger l'ordre
+            // NE PAS MÉLANGER ! Garder l'ordre Lvl1 → Lvl2 → Lvl3
+            return questions;
         }
 
         function createRoom(name, mode, tracks, hostMode, distanceMode) {
@@ -1752,33 +1763,12 @@
 
             gameState.answered = true;
 
-            // Check TITRE
-            const titleWords = q.title.toLowerCase().split(' ');
-            const titleOk = titleInput && titleWords.some(word => 
-                word.length > 2 && (
-                    titleInput.includes(word) || 
-                    isSimilar(titleInput, word) ||
-                    titleWords.join(' ').includes(titleInput)
-                )
-            );
-
-            // Check ARTISTE
-            const artistNames = q.artist.toLowerCase()
-                .replace(/ feat\.? /gi, ',')
-                .replace(/ & /g, ',')
-                .split(',')
-                .map(a => a.trim());
-
-            const artistOk = artistInput && artistNames.some(artist => {
-                const artistWords = artist.split(' ');
-                return artistWords.some(word => 
-                    word.length > 2 && (
-                        artistInput.includes(word) || 
-                        isSimilar(artistInput, word) ||
-                        artist.includes(artistInput)
-                    )
-                );
-            });
+            // VALIDATION PARFAITE : Écriture exacte (ignorer majuscules)
+            const titleNormalized = q.title.toLowerCase().trim();
+            const artistNormalized = q.artist.toLowerCase().trim();
+            
+            const titleOk = titleInput && titleInput === titleNormalized;
+            const artistOk = artistInput && artistNormalized.split(/[,&]|feat\.?/).map(a => a.trim()).includes(artistInput);
 
             // Check ANNÉE (Lvl 3)
             let yearOk = true;
