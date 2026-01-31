@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -561,8 +561,8 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <h1 class="title">Blind Test 🎵</h1>
-                <p class="subtitle">by Play Thau'Gether</p>
+                <h1 class="title">QUIZ PARTY</h1>
+                <p class="subtitle">🎵 Blind Test Musical</p>
             </div>
             <div class="menu-buttons">
                 <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
@@ -632,13 +632,39 @@
 
             <div class="section">
                 <h3>🎵 Choisir une playlist</h3>
-                <select id="playlist-select" class="select">
-                    <option value="">-- Sélectionner --</option>
-                </select>
-                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
-                    Ou ajouter une URL personnalisée :
-                </p>
-                <input id="custom-playlist-url" class="input" placeholder="URL Playlist Deezer">
+                
+                <!-- TABS -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <button class="btn large" onclick="switchPlaylistTab('deezer')" id="tab-deezer" style="flex: 1; background: #ffbe0b;">
+                        🎵 Deezer
+                    </button>
+                    <button class="btn large" onclick="switchPlaylistTab('custom')" id="tab-custom" style="flex: 1; background: rgba(255,255,255,0.1);">
+                        🎨 Playlist Perso
+                    </button>
+                </div>
+                
+                <!-- DEEZER TAB -->
+                <div id="deezer-tab" style="display: block;">
+                    <select id="playlist-select" class="select">
+                        <option value="">-- Sélectionner --</option>
+                    </select>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
+                        Ou ajouter une URL personnalisée :
+                    </p>
+                    <input id="custom-playlist-url" class="input" placeholder="URL Playlist Deezer">
+                </div>
+                
+                <!-- CUSTOM TAB -->
+                <div id="custom-tab" style="display: none;">
+                    <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #aaa;">
+                        📝 Colle le contenu de ton fichier JSON ici :
+                    </p>
+                    <textarea id="custom-json" class="input" placeholder='{"playlist": [{"title": "...", "artist": "...", "preview": "...", "cover": "..."}]}' style="min-height: 200px; font-family: monospace; font-size: 0.85rem; resize: vertical;"></textarea>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #00f5ff;">
+                        💡 Utilise le <a href="playlist-generator.html" target="_blank" style="color: #ffbe0b; font-weight: 600;">générateur JSON</a> pour créer ta playlist facilement !
+                    </p>
+                </div>
+                
                 <button class="btn large" onclick="loadAndCreate()">🚀 Créer la partie</button>
             </div>
 
@@ -1161,50 +1187,127 @@
             event.target.classList.add('active');
         }
 
+        function switchPlaylistTab(tab) {
+            const deezerTab = document.getElementById('deezer-tab');
+            const customTab = document.getElementById('custom-tab');
+            const deezerBtn = document.getElementById('tab-deezer');
+            const customBtn = document.getElementById('tab-custom');
+            
+            if (tab === 'deezer') {
+                deezerTab.style.display = 'block';
+                customTab.style.display = 'none';
+                deezerBtn.style.background = '#ffbe0b';
+                customBtn.style.background = 'rgba(255,255,255,0.1)';
+            } else {
+                deezerTab.style.display = 'none';
+                customTab.style.display = 'block';
+                deezerBtn.style.background = 'rgba(255,255,255,0.1)';
+                customBtn.style.background = '#ffbe0b';
+            }
+        }
+
         async function loadAndCreate() {
             const name = document.getElementById('create-name').value.trim();
             const mode = document.getElementById('create-mode').value;
             const hostMode = document.getElementById('host-mode').checked;
             const distanceMode = document.getElementById('distance-mode').checked;
             
-            let url = document.getElementById('playlist-select').value;
-            if (!url) {
-                url = document.getElementById('custom-playlist-url').value.trim();
-            }
-            
             if (!name) {
                 alert('⚠️ Entre ton pseudo !');
                 return;
             }
             
-            if (!url) {
-                alert('⚠️ Choisis une playlist !');
-                return;
-            }
-            
-            const match = url.match(/playlist\/(\d+)/);
-            if (!match) {
-                alert('❌ URL invalide !');
-                return;
-            }
+            // Vérifier quel onglet est actif
+            const customTab = document.getElementById('custom-tab');
+            const isCustomPlaylist = customTab.style.display !== 'none';
             
             try {
-                showLoading('Chargement des musiques...');
-                let tracks = await getDeezerPlaylist(match[1]);
+                let tracks = [];
                 
-                showLoading(`${tracks.length} musiques chargées. Filtrage...`);
-                tracks = await filterWorkingTracks(tracks);
-                
-                if (tracks.length < gameState.numQuestions) {
-                    alert(`⚠️ Seulement ${tracks.length} musiques valides. Ajuste le nombre de questions.`);
+                if (isCustomPlaylist) {
+                    // MODE PLAYLIST PERSO (JSON)
+                    const jsonInput = document.getElementById('custom-json').value.trim();
+                    
+                    if (!jsonInput) {
+                        alert('⚠️ Colle ton JSON dans la zone de texte !');
+                        return;
+                    }
+                    
+                    showLoading('Chargement de ta playlist perso...');
+                    
+                    // Parser le JSON
+                    let data;
+                    try {
+                        data = JSON.parse(jsonInput);
+                    } catch (e) {
+                        throw new Error('JSON invalide ! Vérifie qu\'il n\'y a pas d\'erreur de syntaxe.');
+                    }
+                    
+                    // Vérifier le format
+                    if (!data.playlist || !Array.isArray(data.playlist)) {
+                        throw new Error('Format JSON invalide ! Il doit contenir un tableau "playlist".');
+                    }
+                    
+                    // Valider les musiques
+                    tracks = data.playlist.filter(t => 
+                        t.title && t.artist && t.preview && t.cover
+                    ).map(t => ({
+                        title: t.title,
+                        artist: t.artist,
+                        cover: t.cover,
+                        preview: t.preview,
+                        year: t.year || null
+                    }));
+                    
+                    if (tracks.length === 0) {
+                        throw new Error('Aucune musique valide dans le JSON !');
+                    }
+                    
+                    alert(`✅ ${tracks.length} musiques chargées depuis ta playlist perso !`);
                     hideLoading();
+                    
+                } else {
+                    // MODE DEEZER (comme avant)
+                    let url = document.getElementById('playlist-select').value;
+                    if (!url) {
+                        url = document.getElementById('custom-playlist-url').value.trim();
+                    }
+                    
+                    if (!url) {
+                        alert('⚠️ Choisis une playlist Deezer !');
+                        return;
+                    }
+                    
+                    const match = url.match(/playlist\/(\d+)/);
+                    if (!match) {
+                        alert('❌ URL Deezer invalide !');
+                        return;
+                    }
+                    
+                    showLoading('Chargement des musiques Deezer...');
+                    tracks = await getDeezerPlaylist(match[1]);
+                    
+                    showLoading(`${tracks.length} musiques chargées. Filtrage...`);
+                    tracks = await filterWorkingTracks(tracks);
+                    
+                    if (tracks.length < gameState.numQuestions) {
+                        alert(`⚠️ Seulement ${tracks.length} musiques valides. Ajuste le nombre de questions.`);
+                        hideLoading();
+                        return;
+                    }
+                    
+                    alert(`✅ ${tracks.length} musiques Deezer prêtes !`);
+                    hideLoading();
+                }
+                
+                // Vérifier qu'on a assez de musiques
+                if (tracks.length < gameState.numQuestions) {
+                    alert(`⚠️ Ta playlist n'a que ${tracks.length} musiques. Ajuste le nombre de questions !`);
                     return;
                 }
                 
-                alert(`✅ ${tracks.length} musiques prêtes !`);
-                hideLoading();
-                
                 createRoom(name, mode, tracks, hostMode, distanceMode);
+                
             } catch (e) {
                 hideLoading();
                 alert('❌ Erreur : ' + e.message);
