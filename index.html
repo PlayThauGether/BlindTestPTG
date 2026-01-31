@@ -1858,10 +1858,6 @@
             }
         }
 
-            showResult(isCorrect || (titleOk || artistOk), pts, `${q.title} - ${q.artist}`, feedback);
-            updateScore(pts);
-        }
-
         function showResult(isCorrect, pts, answer, feedback = '') {
             const container = document.getElementById('result-container');
             container.classList.remove('hidden', 'correct', 'wrong');
