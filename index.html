@@ -1806,6 +1806,11 @@
                     if (q.type === 'qcm' && gameState.answered) {
                         const correct = q[q.qType];
                         document.querySelectorAll('.opt').forEach(btn => {
+                            // Enlever le style jaune d'attente
+                            btn.style.background = '';
+                            btn.style.borderColor = '';
+                            
+                            // Mettre vert ou rouge
                             if (btn.textContent === correct) {
                                 btn.classList.add('correct');
                             } else {
@@ -1863,11 +1868,18 @@
             // STOCKER le score en attente (sera appliqué à 0s)
             gameState.pendingScore = pts;
             gameState.pendingCorrect = isCorrect;
+            gameState.pendingAnswer = answer; // Stocker la réponse choisie
             
-            // Désactiver les boutons SANS montrer la réponse
+            // Désactiver les boutons + JAUNE sur celui choisi
             document.querySelectorAll('.opt').forEach(btn => {
                 btn.classList.add('disabled');
                 btn.onclick = null;
+                
+                // Mettre en JAUNE la réponse choisie
+                if (btn.textContent === answer) {
+                    btn.style.background = 'rgba(255, 190, 11, 0.3)';
+                    btn.style.borderColor = '#ffbe0b';
+                }
             });
             
             // PAS de feedback immédiat ! Attendre 0s
