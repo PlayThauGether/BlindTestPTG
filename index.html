@@ -914,8 +914,75 @@
         };
 
         // ===========================================
-        // DEEZER API
+        // SESSION (reconnexion après rafraîchissement)
         // ===========================================
+        function saveSession() {
+            const session = {
+                code: gameState.room.code,
+                name: gameState.room.players[gameState.playerIndex].name,
+                isHost: gameState.isHost
+            };
+            localStorage.setItem('quizPartySession', JSON.stringify(session));
+        }
+
+        function clearSession() {
+            localStorage.removeItem('quizPartySession');
+        }
+
+        function tryReconnect() {
+            const raw = localStorage.getItem('quizPartySession');
+            if (!raw) return;
+
+            let session;
+            try { session = JSON.parse(raw); } catch(e) { clearSession(); return; }
+            if (!session || !session.code || !session.name) { clearSession(); return; }
+
+            console.log('🔄 Session trouvée, tentative de reconnexion...', session);
+
+            db.ref(`rooms/${session.code}`).once('value', snapshot => {
+                const room = snapshot.val();
+
+                // Room plus en vie sur Firebase
+                if (!room) {
+                    console.log('❌ Room introuvable, session effacée.');
+                    clearSession();
+                    return;
+                }
+
+                // Trouver le joueur par son nom
+                const idx = room.players.findIndex(p => p.name === session.name);
+                if (idx === -1) {
+                    console.log('❌ Joueur introuvable dans la room.');
+                    clearSession();
+                    return;
+                }
+
+                // Partie terminée
+                if (room.currentQ >= room.questions.length) {
+                    console.log('✅ Partie déjà terminée.');
+                    clearSession();
+                    return;
+                }
+
+                // Tout bon — on reconnecte
+                console.log('✅ Reconnexion réussie !');
+                gameState.room = room;
+                gameState.playerIndex = idx;
+                gameState.isHost = session.isHost;
+                gameState.distanceMode = room.distanceMode || false;
+                gameState.hostDisplayOnly = room.hostMode || false;
+
+                if (room.started) {
+                    // Partie en cours → on rejoint directement en game
+                    showScreen('game-screen');
+                    listenToRoom();
+                    loadQuestion();
+                } else {
+                    // Pas encore lancée → on retourne au lobby
+                    goToLobby();
+                }
+            });
+        }
         // TON SERVEUR BACKEND !
         const BACKEND_URL = 'https://blind-test-ptg.vercel.app';
 
@@ -1060,6 +1127,7 @@
         function goToMenu() {
             if (gameState.roomRef) gameState.roomRef.off();
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            clearSession();
             gameState = {
                 room: null,
                 playerIndex: 0,
@@ -1493,6 +1561,7 @@
             gameState.playerIndex = 0;
             gameState.isHost = true;
             
+            saveSession();
             goToLobby();
         }
 
@@ -1521,6 +1590,7 @@
                 gameState.distanceMode = room.distanceMode || false;
                 gameState.musicDB = room.questions;
 
+                saveSession();
                 goToLobby();
             });
         }
@@ -2127,10 +2197,25 @@
         }
 
         function updateScore(pts) {
-            const players = [...gameState.room.players];
-            players[gameState.playerIndex].score = (players[gameState.playerIndex].score || 0) + pts;
+            if (pts <= 0) return;
             
-            db.ref(`rooms/${gameState.room.code}/players`).set(players);
+            const myName = gameState.room.players[gameState.playerIndex].name;
+            const playersRef = db.ref(`rooms/${gameState.room.code}/players`);
+            
+            // Transaction atomique : lit, modifie, écrit sans conflit
+            playersRef.transaction(function(currentPlayers) {
+                if (!currentPlayers) return currentPlayers;
+                
+                // Trouver mon index par mon NOM (pas par playerIndex)
+                for (let i = 0; i < currentPlayers.length; i++) {
+                    if (currentPlayers[i].name === myName) {
+                        currentPlayers[i].score = (currentPlayers[i].score || 0) + pts;
+                        break;
+                    }
+                }
+                
+                return currentPlayers;
+            });
         }
 
         function toggleAudio() {
@@ -2154,6 +2239,7 @@
             
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
             if (gameState.roomRef) gameState.roomRef.off();
+            clearSession();
 
             showScreen('leaderboard-screen');
 
@@ -2312,7 +2398,8 @@
         // ===========================================
         // INIT
         // ===========================================
-        console.log('✅ Quiz Party V1 chargé !');
+        console.log('✅ Quiz Party V2 chargé !');
+        tryReconnect(); // Tentative de reconnexion si rafraîchissement
     </script>
 </body>
 </html>
