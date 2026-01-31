@@ -983,10 +983,20 @@
                 }));
 
                 if (room.started) {
-                    // Partie en cours → on rejoint directement en game
+                    // Partie en cours → on BLOQUE sur la question suivante
+                    gameState.waitingForNextQ = true;
+                    gameState.lastSeenQ = room.currentQ; // On mémorise la question actuelle
                     showScreen('game-screen');
+                    document.getElementById('options-container').classList.add('hidden');
+                    document.getElementById('writing-container').classList.add('hidden');
+                    document.getElementById('question-text').textContent = '⏳ Attends la question suivante...';
+                    document.getElementById('answer-reveal').classList.add('hidden');
+                    document.getElementById('result-container').classList.add('hidden');
+                    document.getElementById('timer').textContent = '—';
+                    const coverBox = document.querySelector('.img-box');
+                    if (coverBox) coverBox.style.display = 'none';
+                    gameState.answered = true;
                     listenToRoom();
-                    loadQuestion();
                 } else {
                     // Pas encore lancée → on retourne au lobby
                     goToLobby();
@@ -1666,21 +1676,28 @@
 
                 if (currentScreen === 'game') {
                     updateScoreboard();
+
+                    // CAS 1 : On est en attente après rafraîchissement
+                    if (gameState.waitingForNextQ) {
+                        if (data.currentQ !== gameState.lastSeenQ && data.currentQ < data.questions.length) {
+                            console.log('✅ Nouvelle question détectée après rafraîchissement, on reprend !');
+                            gameState.waitingForNextQ = false;
+                            gameState.lastSeenQ = null;
+                            loadQuestion();
+                        }
+                        // Sinon on ne fait rien, on attend
+                        return;
+                    }
+
+                    // CAS 2 : En cours de transition (on bloque loadQuestion)
+                    if (gameState.transitionInProgress) {
+                        return;
+                    }
                     
+                    // CAS 3 : Nouvelle question normale
                     if (data.currentQ !== oldCurrentQ && data.currentQ < data.questions.length) {
                         console.log('📢 Nouvelle question:', data.currentQ);
                         loadQuestion();
-                    }
-
-                    // Si currentOptions arrive depuis Firebase et qu'on est sur une question QCM sans options affichées encore
-                    if (data.currentOptions && 
-                        data.currentOptions.questionIndex === data.currentQ &&
-                        data.questions[data.currentQ] &&
-                        data.questions[data.currentQ].type === 'qcm' &&
-                        document.getElementById('options-container').children.length === 0) {
-                        const q = data.questions[data.currentQ];
-                        const correct = q[q.qType || 'title'];
-                        renderQCMOptions(data.currentOptions.options, correct);
                     }
                     
                     if (data.currentQ >= data.questions.length) {
@@ -1707,86 +1724,48 @@
             const q = gameState.room.questions[gameState.room.currentQ];
             const player = gameState.room.players[gameState.playerIndex];
 
-            // DÉTECTION CHANGEMENT DE MODE + NIVEAU (transitions complexes)
+            // DÉTECTION CHANGEMENT DE MODE + NIVEAU (transitions pour TOUS les joueurs)
             const prevMode = gameState.lastMode || '';
             const prevLevel = gameState.lastLevel || 0;
-            const currentMode = q.mode || q.type; // 'qcm' ou 'writing'
+            const currentMode = q.mode || q.type;
             const currentLevel = q.level || 2;
             
-            // Priorité 1: Changement de mode principal (qcm → writing en mode soirée)
-            if (currentMode !== prevMode && prevMode && gameState.isHost) {
+            let transitionScreen = null;
+
+            if (currentMode !== prevMode && prevMode) {
                 if (currentMode === 'writing' && currentLevel === 1) {
-                    // Passage QCM → Écriture Niveau 1
-                    showIntroScreen('writing-lvl1-intro-screen');
-                    gameState.lastMode = currentMode;
-                    gameState.lastLevel = currentLevel;
-                    return;
+                    transitionScreen = 'writing-lvl1-intro-screen';
                 } else if (currentMode === 'qcm' && currentLevel === 1) {
-                    // Début QCM Niveau 1
-                    showIntroScreen('qcm-lvl1-intro-screen');
-                    gameState.lastMode = currentMode;
-                    gameState.lastLevel = currentLevel;
-                    return;
+                    transitionScreen = 'qcm-lvl1-intro-screen';
                 }
             }
             
-            // Priorité 2: Changement de niveau dans le même mode
-            if (currentLevel !== prevLevel && prevLevel !== 0 && gameState.isHost) {
+            if (!transitionScreen && currentLevel !== prevLevel && prevLevel !== 0) {
                 if (currentMode === 'qcm' && currentLevel === 2) {
-                    // QCM Niveau 2
-                    showIntroScreen('qcm-lvl2-intro-screen');
-                    gameState.lastLevel = currentLevel;
-                    return;
+                    transitionScreen = 'qcm-lvl2-intro-screen';
                 } else if (currentMode === 'writing' && currentLevel === 2) {
-                    // Écriture Niveau 2
-                    showIntroScreen('writing-lvl2-intro-screen');
-                    gameState.lastLevel = currentLevel;
-                    return;
+                    transitionScreen = 'writing-lvl2-intro-screen';
                 }
+            }
+
+            if (transitionScreen) {
+                gameState.lastMode = currentMode;
+                gameState.lastLevel = currentLevel;
+                gameState.transitionInProgress = true; // Bloquer le listener pendant la transition
+
+                showScreen(transitionScreen);
+                setTimeout(() => {
+                    gameState.transitionInProgress = false;
+                    showScreen('game-screen');
+                    loadQuestion(); // Recharger — cette fois sans transition
+                }, 3000);
+                return;
             }
             
             gameState.lastMode = currentMode;
             gameState.lastLevel = currentLevel;
 
-            // TIMER : calculer le temps restant depuis Firebase
-            let timeLeft = 20;
-            if (gameState.room.questionStartTime) {
-                const elapsed = Math.floor((Date.now() - gameState.room.questionStartTime) / 1000);
-                timeLeft = 20 - elapsed;
-            }
-
-            // L'hôte sauvegarde le timestamp de début
-            if (gameState.isHost) {
-                db.ref(`rooms/${gameState.room.code}/questionStartTime`).set(Date.now());
-                timeLeft = 20; // L'hôte part toujours à 20
-            }
-
-            // Si le temps est déjà écoulé à la reconnexion → on affiche juste la réponse
-            if (timeLeft <= 0) {
-                gameState.currentTime = 0;
-                gameState.answered = true;
-                document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
-                document.getElementById('total-q').textContent = gameState.room.questions.length;
-                document.getElementById('timer').textContent = '0';
-                document.getElementById('cover-img').style.filter = 'blur(0px)';
-                document.getElementById('cover-img').src = q.cover;
-                document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
-                document.getElementById('answer-reveal').classList.remove('hidden');
-                document.getElementById('result-container').classList.add('hidden');
-                // Afficher les options mais disabled
-                if (q.type === 'qcm') {
-                    loadQCM(q);
-                    document.querySelectorAll('.opt').forEach(btn => {
-                        btn.classList.add('disabled');
-                        btn.onclick = null;
-                        if (btn.textContent === q[q.qType]) btn.classList.add('correct');
-                        else btn.classList.add('wrong');
-                    });
-                }
-                return;
-            }
-
-            gameState.currentTime = timeLeft;
+            gameState.currentTime = 20;
             gameState.answered = false;
             gameState.audioPlaying = false;
             gameState.pendingScore = 0;
@@ -1794,20 +1773,24 @@
             document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
             document.getElementById('total-q').textContent = gameState.room.questions.length;
             document.getElementById('player-score').textContent = player.score || 0;
-            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('timer').textContent = '20';
             
-            // COVER : Cacher si mode hôte ET pas l'hôte
+            // COVER
             const coverBox = document.querySelector('.img-box');
             if (gameState.room.hostMode && !gameState.isHost) {
                 coverBox.style.display = 'none';
             } else {
                 coverBox.style.display = 'block';
                 document.getElementById('cover-img').src = q.cover;
-                document.getElementById('cover-img').style.filter = `blur(${(timeLeft / 20) * 25}px)`;
+                document.getElementById('cover-img').style.filter = 'blur(25px)';
             }
 
             document.getElementById('answer-reveal').classList.add('hidden');
             document.getElementById('result-container').classList.add('hidden');
+
+            // CACHER les réponses — on ne les montre qu'après que l'audio commence
+            document.getElementById('options-container').classList.add('hidden');
+            document.getElementById('writing-container').classList.add('hidden');
 
             updateScoreboard();
 
@@ -1815,22 +1798,17 @@
             const audioBox = document.getElementById('audio-box');
             const audio = document.getElementById('audio-player');
             
-            // MODE DISTANCE : Audio pour tout le monde (avec sync timestamp)
-            // MODE NORMAL : Audio seulement pour l'hôte
             if (gameState.distanceMode || gameState.isHost) {
                 audioBox.classList.remove('hidden');
                 audio.src = q.preview;
                 audio.load();
                 
-                // MODE DISTANCE: Sync via timestamp Firebase
                 if (gameState.distanceMode && gameState.isHost) {
-                    // L'hôte enregistre le timestamp de démarrage
-                    const startTime = Date.now() + 500; // +500ms pour le délai
+                    const startTime = Date.now() + 500;
                     db.ref(`rooms/${gameState.room.code}/audioStartTime`).set(startTime);
                 }
                 
                 setTimeout(() => {
-                    // MODE DISTANCE: Attendre le timestamp
                     if (gameState.distanceMode && !gameState.isHost) {
                         db.ref(`rooms/${gameState.room.code}/audioStartTime`).once('value', snapshot => {
                             const startTime = snapshot.val();
@@ -1860,19 +1838,28 @@
 
             // MODE HÔTE : ne pas afficher les questions
             if (gameState.hostDisplayOnly) {
-                document.getElementById('options-container').classList.add('hidden');
-                document.getElementById('writing-container').classList.add('hidden');
                 document.getElementById('question-text').textContent = '🎮 Mode Affichage';
                 startTimer();
                 return;
             }
 
-            // Question normale
+            // Charger les options EN ARRIÈRE PLAN (pas encore visibles)
             if (q.type === 'qcm') {
                 loadQCM(q);
+                document.getElementById('options-container').classList.add('hidden');
             } else {
                 loadWriting(q);
+                document.getElementById('writing-container').classList.add('hidden');
             }
+
+            // RÉVÉLER les réponses après 500ms (quand l'audio commence)
+            setTimeout(() => {
+                if (q.type === 'qcm') {
+                    document.getElementById('options-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('writing-container').classList.remove('hidden');
+                }
+            }, 500);
 
             startTimer();
         }
