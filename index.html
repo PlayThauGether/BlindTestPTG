@@ -686,6 +686,28 @@
             </div>
         </div>
 
+        <!-- WRITING MODE TRANSITION -->
+        <div id="writing-transition-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
+                    ✍️ MODE ÉCRITURE
+                </h1>
+                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin: 2rem 0;">
+                    <h2 style="color: #ffbe0b; font-size: 2rem; margin-bottom: 1.5rem;">⚠️ ATTENTION</h2>
+                    <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
+                        📝 <strong>Orthographe PARFAITE requise !</strong>
+                    </p>
+                    <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
+                        ✅ <strong>N'oubliez pas de VALIDER votre réponse !</strong>
+                    </p>
+                    <p style="font-size: 1rem; color: #aaa; margin-top: 1.5rem;">
+                        (Les majuscules ne comptent pas)
+                    </p>
+                </div>
+                <div class="spinner" style="margin: 3rem auto;"></div>
+            </div>
+        </div>
+
         <!-- GAME -->
         <div id="game-screen" class="screen hidden">
             <div class="game-header">
@@ -1396,13 +1418,25 @@
             const currentLevel = q.level || 2;
             
             if (currentLevel !== prevLevel && prevLevel !== 0 && gameState.isHost) {
-                // Afficher transition
+                // Afficher transition niveau
                 showLevelTransition(currentLevel);
                 gameState.lastLevel = currentLevel;
                 return; // Attendre la fin de la transition
             }
             
+            // DÉTECTION PASSAGE À L'ÉCRITURE (en mode soirée)
+            const prevType = gameState.lastQuestionType || '';
+            const currentType = q.type;
+            
+            if (currentType === 'writing' && prevType === 'qcm' && gameState.isHost) {
+                // Afficher transition écriture
+                showWritingTransition();
+                gameState.lastQuestionType = currentType;
+                return; // Attendre la fin de la transition
+            }
+            
             gameState.lastLevel = currentLevel;
+            gameState.lastQuestionType = currentType;
 
             gameState.currentTime = 20;
             gameState.answered = false;
@@ -1957,6 +1991,15 @@
                 showScreen('game-screen');
                 loadQuestion(); // Charger la vraie question
             }, 3000); // 3 secondes de transition
+        }
+
+        function showWritingTransition() {
+            showScreen('writing-transition-screen');
+            
+            setTimeout(() => {
+                showScreen('game-screen');
+                loadQuestion(); // Charger la vraie question
+            }, 4000); // 4 secondes pour lire les instructions
         }
 
         function restartGame() {
