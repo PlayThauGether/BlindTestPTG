@@ -974,6 +974,13 @@
                 gameState.isHost = (room.host === session.name);
                 // hostDisplayOnly UNIQUEMENT si c'est l'hôte ET que le mode hôte est activé
                 gameState.hostDisplayOnly = gameState.isHost && (room.hostMode || false);
+                // Reconstruire musicDB depuis les questions (nécessaire pour générer les fausses réponses QCM)
+                gameState.musicDB = room.questions.map(q => ({
+                    title: q.title,
+                    artist: q.artist,
+                    cover: q.cover,
+                    preview: q.preview
+                }));
 
                 if (room.started) {
                     // Partie en cours → on rejoint directement en game
