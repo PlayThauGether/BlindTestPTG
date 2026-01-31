@@ -1748,15 +1748,53 @@
             gameState.lastMode = currentMode;
             gameState.lastLevel = currentLevel;
 
-            gameState.currentTime = 20;
+            // TIMER : calculer le temps restant depuis Firebase
+            let timeLeft = 20;
+            if (gameState.room.questionStartTime) {
+                const elapsed = Math.floor((Date.now() - gameState.room.questionStartTime) / 1000);
+                timeLeft = 20 - elapsed;
+            }
+
+            // L'hôte sauvegarde le timestamp de début
+            if (gameState.isHost) {
+                db.ref(`rooms/${gameState.room.code}/questionStartTime`).set(Date.now());
+                timeLeft = 20; // L'hôte part toujours à 20
+            }
+
+            // Si le temps est déjà écoulé à la reconnexion → on affiche juste la réponse
+            if (timeLeft <= 0) {
+                gameState.currentTime = 0;
+                gameState.answered = true;
+                document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
+                document.getElementById('total-q').textContent = gameState.room.questions.length;
+                document.getElementById('timer').textContent = '0';
+                document.getElementById('cover-img').style.filter = 'blur(0px)';
+                document.getElementById('cover-img').src = q.cover;
+                document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
+                document.getElementById('answer-reveal').classList.remove('hidden');
+                document.getElementById('result-container').classList.add('hidden');
+                // Afficher les options mais disabled
+                if (q.type === 'qcm') {
+                    loadQCM(q);
+                    document.querySelectorAll('.opt').forEach(btn => {
+                        btn.classList.add('disabled');
+                        btn.onclick = null;
+                        if (btn.textContent === q[q.qType]) btn.classList.add('correct');
+                        else btn.classList.add('wrong');
+                    });
+                }
+                return;
+            }
+
+            gameState.currentTime = timeLeft;
             gameState.answered = false;
             gameState.audioPlaying = false;
-            gameState.pendingScore = 0; // Score en attente (sera appliqué à 0s)
+            gameState.pendingScore = 0;
 
             document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
             document.getElementById('total-q').textContent = gameState.room.questions.length;
             document.getElementById('player-score').textContent = player.score || 0;
-            document.getElementById('timer').textContent = '20';
+            document.getElementById('timer').textContent = timeLeft;
             
             // COVER : Cacher si mode hôte ET pas l'hôte
             const coverBox = document.querySelector('.img-box');
@@ -1765,7 +1803,7 @@
             } else {
                 coverBox.style.display = 'block';
                 document.getElementById('cover-img').src = q.cover;
-                document.getElementById('cover-img').style.filter = 'blur(25px)';
+                document.getElementById('cover-img').style.filter = `blur(${(timeLeft / 20) * 25}px)`;
             }
 
             document.getElementById('answer-reveal').classList.add('hidden');
