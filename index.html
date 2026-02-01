@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -561,7 +561,7 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <img src="ptgmusique.png" alt="logo" style="height: 250px; width: auto; display: block; margin: 0 auto 0.5rem;">
+                <img src="logo.png" alt="logo" style="height: 200px; width: auto; display: block; margin: 0 auto 0.5rem;">
                 <h1 class="title" style="margin: 0;">BLIND TEST</h1>
                 <p class="subtitle">BY PLAY THAU'GETHER</p>
             </div>
@@ -605,6 +605,7 @@
                     <option value="writing">Écriture (Titre + Artiste)</option>
                     <option value="title-only">Titres uniquement</option>
                     <option value="soiree">Soirée (Mix QCM + Écriture)</option>
+                    <option value="mix">🎧 Mix (Normal → Reverse → Remix)</option>
                 </select>
             </div>
 
@@ -717,7 +718,7 @@
         <div id="mode-start-screen" class="screen hidden">
             <div style="text-align: center;">
                 <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);" id="mode-start-title">
-                    🎯 MODE QCM
+                    🎮 MODE QCM
                 </h1>
                 <div style="font-size: 8rem; color: #ffbe0b; font-weight: 800; text-shadow: 0 0 50px rgba(255,190,11,0.8);" id="countdown-number">
                     10
@@ -813,6 +814,51 @@
                     <p style="font-size: 1rem; color: #aaa; margin-top: 1.5rem;">
                         (Les majuscules ne comptent pas)
                     </p>
+                </div>
+                <div class="spinner" style="margin: 3rem auto;"></div>
+            </div>
+        </div>
+
+        <!-- MIX LEVEL 1 INTRO (Normal) -->
+        <div id="mix-lvl1-intro-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <h1 style="font-size: 3.5rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
+                    🎧 MODE MIX
+                </h1>
+                <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem;">
+                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 1 — NORMAL</h2>
+                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">🎵 Extraits classiques</p>
+                    <p style="font-size: 1.2rem; color: #aaa; margin-top: 0.8rem;">4 choix de réponse</p>
+                </div>
+                <div class="spinner" style="margin: 3rem auto;"></div>
+            </div>
+        </div>
+
+        <!-- MIX LEVEL 2 INTRO (Reverse) -->
+        <div id="mix-lvl2-intro-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
+                    🎧 MODE MIX
+                </h1>
+                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
+                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 2 — REVERSE</h2>
+                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">⏪ Musiques inversées !</p>
+                    <p style="font-size: 1.2rem; color: #aaa; margin-top: 0.8rem;">4 choix de réponse</p>
+                </div>
+                <div class="spinner" style="margin: 3rem auto;"></div>
+            </div>
+        </div>
+
+        <!-- MIX LEVEL 3 INTRO (Remix) -->
+        <div id="mix-lvl3-intro-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <h1 style="font-size: 3.5rem; color: #ffbe0b; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">
+                    🎧 MODE MIX
+                </h1>
+                <div style="background: rgba(255, 190, 11, 0.1); border: 3px solid #ffbe0b; border-radius: 20px; padding: 2rem;">
+                    <h2 style="color: #ff006e; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 3 — DIALOGUES</h2>
+                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">🎬 Extraits de films !</p>
+                    <p style="font-size: 1.2rem; color: #aaa; margin-top: 0.8rem;">Trouve le film parmi 4 propositions</p>
                 </div>
                 <div class="spinner" style="margin: 3rem auto;"></div>
             </div>
@@ -1175,7 +1221,7 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
+        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
 
         function goToPlaylists() {
             const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
@@ -1549,8 +1595,62 @@
                     });
                 }
                 
+            } else if (mode === 'mix') {
+                // MODE MIX : Normal → Reverse → Dialogue
+                // Filtrer proprement par trackType depuis tracks (pas shuffled qui est déjà mêlé)
+                const normalTracks = shuffle(tracks.filter(t => t.trackType === 'normal' || !t.trackType));
+                const reverseTracks = shuffle(tracks.filter(t => t.trackType === 'reverse'));
+                const dialogueTracks = shuffle(tracks.filter(t => t.trackType === 'dialogue'));
+
+                // Répartition en 3 tiers égaux
+                const perLevel = Math.floor(numQuestions / 3);
+                const remainder = numQuestions - perLevel * 3;
+                const lvl1Count = perLevel + (remainder > 0 ? 1 : 0);
+                const lvl2Count = perLevel + (remainder > 1 ? 1 : 0);
+                const lvl3Count = perLevel;
+
+                console.log(`📊 Mix: Normal(${lvl1Count}) + Reverse(${lvl2Count}) + Dialogue(${lvl3Count})`);
+                console.log(`📊 Disponible: Normal(${normalTracks.length}) + Reverse(${reverseTracks.length}) + Dialogue(${dialogueTracks.length})`);
+
+                // === NIVEAU 1 : Normal ===
+                for (let i = 0; i < normalTracks.length && i < lvl1Count; i++) {
+                    questions.push({
+                        ...normalTracks[i],
+                        type: 'qcm',
+                        level: 1,
+                        mode: 'mix',
+                        qType: 'artist',
+                        optionsCount: 4
+                    });
+                }
+
+                // === NIVEAU 2 : Reverse ===
+                for (let i = 0; i < reverseTracks.length && i < lvl2Count; i++) {
+                    questions.push({
+                        ...reverseTracks[i],
+                        type: 'qcm',
+                        level: 2,
+                        mode: 'mix',
+                        qType: 'artist',
+                        optionsCount: 4
+                    });
+                }
+
+                // === NIVEAU 3 : Dialogues ===
+                for (let i = 0; i < dialogueTracks.length && i < lvl3Count; i++) {
+                    questions.push({
+                        ...dialogueTracks[i],
+                        type: 'qcm',
+                        level: 3,
+                        mode: 'mix',
+                        qType: 'title',
+                        optionsCount: 4
+                    });
+                }
+
+                console.log(`📊 Questions générées: ${questions.length} total`);
+
             } else {
-                // title-only: Niveau 2 uniquement
                 questions = shuffled.slice(0, numQuestions).map(q => ({
                     ...q,
                     type: 'qcm',
@@ -1741,32 +1841,63 @@
             
             let transitionScreen = null;
 
-            if (currentMode !== prevMode && prevMode) {
+            // CAS 1 : Première question du jeu (prevMode === '')
+            if (!prevMode) {
+                if (currentMode === 'mix' && currentLevel === 1) {
+                    transitionScreen = 'mix-lvl1-intro-screen';
+                } else if (currentMode === 'qcm' && currentLevel === 1) {
+                    transitionScreen = 'qcm-lvl1-intro-screen';
+                } else if (currentMode === 'writing' && currentLevel === 1) {
+                    transitionScreen = 'writing-lvl1-intro-screen';
+                }
+            }
+
+            // CAS 2 : Changement de mode en cours de jeu
+            if (!transitionScreen && currentMode !== prevMode && prevMode) {
                 if (currentMode === 'writing' && currentLevel === 1) {
                     transitionScreen = 'writing-lvl1-intro-screen';
                 } else if (currentMode === 'qcm' && currentLevel === 1) {
                     transitionScreen = 'qcm-lvl1-intro-screen';
+                } else if (currentMode === 'mix' && currentLevel === 1) {
+                    transitionScreen = 'mix-lvl1-intro-screen';
                 }
             }
             
+            // CAS 3 : Changement de niveau dans le même mode
             if (!transitionScreen && currentLevel !== prevLevel && prevLevel !== 0) {
                 if (currentMode === 'qcm' && currentLevel === 2) {
                     transitionScreen = 'qcm-lvl2-intro-screen';
                 } else if (currentMode === 'writing' && currentLevel === 2) {
                     transitionScreen = 'writing-lvl2-intro-screen';
+                } else if (currentMode === 'mix' && currentLevel === 2) {
+                    transitionScreen = 'mix-lvl2-intro-screen';
+                } else if (currentMode === 'mix' && currentLevel === 3) {
+                    transitionScreen = 'mix-lvl3-intro-screen';
                 }
             }
 
             if (transitionScreen) {
                 gameState.lastMode = currentMode;
                 gameState.lastLevel = currentLevel;
+                gameState.usedQCMValues = []; // Réinitialiser les options utilisées à chaque nouveau niveau
                 gameState.transitionInProgress = true; // Bloquer le listener pendant la transition
 
                 showScreen(transitionScreen);
                 setTimeout(() => {
                     gameState.transitionInProgress = false;
-                    showScreen('game-screen');
-                    loadQuestion(); // Recharger — cette fois sans transition
+                    // Recharger la room depuis Firebase pour avoir le bon currentQ
+                    db.ref(`rooms/${gameState.room.code}`).once('value', snapshot => {
+                        const freshData = snapshot.val();
+                        if (freshData) {
+                            gameState.room = freshData;
+                            if (freshData.currentQ >= freshData.questions.length) {
+                                goToLeaderboard();
+                                return;
+                            }
+                        }
+                        showScreen('game-screen');
+                        loadQuestion();
+                    });
                 }, 3000);
                 return;
             }
@@ -1913,10 +2044,18 @@
             const correct = q[type];
             const level = q.level || 2;
             
-            // Afficher niveau
-            const levelText = level === 1 ? " (Facile)" : level === 3 ? " (Difficile)" : "";
-            document.getElementById('question-text').textContent = 
-                (type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?") + levelText;
+            // Texte de la question selon le contexte
+            let questionText = '';
+            if (q.mode === 'mix') {
+                if (q.trackType === 'dialogue') {
+                    questionText = '🎬 Quel est le film ?';
+                } else {
+                    questionText = '🎵 Quel est le film ?';
+                }
+            } else {
+                questionText = (type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
+            }
+            document.getElementById('question-text').textContent = questionText;
 
             // Si on a déjà les options dans la room Firebase → on les utilise directement
             const storedOptions = gameState.room.currentOptions;
@@ -1930,16 +2069,23 @@
             
             const allTracks = gameState.musicDB;
             const usedValues = gameState.usedQCMValues || [];
+
+            // En mode mix, on filtre les fausses réponses par trackType pour éviter les doublons entre niveaux
+            let candidateTracks = allTracks;
+            if (q.mode === 'mix' && q.trackType) {
+                candidateTracks = allTracks.filter(t => t.trackType === q.trackType);
+            }
             
             let wrongPool = shuffle(
-                allTracks.filter(t => 
+                candidateTracks.filter(t => 
                     t[type] !== correct && 
                     !usedValues.includes(t[type])
                 )
             );
             
+            // Si pas assez, on réinitialise usedValues mais on reste dans le même trackType
             if (wrongPool.length < 3) {
-                wrongPool = shuffle(allTracks.filter(t => t[type] !== correct));
+                wrongPool = shuffle(candidateTracks.filter(t => t[type] !== correct));
             }
             
             options = [correct];
@@ -2417,8 +2563,12 @@
 
         function startGameWithCountdown() {
             const q = gameState.room.questions[0];
-            const modeTitle = q.mode === 'writing' || q.type === 'writing' ? 
-                '✍️ MODE ÉCRITURE' : '🎮 MODE QCM';
+            let modeTitle = '🎮 MODE QCM';
+            if (q.mode === 'mix') {
+                modeTitle = '🎧 MODE MIX';
+            } else if (q.mode === 'writing' || q.type === 'writing') {
+                modeTitle = '✍️ MODE ÉCRITURE';
+            }
             
             document.getElementById('mode-start-title').textContent = modeTitle;
             showScreen('mode-start-screen');
@@ -2432,13 +2582,9 @@
                 
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    // Afficher l'écran d'intro du premier niveau
-                    const firstQ = gameState.room.questions[0];
-                    if (firstQ.mode === 'qcm' || firstQ.type === 'qcm') {
-                        showIntroScreen('qcm-lvl1-intro-screen');
-                    } else {
-                        showIntroScreen('writing-lvl1-intro-screen');
-                    }
+                    // Passer directement au game-screen — loadQuestion() gérera la transition de niveau
+                    showScreen('game-screen');
+                    loadQuestion();
                 }
             }, 1000);
         }
