@@ -1786,12 +1786,18 @@
             
             // COVER
             const coverBox = document.querySelector('.img-box');
+            const coverImg = document.getElementById('cover-img');
             if (gameState.room.hostMode && !gameState.isHost) {
                 coverBox.style.display = 'none';
             } else {
+                // Cacher d'abord, charger en arrière-plan, montrer une fois prête
+                coverImg.style.visibility = 'hidden';
+                coverImg.style.filter = 'blur(25px)';
+                coverImg.onload = function() {
+                    coverImg.style.visibility = 'visible';
+                };
+                coverImg.src = q.cover;
                 coverBox.style.display = 'block';
-                document.getElementById('cover-img').style.filter = 'blur(25px)';
-                document.getElementById('cover-img').src = q.cover;
             }
 
             document.getElementById('answer-reveal').classList.add('hidden');
