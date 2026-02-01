@@ -906,6 +906,12 @@
                         <div id="result-container" class="result hidden"></div>
                     </div>
                 </div>
+
+                <!-- BLOC DROITE : Joueurs qui ont bien répondu (hôte uniquement, affiché à timer=0) -->
+                <div id="correct-players-side" class="scoreboard-side hidden">
+                    <h3>🎉 Bien répondu !</h3>
+                    <div id="correct-players-list"></div>
+                </div>
             </div>
         </div>
 
@@ -1935,6 +1941,9 @@
             gameState.audioPlaying = false;
             gameState.pendingScore = 0;
 
+            // Cacher le bloc "bien répondu" à droite
+            document.getElementById('correct-players-side').classList.add('hidden');
+
             document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
             document.getElementById('total-q').textContent = gameState.room.questions.length;
             document.getElementById('player-score').textContent = player.score || 0;
@@ -2074,20 +2083,19 @@
             });
         }
 
-        // Affiche les joueurs qui ont bien répondu — appelée une seule fois à timer=0, uniquement sur l'écran de l'hôte
+        // Affiche les joueurs qui ont bien répondu dans le bloc à droite — appelée une seule fois à timer=0, uniquement hôte
         function showCorrectPlayers() {
             if (!gameState.isHost || gameState.distanceMode) return;
 
-            const container = document.getElementById('live-scores');
-            const scoreboard = document.getElementById('scoreboard-side');
-            scoreboard.style.display = 'block';
+            const side = document.getElementById('correct-players-side');
+            const list = document.getElementById('correct-players-list');
 
             // Lire lastAnswers depuis Firebase (données fraîches)
             db.ref(`rooms/${gameState.room.code}/lastAnswers`).once('value', snapshot => {
                 const lastAnswers = snapshot.val() || {};
                 const currentQ = gameState.room.currentQ;
 
-                // Collecter les noms des joueurs qui ont bien répondu à cette question
+                // Collecter les noms des joueurs qui ont bien répondu
                 const correctNames = [];
                 gameState.room.players.forEach(p => {
                     const safeName = p.name.replace(/[.#$[\]]/g, '_');
@@ -2097,29 +2105,24 @@
                     }
                 });
 
-                container.innerHTML = '';
+                list.innerHTML = '';
 
                 if (correctNames.length === 0) {
-                    // Personne n'a bien répondu
                     const msg = document.createElement('div');
-                    msg.style.cssText = 'text-align:center; color:#aaa; padding:1rem; font-size:0.95rem;';
+                    msg.style.cssText = 'text-align:center; color:#aaa; padding:0.8rem 0; font-size:0.95rem;';
                     msg.textContent = '😬 Personne cette fois !';
-                    container.appendChild(msg);
+                    list.appendChild(msg);
                 } else {
-                    // Titre
-                    const title = document.createElement('div');
-                    title.style.cssText = 'text-align:center; color:#00f5ff; font-weight:700; margin-bottom:0.6rem; font-size:0.95rem;';
-                    title.textContent = '🎉 Bien répondu !';
-                    container.appendChild(title);
-
-                    // Liste des noms
                     correctNames.forEach(name => {
                         const div = document.createElement('div');
-                        div.style.cssText = 'background:rgba(0,200,100,0.2); border:1px solid #00c864; border-radius:8px; padding:0.45rem 0.7rem; margin-bottom:0.4rem; color:#fff; font-weight:600; font-size:0.9rem;';
+                        div.style.cssText = 'background:rgba(0,200,100,0.2); border:1px solid #00c864; border-radius:8px; padding:0.5rem 0.7rem; margin-bottom:0.4rem; color:#fff; font-weight:600; font-size:0.9rem;';
                         div.textContent = '✅ ' + name;
-                        container.appendChild(div);
+                        list.appendChild(div);
                     });
                 }
+
+                // Montrer le bloc
+                side.classList.remove('hidden');
             });
         }
 
