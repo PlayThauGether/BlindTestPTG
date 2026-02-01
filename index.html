@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test🎵</title>
+    <title>PTG - Blind Test 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -561,7 +561,7 @@
         <!-- MENU -->
         <div id="menu-screen" class="screen">
             <div class="logo">
-                <img src="ptgmusique.png" alt="logo" style="height: 250px; width: auto; display: block; margin: 0 auto 0.5rem;">
+                <img src="logo.png" alt="logo" style="height: 250px; width: auto; display: block; margin: 0 auto 0.5rem;">
                 <h1 class="title" style="margin: 0;">BLIND TEST</h1>
                 <p class="subtitle">BY PLAY THAU'GETHER</p>
             </div>
@@ -1175,7 +1175,15 @@
             showScreen('join-screen');
         }
 
+        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
+
         function goToPlaylists() {
+            const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
+            if (pwd === null) return; // annulé
+            if (pwd !== PLAYLIST_PASSWORD) {
+                alert('❌ Mot de passe incorrect !');
+                return;
+            }
             loadPlaylists();
             showScreen('playlists-screen');
         }
