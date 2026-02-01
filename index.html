@@ -605,7 +605,8 @@
                     <option value="writing">Écriture (Titre + Artiste)</option>
                     <option value="title-only">Titres uniquement</option>
                     <option value="soiree">Soirée (Mix QCM + Écriture)</option>
-                    <option value="mix">🎧 Mix (Normal → Reverse → Remix)</option>
+                    <option value="mix">🎧 Mix (Normal → Reverse → Extrait)</option>
+                    <option value="qcm-film">🎬 QCM Film (Trouve le film)</option>
                 </select>
             </div>
 
@@ -849,7 +850,7 @@
             </div>
         </div>
 
-        <!-- MIX LEVEL 3 INTRO (Remix) -->
+        <!-- MIX LEVEL 3 INTRO (Extrait) -->
         <div id="mix-lvl3-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 700px; margin: 0 auto;">
                 <h1 style="font-size: 3.5rem; color: #ffbe0b; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">
@@ -867,7 +868,7 @@
         <!-- GAME -->
         <div id="game-screen" class="screen hidden">
             <div class="game-header">
-                <div class="timer">⏱️ <span id="timer">20</span>s</div>
+                <div class="timer">⏱️ <span id="timer">20</span>s <span id="level-badge" style="font-size:0.75rem; background:rgba(255,255,255,0.12); border-radius:6px; padding:2px 7px; margin-left:6px; color:#aaa;"></span></div>
                 <div>Q <span id="current-q">1</span>/<span id="total-q">10</span></div>
                 <div class="score">🏆 <span id="player-score">0</span></div>
             </div>
@@ -1026,7 +1027,8 @@
                     title: q.title,
                     artist: q.artist,
                     cover: q.cover,
-                    preview: q.preview
+                    preview: q.preview,
+                    trackType: q.trackType || 'normal'
                 }));
 
                 if (room.started) {
@@ -1399,7 +1401,8 @@
                         artist: t.artist,
                         cover: t.cover,
                         preview: t.preview,
-                        year: t.year || null
+                        year: t.year || null,
+                        trackType: t.trackType || 'normal'
                     }));
                     
                     if (tracks.length === 0) {
@@ -1602,12 +1605,10 @@
                 const reverseTracks = shuffle(tracks.filter(t => t.trackType === 'reverse'));
                 const dialogueTracks = shuffle(tracks.filter(t => t.trackType === 'dialogue'));
 
-                // Répartition en 3 tiers égaux
-                const perLevel = Math.floor(numQuestions / 3);
-                const remainder = numQuestions - perLevel * 3;
-                const lvl1Count = perLevel + (remainder > 0 ? 1 : 0);
-                const lvl2Count = perLevel + (remainder > 1 ? 1 : 0);
-                const lvl3Count = perLevel;
+                // Répartition personnalisée : 50% Normal, 20% Reverse, 30% Dialogue
+                const lvl1Count = Math.round(numQuestions * 0.50);
+                const lvl2Count = Math.round(numQuestions * 0.20);
+                const lvl3Count = numQuestions - lvl1Count - lvl2Count;
 
                 console.log(`📊 Mix: Normal(${lvl1Count}) + Reverse(${lvl2Count}) + Dialogue(${lvl3Count})`);
                 console.log(`📊 Disponible: Normal(${normalTracks.length}) + Reverse(${reverseTracks.length}) + Dialogue(${dialogueTracks.length})`);
@@ -1649,6 +1650,30 @@
                 }
 
                 console.log(`📊 Questions générées: ${questions.length} total`);
+
+            } else if (mode === 'qcm-film') {
+                // MODE QCM FILM : comme QCM normal mais qType = 'artist' uniquement
+                // Niveau 1 : 2 choix, Niveau 2 : 4 choix (même répartition que QCM)
+                for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
+                    questions.push({
+                        ...shuffled[trackIndex++],
+                        type: 'qcm',
+                        level: 1,
+                        mode: 'qcm-film',
+                        qType: 'artist',
+                        optionsCount: 2
+                    });
+                }
+                for (let i = 0; i < lvl2Count && trackIndex < shuffled.length; i++) {
+                    questions.push({
+                        ...shuffled[trackIndex++],
+                        type: 'qcm',
+                        level: 2,
+                        mode: 'qcm-film',
+                        qType: 'artist',
+                        optionsCount: 4
+                    });
+                }
 
             } else {
                 questions = shuffled.slice(0, numQuestions).map(q => ({
@@ -1914,6 +1939,16 @@
             document.getElementById('total-q').textContent = gameState.room.questions.length;
             document.getElementById('player-score').textContent = player.score || 0;
             document.getElementById('timer').textContent = '20';
+
+            // Badge niveau
+            const lvlBadge = document.getElementById('level-badge');
+            if (q.mode === 'mix') {
+                const lvlLabels = { 1: '🎵 Normal', 2: '⏪ Reverse', 3: '🎬 Dialogues' };
+                lvlBadge.textContent = lvlLabels[q.level] || '';
+                lvlBadge.style.display = 'inline-block';
+            } else {
+                lvlBadge.style.display = 'none';
+            }
             
             // COVER
             const coverBox = document.querySelector('.img-box');
@@ -2039,10 +2074,58 @@
             });
         }
 
+        // Affiche les joueurs qui ont bien répondu — appelée une seule fois à timer=0, uniquement sur l'écran de l'hôte
+        function showCorrectPlayers() {
+            if (!gameState.isHost || gameState.distanceMode) return;
+
+            const container = document.getElementById('live-scores');
+            const scoreboard = document.getElementById('scoreboard-side');
+            scoreboard.style.display = 'block';
+
+            // Lire lastAnswers depuis Firebase (données fraîches)
+            db.ref(`rooms/${gameState.room.code}/lastAnswers`).once('value', snapshot => {
+                const lastAnswers = snapshot.val() || {};
+                const currentQ = gameState.room.currentQ;
+
+                // Collecter les noms des joueurs qui ont bien répondu à cette question
+                const correctNames = [];
+                gameState.room.players.forEach(p => {
+                    const safeName = p.name.replace(/[.#$[\]]/g, '_');
+                    const answer = lastAnswers[safeName];
+                    if (answer && answer.questionIndex === currentQ && answer.correct) {
+                        correctNames.push(p.name);
+                    }
+                });
+
+                container.innerHTML = '';
+
+                if (correctNames.length === 0) {
+                    // Personne n'a bien répondu
+                    const msg = document.createElement('div');
+                    msg.style.cssText = 'text-align:center; color:#aaa; padding:1rem; font-size:0.95rem;';
+                    msg.textContent = '😬 Personne cette fois !';
+                    container.appendChild(msg);
+                } else {
+                    // Titre
+                    const title = document.createElement('div');
+                    title.style.cssText = 'text-align:center; color:#00f5ff; font-weight:700; margin-bottom:0.6rem; font-size:0.95rem;';
+                    title.textContent = '🎉 Bien répondu !';
+                    container.appendChild(title);
+
+                    // Liste des noms
+                    correctNames.forEach(name => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'background:rgba(0,200,100,0.2); border:1px solid #00c864; border-radius:8px; padding:0.45rem 0.7rem; margin-bottom:0.4rem; color:#fff; font-weight:600; font-size:0.9rem;';
+                        div.textContent = '✅ ' + name;
+                        container.appendChild(div);
+                    });
+                }
+            });
+        }
+
         function loadQCM(q) {
             const type = q.qType || 'title';
             const correct = q[type];
-            const level = q.level || 2;
             
             // Texte de la question selon le contexte
             let questionText = '';
@@ -2052,6 +2135,8 @@
                 } else {
                     questionText = '🎵 Quel est le film ?';
                 }
+            } else if (q.mode === 'qcm-film') {
+                questionText = '🎬 Quel est le film ?';
             } else {
                 questionText = (type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
             }
@@ -2065,45 +2150,25 @@
             }
 
             // Sinon on génère (normalement seul l'hôte arrive ici en premier)
-            let options = [];
-            
             const allTracks = gameState.musicDB;
-            const usedValues = gameState.usedQCMValues || [];
 
-            // En mode mix, on filtre les fausses réponses par trackType pour éviter les doublons entre niveaux
+            // En mode mix, on filtre par trackType pour ne piger les fausses réponses que dans le même niveau
             let candidateTracks = allTracks;
             if (q.mode === 'mix' && q.trackType) {
                 candidateTracks = allTracks.filter(t => t.trackType === q.trackType);
             }
-            
-            let wrongPool = shuffle(
-                candidateTracks.filter(t => 
-                    t[type] !== correct && 
-                    !usedValues.includes(t[type])
-                )
-            );
-            
-            // Si pas assez, on réinitialise usedValues mais on reste dans le même trackType
-            if (wrongPool.length < 3) {
-                wrongPool = shuffle(candidateTracks.filter(t => t[type] !== correct));
-            }
-            
-            options = [correct];
-            const newUsed = [correct];
-            
+
+            // Collecter les valeurs uniques disponibles comme fausses réponses
+            const wrongValues = [...new Set(
+                candidateTracks
+                    .map(t => t[type])
+                    .filter(v => v && v !== correct)
+            )];
+
+            // Mêler et prendre les 3 premières comme fausses réponses
+            const shuffledWrong = shuffle(wrongValues);
             const targetCount = q.optionsCount || 4;
-            
-            while (options.length < targetCount && wrongPool.length > 0) {
-                const track = wrongPool.pop();
-                const val = track[type];
-                if (val && !options.includes(val)) {
-                    options.push(val);
-                    newUsed.push(val);
-                }
-            }
-
-            gameState.usedQCMValues = [...usedValues, ...newUsed].slice(-20);
-
+            const options = [correct, ...shuffledWrong.slice(0, targetCount - 1)];
             const shuffledOptions = shuffle(options);
 
             // Sauvegarder dans Firebase pour que tous voient les mêmes options
@@ -2264,6 +2329,9 @@
                     if (gameState.answered && gameState.pendingScore) {
                         updateScore(gameState.pendingScore);
                     }
+
+                    // Afficher les joueurs qui ont bien répondu (uniquement sur l'écran de l'hôte)
+                    showCorrectPlayers();
                     
                     // Arrêter l'audio
                     if (gameState.distanceMode || gameState.isHost) {
@@ -2298,6 +2366,13 @@
             gameState.pendingScore = pts;
             gameState.pendingCorrect = isCorrect;
             gameState.pendingAnswer = answer; // Stocker la réponse choisie
+
+            // Pousser le résultat dans Firebase pour que l'hôte puisse voir qui a bien répondu
+            const myName = gameState.room.players[gameState.playerIndex].name;
+            db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                correct: isCorrect,
+                questionIndex: gameState.room.currentQ
+            });
             
             // Désactiver les boutons + JAUNE sur celui choisi
             document.querySelectorAll('.opt').forEach(btn => {
@@ -2388,6 +2463,13 @@
             gameState.pendingFeedback = feedback;
             gameState.pendingTitleOk = titleOk;
             gameState.pendingArtistOk = artistOk;
+
+            // Pousser le résultat dans Firebase pour que l'hôte puisse voir qui a bien répondu
+            const myName = gameState.room.players[gameState.playerIndex].name;
+            db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                correct: pts > 0,
+                questionIndex: gameState.room.currentQ
+            });
             
             // Mettre les inputs en ORANGE (attente)
             const titleInputEl = document.getElementById('input-title');
@@ -2568,6 +2650,8 @@
                 modeTitle = '🎧 MODE MIX';
             } else if (q.mode === 'writing' || q.type === 'writing') {
                 modeTitle = '✍️ MODE ÉCRITURE';
+            } else if (q.mode === 'qcm-film') {
+                modeTitle = '🎬 MODE QCM FILM';
             }
             
             document.getElementById('mode-start-title').textContent = modeTitle;
@@ -2582,7 +2666,6 @@
                 
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    // Passer directement au game-screen — loadQuestion() gérera la transition de niveau
                     showScreen('game-screen');
                     loadQuestion();
                 }
