@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵</title>
+    <title>PTG - Blind Test🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1606,7 +1606,6 @@
                 
             } else if (mode === 'mix') {
                 // MODE MIX : Normal → Reverse → Dialogue
-                // Filtrer proprement par trackType depuis tracks (pas shuffled qui est déjà mêlé)
                 const normalTracks = shuffle(tracks.filter(t => t.trackType === 'normal' || !t.trackType));
                 const reverseTracks = shuffle(tracks.filter(t => t.trackType === 'reverse'));
                 const dialogueTracks = shuffle(tracks.filter(t => t.trackType === 'dialogue'));
@@ -1615,9 +1614,6 @@
                 const lvl1Count = Math.round(numQuestions * 0.50);
                 const lvl2Count = Math.round(numQuestions * 0.20);
                 const lvl3Count = numQuestions - lvl1Count - lvl2Count;
-
-                console.log(`📊 Mix: Normal(${lvl1Count}) + Reverse(${lvl2Count}) + Dialogue(${lvl3Count})`);
-                console.log(`📊 Disponible: Normal(${normalTracks.length}) + Reverse(${reverseTracks.length}) + Dialogue(${dialogueTracks.length})`);
 
                 // === NIVEAU 1 : Normal ===
                 for (let i = 0; i < normalTracks.length && i < lvl1Count; i++) {
@@ -1650,7 +1646,7 @@
                         type: 'qcm',
                         level: 3,
                         mode: 'mix',
-                        qType: 'title',
+                        qType: 'artist',  // Pour dialogue, le nom du film est dans 'artist'
                         optionsCount: 4
                     });
                 }
@@ -1659,7 +1655,7 @@
 
             } else if (mode === 'qcm-film') {
                 // MODE QCM FILM : comme QCM normal mais qType = 'artist' uniquement
-                // Niveau 1 : 2 choix, Niveau 2 : 4 choix (même répartition que QCM)
+                // Niveau 1 : 2 choix, Niveau 2 : 4 choix
                 for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
