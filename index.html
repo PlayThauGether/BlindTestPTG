@@ -2403,17 +2403,11 @@
                 candidateTracks = allTracks.filter(t => t.trackType === q.trackType);
             }
 
-            // Récupérer TOUS les films qui sont des bonnes réponses dans ce quiz
-            const correctAnswersInQuiz = new Set(
-                gameState.room.questions.map(question => question[type])
-            );
-
             // Collecter les valeurs uniques disponibles comme fausses réponses
-            // EXCLURE tous les films qui sont déjà des bonnes réponses dans le quiz
             const wrongValues = [...new Set(
                 candidateTracks
                     .map(t => t[type])
-                    .filter(v => v && v !== correct && !correctAnswersInQuiz.has(v))
+                    .filter(v => v && v !== correct)
             )];
 
             // Double shuffle pour plus d'aléatoire
