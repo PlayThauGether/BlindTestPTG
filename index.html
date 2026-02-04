@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1173,7 +1173,13 @@
         // UTILS
         // ===========================================
         function shuffle(arr) {
-            return [...arr].sort(() => Math.random() - 0.5);
+            // Fisher-Yates shuffle pour un vrai aléatoire
+            const shuffled = [...arr];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
         }
 
         function genCode() {
@@ -1258,7 +1264,7 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
+        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
 
         function goToPlaylists() {
             const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
@@ -1805,8 +1811,25 @@
                 const lvl2Count = Math.round(numQuestions * 0.20);
                 const lvl3Count = numQuestions - lvl1Count - lvl2Count;
 
+                console.log(`📊 Répartition: Lvl1(${lvl1Count}) Lvl2(${lvl2Count}) Lvl3(${lvl3Count})`);
+                console.log(`📊 Disponible: Normal(${normalTracks.length}) Reverse(${reverseTracks.length}) Dialogue(${dialogueTracks.length})`);
+
+                // Vérifier qu'on a assez de tracks par type
+                if (normalTracks.length < lvl1Count) {
+                    alert(`⚠️ Pas assez de tracks Normal ! Tu as ${normalTracks.length} tracks mais il en faut ${lvl1Count}.\nAjoute des tracks "normal" dans ta playlist ou réduis le nombre de questions.`);
+                    return [];
+                }
+                if (reverseTracks.length < lvl2Count) {
+                    alert(`⚠️ Pas assez de tracks Reverse ! Tu as ${reverseTracks.length} tracks mais il en faut ${lvl2Count}.\nAjoute des tracks "reverse" dans ta playlist ou réduis le nombre de questions.`);
+                    return [];
+                }
+                if (dialogueTracks.length < lvl3Count) {
+                    alert(`⚠️ Pas assez de tracks Dialogue ! Tu as ${dialogueTracks.length} tracks mais il en faut ${lvl3Count}.\nAjoute des tracks "dialogue" dans ta playlist ou réduis le nombre de questions.`);
+                    return [];
+                }
+
                 // === NIVEAU 1 : Normal ===
-                for (let i = 0; i < normalTracks.length && i < lvl1Count; i++) {
+                for (let i = 0; i < lvl1Count; i++) {
                     questions.push({
                         ...normalTracks[i],
                         type: 'qcm',
@@ -1818,7 +1841,7 @@
                 }
 
                 // === NIVEAU 2 : Reverse ===
-                for (let i = 0; i < reverseTracks.length && i < lvl2Count; i++) {
+                for (let i = 0; i < lvl2Count; i++) {
                     questions.push({
                         ...reverseTracks[i],
                         type: 'qcm',
@@ -1830,7 +1853,7 @@
                 }
 
                 // === NIVEAU 3 : Dialogues ===
-                for (let i = 0; i < dialogueTracks.length && i < lvl3Count; i++) {
+                for (let i = 0; i < lvl3Count; i++) {
                     questions.push({
                         ...dialogueTracks[i],
                         type: 'qcm',
@@ -1841,7 +1864,8 @@
                     });
                 }
 
-                console.log(`📊 Questions générées: ${questions.length} total`);
+                console.log(`✅ Questions générées: ${questions.length} total`);
+
 
             } else if (mode === 'qcm-film') {
                 // MODE QCM FILM : comme QCM normal mais qType = 'artist' uniquement
@@ -2351,7 +2375,26 @@
                 return;
             }
 
-            // Sinon on génère (normalement seul l'hôte arrive ici en premier)
+            // Si on n'est PAS l'hôte, attendre que l'hôte génère les options
+            if (!gameState.isHost) {
+                const waitForOptions = setInterval(() => {
+                    db.ref(`rooms/${gameState.room.code}/currentOptions`).once('value', snapshot => {
+                        const opts = snapshot.val();
+                        if (opts && opts.questionIndex === gameState.room.currentQ) {
+                            clearInterval(waitForOptions);
+                            renderQCMOptions(opts.options, correct);
+                        }
+                    });
+                }, 200); // Vérifier toutes les 200ms
+                
+                // Timeout de sécurité après 3 secondes
+                setTimeout(() => {
+                    clearInterval(waitForOptions);
+                }, 3000);
+                return;
+            }
+
+            // UNIQUEMENT L'HÔTE génère les options
             const allTracks = gameState.musicDB;
 
             // En mode mix, on filtre par trackType pour ne piger les fausses réponses que dans le même niveau
@@ -2360,17 +2403,28 @@
                 candidateTracks = allTracks.filter(t => t.trackType === q.trackType);
             }
 
+            // Récupérer TOUS les films qui sont des bonnes réponses dans ce quiz
+            const correctAnswersInQuiz = new Set(
+                gameState.room.questions.map(question => question[type])
+            );
+
             // Collecter les valeurs uniques disponibles comme fausses réponses
+            // EXCLURE tous les films qui sont déjà des bonnes réponses dans le quiz
             const wrongValues = [...new Set(
                 candidateTracks
                     .map(t => t[type])
-                    .filter(v => v && v !== correct)
+                    .filter(v => v && v !== correct && !correctAnswersInQuiz.has(v))
             )];
 
-            // Mêler et prendre les 3 premières comme fausses réponses
-            const shuffledWrong = shuffle(wrongValues);
+            // Double shuffle pour plus d'aléatoire
+            const shuffledWrong = shuffle(shuffle(wrongValues));
             const targetCount = q.optionsCount || 4;
-            const options = [correct, ...shuffledWrong.slice(0, targetCount - 1)];
+            
+            // Prendre un subset aléatoire (pas toujours les mêmes)
+            const startIndex = Math.floor(Math.random() * Math.max(1, shuffledWrong.length - targetCount + 1));
+            const selectedWrong = shuffledWrong.slice(startIndex, startIndex + targetCount - 1);
+            
+            const options = [correct, ...selectedWrong];
             const shuffledOptions = shuffle(options);
 
             // Sauvegarder dans Firebase pour que tous voient les mêmes options
