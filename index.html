@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -574,16 +574,26 @@
 
         <!-- PLAYLISTS -->
         <div id="playlists-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">📋 Mes Playlists</h2>
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">📋 Gérer mes Playlists</h2>
             
-            <div class="playlists-box">
-                <h3 style="color: #00f5ff; margin-bottom: 1rem;">Playlists enregistrées</h3>
+            <!-- PLAYLISTS DEEZER -->
+            <div class="playlists-box" style="margin-bottom: 2rem;">
+                <h3 style="color: #00f5ff; margin-bottom: 1rem;">🎵 Playlists Deezer</h3>
                 <div id="playlists-list"></div>
-                <button class="btn" onclick="showAddPlaylist()" style="margin-top: 1rem;">➕ Ajouter une playlist</button>
+                <button class="btn" onclick="showAddPlaylist()" style="margin-top: 1rem;">➕ Ajouter une playlist Deezer</button>
+            </div>
+
+            <!-- PLAYLISTS JSON -->
+            <div class="playlists-box">
+                <h3 style="color: #00f5ff; margin-bottom: 1rem;">📚 Mes Playlists JSON</h3>
+                <div id="json-playlists-list"></div>
+                <p id="no-json-playlists" style="color: #aaa; font-size: 0.9rem; margin-top: 0.5rem;">
+                    Aucune playlist JSON sauvegardée. Créez-en une dans "Créer une partie" → Onglet "🎨 Nouvelle Playlist".
+                </p>
             </div>
 
             <div id="add-playlist-form" class="section hidden">
-                <h3>Nouvelle Playlist</h3>
+                <h3>Nouvelle Playlist Deezer</h3>
                 <input id="new-playlist-name" class="input" placeholder="Nom de la playlist">
                 <input id="new-playlist-url" class="input" placeholder="URL Deezer">
                 <button class="btn" onclick="savePlaylist()">💾 Enregistrer</button>
@@ -641,8 +651,11 @@
                     <button class="btn large" onclick="switchPlaylistTab('deezer')" id="tab-deezer" style="flex: 1; background: #ffbe0b;">
                         🎵 Deezer
                     </button>
+                    <button class="btn large" onclick="switchPlaylistTab('saved')" id="tab-saved" style="flex: 1; background: rgba(255,255,255,0.1);">
+                        📚 Mes Playlists
+                    </button>
                     <button class="btn large" onclick="switchPlaylistTab('custom')" id="tab-custom" style="flex: 1; background: rgba(255,255,255,0.1);">
-                        🎨 Playlist Perso
+                        🎨 Nouvelle Playlist
                     </button>
                 </div>
                 
@@ -657,6 +670,19 @@
                     <input id="custom-playlist-url" class="input" placeholder="URL Playlist Deezer">
                 </div>
                 
+                <!-- SAVED PLAYLISTS TAB -->
+                <div id="saved-tab" style="display: none;">
+                    <select id="saved-playlist-select" class="select" onchange="loadSavedPlaylist()">
+                        <option value="">-- Sélectionner une playlist sauvegardée --</option>
+                    </select>
+                    <div id="saved-playlist-actions" style="margin-top: 1rem; display: none;">
+                        <button class="btn" style="background: #f56565; color: white;" onclick="deleteSavedPlaylist()">🗑️ Supprimer cette playlist</button>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.85rem; color: #aaa;" id="no-saved-playlists">
+                        Aucune playlist sauvegardée. Créez-en une dans l'onglet "🎨 Nouvelle Playlist" !
+                    </p>
+                </div>
+                
                 <!-- CUSTOM TAB -->
                 <div id="custom-tab" style="display: none;">
                     <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #aaa;">
@@ -666,6 +692,9 @@
                     <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #00f5ff;">
                         💡 Utilise le <a href="playlist-generator.html" target="_blank" style="color: #ffbe0b; font-weight: 600;">générateur JSON</a> pour créer ta playlist facilement !
                     </p>
+                    <button class="btn large" style="background: #48bb78; color: white; margin-top: 1rem; width: 100%;" onclick="saveCurrentPlaylist()">
+                        💾 Sauvegarder cette playlist pour plus tard
+                    </button>
                 </div>
                 
                 <button class="btn large" onclick="loadAndCreate()">🚀 Créer la partie</button>
@@ -1239,6 +1268,7 @@
                 return;
             }
             loadPlaylists();
+            loadJsonPlaylistsManager(); // Charger aussi les playlists JSON
             showScreen('playlists-screen');
         }
 
@@ -1340,21 +1370,180 @@
 
         function switchPlaylistTab(tab) {
             const deezerTab = document.getElementById('deezer-tab');
+            const savedTab = document.getElementById('saved-tab');
             const customTab = document.getElementById('custom-tab');
             const deezerBtn = document.getElementById('tab-deezer');
+            const savedBtn = document.getElementById('tab-saved');
             const customBtn = document.getElementById('tab-custom');
             
+            // Cacher tous les onglets
+            deezerTab.style.display = 'none';
+            savedTab.style.display = 'none';
+            customTab.style.display = 'none';
+            deezerBtn.style.background = 'rgba(255,255,255,0.1)';
+            savedBtn.style.background = 'rgba(255,255,255,0.1)';
+            customBtn.style.background = 'rgba(255,255,255,0.1)';
+            
+            // Afficher l'onglet sélectionné
             if (tab === 'deezer') {
                 deezerTab.style.display = 'block';
-                customTab.style.display = 'none';
                 deezerBtn.style.background = '#ffbe0b';
-                customBtn.style.background = 'rgba(255,255,255,0.1)';
-            } else {
-                deezerTab.style.display = 'none';
+            } else if (tab === 'saved') {
+                savedTab.style.display = 'block';
+                savedBtn.style.background = '#ffbe0b';
+                refreshSavedPlaylistsList();
+            } else if (tab === 'custom') {
                 customTab.style.display = 'block';
-                deezerBtn.style.background = 'rgba(255,255,255,0.1)';
                 customBtn.style.background = '#ffbe0b';
             }
+        }
+
+        function saveCurrentPlaylist() {
+            const jsonText = document.getElementById('custom-json').value.trim();
+            if (!jsonText) {
+                alert('⚠️ Colle d\'abord ton JSON dans le champ !');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(jsonText);
+                if (!data.playlist || !Array.isArray(data.playlist)) {
+                    alert('⚠️ JSON invalide ! Il doit contenir une clé "playlist" avec un tableau.');
+                    return;
+                }
+                
+                const name = prompt('📝 Donne un nom à cette playlist :\n(ex: "Disney Complet", "Années 80", "Hits 2023")');
+                if (!name || name.trim() === '') return;
+                
+                // Récupérer les playlists existantes
+                const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+                
+                // Sauvegarder
+                saved[name.trim()] = {
+                    data: data,
+                    savedAt: new Date().toISOString(),
+                    trackCount: data.playlist.length
+                };
+                
+                localStorage.setItem('savedPlaylists', JSON.stringify(saved));
+                
+                alert(`✅ Playlist "${name.trim()}" sauvegardée avec ${data.playlist.length} tracks !`);
+                
+                // Basculer vers l'onglet "Mes Playlists"
+                switchPlaylistTab('saved');
+                
+            } catch (err) {
+                alert('⚠️ Erreur : JSON invalide !');
+            }
+        }
+
+        function refreshSavedPlaylistsList() {
+            const select = document.getElementById('saved-playlist-select');
+            const noPlaylistsMsg = document.getElementById('no-saved-playlists');
+            const actions = document.getElementById('saved-playlist-actions');
+            
+            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            const names = Object.keys(saved);
+            
+            // Vider le select
+            select.innerHTML = '<option value="">-- Sélectionner une playlist sauvegardée --</option>';
+            
+            if (names.length === 0) {
+                noPlaylistsMsg.style.display = 'block';
+                actions.style.display = 'none';
+            } else {
+                noPlaylistsMsg.style.display = 'none';
+                names.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = `${name} (${saved[name].trackCount} tracks)`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function loadSavedPlaylist() {
+            const select = document.getElementById('saved-playlist-select');
+            const actions = document.getElementById('saved-playlist-actions');
+            const name = select.value;
+            
+            if (!name) {
+                actions.style.display = 'none';
+                return;
+            }
+            
+            actions.style.display = 'block';
+            
+            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            const playlist = saved[name];
+            
+            if (!playlist) {
+                alert('⚠️ Playlist introuvable !');
+                return;
+            }
+            
+            // Mettre le JSON dans le champ custom pour qu'il soit utilisé lors du lancement
+            document.getElementById('custom-json').value = JSON.stringify(playlist.data, null, 2);
+        }
+
+        function deleteSavedPlaylist() {
+            const select = document.getElementById('saved-playlist-select');
+            const name = select.value;
+            
+            if (!name) return;
+            
+            if (!confirm(`🗑️ Supprimer la playlist "${name}" ?\nCette action est irréversible.`)) {
+                return;
+            }
+            
+            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            delete saved[name];
+            localStorage.setItem('savedPlaylists', JSON.stringify(saved));
+            
+            alert(`✅ Playlist "${name}" supprimée !`);
+            refreshSavedPlaylistsList();
+        }
+
+        function loadJsonPlaylistsManager() {
+            const container = document.getElementById('json-playlists-list');
+            const noMsg = document.getElementById('no-json-playlists');
+            
+            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            const names = Object.keys(saved);
+            
+            container.innerHTML = '';
+            
+            if (names.length === 0) {
+                noMsg.style.display = 'block';
+                return;
+            }
+            
+            noMsg.style.display = 'none';
+            
+            names.forEach(name => {
+                const playlist = saved[name];
+                const div = document.createElement('div');
+                div.className = 'playlist-item';
+                div.innerHTML = `
+                    <span class="playlist-name">${name}</span>
+                    <span class="playlist-url">${playlist.trackCount} tracks</span>
+                    <button class="btn danger" onclick="deleteJsonPlaylistFromManager('${name.replace(/'/g, "\\'")}')">🗑️</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteJsonPlaylistFromManager(name) {
+            if (!confirm(`🗑️ Supprimer la playlist "${name}" ?\nCette action est irréversible.`)) {
+                return;
+            }
+            
+            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            delete saved[name];
+            localStorage.setItem('savedPlaylists', JSON.stringify(saved));
+            
+            alert(`✅ Playlist "${name}" supprimée !`);
+            loadJsonPlaylistsManager(); // Recharger la liste
         }
 
         async function loadAndCreate() {
@@ -1370,21 +1559,22 @@
             
             // Vérifier quel onglet est actif
             const customTab = document.getElementById('custom-tab');
-            const isCustomPlaylist = customTab.style.display !== 'none';
+            const savedTab = document.getElementById('saved-tab');
+            const isCustomPlaylist = customTab.style.display !== 'none' || savedTab.style.display !== 'none';
             
             try {
                 let tracks = [];
                 
                 if (isCustomPlaylist) {
-                    // MODE PLAYLIST PERSO (JSON)
+                    // MODE PLAYLIST PERSO (JSON) ou PLAYLIST SAUVEGARDÉE
                     const jsonInput = document.getElementById('custom-json').value.trim();
                     
                     if (!jsonInput) {
-                        alert('⚠️ Colle ton JSON dans la zone de texte !');
+                        alert('⚠️ Sélectionne une playlist sauvegardée ou colle ton JSON !');
                         return;
                     }
                     
-                    showLoading('Chargement de ta playlist perso...');
+                    showLoading('Chargement de ta playlist...');
                     
                     // Parser le JSON
                     let data;
