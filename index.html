@@ -2247,13 +2247,6 @@
                 audioBox.classList.add('hidden');
             }
 
-            // MODE HÔTE : ne pas afficher les questions
-            if (gameState.hostDisplayOnly) {
-                document.getElementById('question-text').textContent = '🎮 Mode Affichage';
-                startTimer();
-                return;
-            }
-
             // Charger les options EN ARRIÈRE PLAN (pas encore visibles)
             if (q.type === 'qcm') {
                 loadQCM(q);
@@ -2261,6 +2254,13 @@
             } else {
                 loadWriting(q);
                 document.getElementById('writing-container').classList.add('hidden');
+            }
+
+            // MODE HÔTE : ne pas afficher les questions, mais on a déjà généré les options ci-dessus
+            if (gameState.hostDisplayOnly) {
+                document.getElementById('question-text').textContent = '🎮 Mode Affichage';
+                startTimer();
+                return;
             }
 
             // RÉVÉLER les réponses après 500ms (quand l'audio commence)
@@ -2414,12 +2414,25 @@
             const shuffledWrong = shuffle(shuffle(wrongValues));
             const targetCount = q.optionsCount || 4;
             
+            console.log(`🎲 Fausses réponses disponibles: ${wrongValues.length}`);
+            console.log(`🎯 Besoin de ${targetCount - 1} fausses réponses`);
+            
+            // Si pas assez de fausses réponses, prendre ce qu'on a
+            if (shuffledWrong.length < targetCount - 1) {
+                console.warn(`⚠️ Pas assez de fausses réponses (${shuffledWrong.length}/${targetCount - 1})`);
+            }
+            
             // Prendre un subset aléatoire (pas toujours les mêmes)
-            const startIndex = Math.floor(Math.random() * Math.max(1, shuffledWrong.length - targetCount + 1));
-            const selectedWrong = shuffledWrong.slice(startIndex, startIndex + targetCount - 1);
+            const neededCount = Math.min(shuffledWrong.length, targetCount - 1);
+            const startIndex = Math.floor(Math.random() * Math.max(1, shuffledWrong.length - neededCount + 1));
+            const selectedWrong = shuffledWrong.slice(startIndex, startIndex + neededCount);
+            
+            console.log(`✅ Sélectionnées: ${selectedWrong.length} fausses réponses`);
             
             const options = [correct, ...selectedWrong];
             const shuffledOptions = shuffle(options);
+            
+            console.log(`📋 Options finales:`, shuffledOptions);
 
             // Sauvegarder dans Firebase pour que tous voient les mêmes options
             db.ref(`rooms/${gameState.room.code}/currentOptions`).set({
