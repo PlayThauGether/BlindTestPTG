@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG- Blind Test🎵</title>
+    <title>PTG - Blind Test🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -350,7 +350,7 @@
             width: 100%;
             height: 400px;
             object-fit: cover;
-            transition: filter 0.3s ease;
+            transition: filter 0.3s ease, opacity 0.3s ease;
         }
 
         .answer-reveal {
@@ -1961,13 +1961,22 @@
             if (gameState.room.hostMode && !gameState.isHost) {
                 coverBox.style.display = 'none';
             } else {
-                // Cacher d'abord avec blur max
+                // Rendre l'image complètement invisible + blur max
                 coverImg.style.visibility = 'hidden';
                 coverImg.style.filter = 'blur(25px)';
+                coverImg.style.opacity = '0';
+                
+                // Mettre un fond noir temporaire pour cacher le flash
+                coverBox.style.background = '#000';
+                
                 coverImg.onload = function() {
-                    // Montrer l'image mais garder le blur max
-                    coverImg.style.visibility = 'visible';
-                    coverImg.style.filter = 'blur(25px)';
+                    // Attendre 50ms après le load pour être sûr que le blur est appliqué
+                    setTimeout(() => {
+                        coverImg.style.visibility = 'visible';
+                        coverImg.style.opacity = '1';
+                        coverImg.style.filter = 'blur(25px)';
+                        coverBox.style.background = '';
+                    }, 50);
                 };
                 coverImg.src = q.cover;
                 coverBox.style.display = 'block';
