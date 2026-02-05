@@ -1554,6 +1554,12 @@
         function goToCreate() {
             loadPlaylistsSelect();
             showScreen('create-screen');
+            
+            // Si on a déjà une musicDB (partie précédente), la sauvegarder temporairement
+            if (gameState.musicDB && gameState.musicDB.length > 0) {
+                console.log(`💾 Playlist précédente sauvegardée (${gameState.musicDB.length} tracks)`);
+                // On garde gameState.musicDB pour le réutiliser
+            }
         }
 
         function goToJoin() {
@@ -1917,31 +1923,35 @@
                         url = document.getElementById('custom-playlist-url').value.trim();
                     }
                     
-                    if (!url) {
+                    // Si pas d'URL et qu'on a déjà une musicDB, la réutiliser
+                    if (!url && gameState.musicDB && gameState.musicDB.length > 0) {
+                        console.log(`🔄 Réutilisation de la playlist précédente (${gameState.musicDB.length} tracks)`);
+                        tracks = gameState.musicDB;
+                    } else if (!url) {
                         alert('⚠️ Choisis une playlist Deezer !');
                         return;
-                    }
-                    
-                    const match = url.match(/playlist\/(\d+)/);
-                    if (!match) {
-                        alert('❌ URL Deezer invalide !');
-                        return;
-                    }
-                    
-                    showLoading('Chargement des musiques Deezer...');
-                    tracks = await getDeezerPlaylist(match[1]);
-                    
-                    showLoading(`${tracks.length} musiques chargées. Filtrage...`);
-                    tracks = await filterWorkingTracks(tracks);
-                    
-                    if (tracks.length < gameState.numQuestions) {
-                        alert(`⚠️ Seulement ${tracks.length} musiques valides. Ajuste le nombre de questions.`);
+                    } else {
+                        const match = url.match(/playlist\/(\d+)/);
+                        if (!match) {
+                            alert('❌ URL Deezer invalide !');
+                            return;
+                        }
+                        
+                        showLoading('Chargement des musiques Deezer...');
+                        tracks = await getDeezerPlaylist(match[1]);
+                        
+                        showLoading(`${tracks.length} musiques chargées. Filtrage...`);
+                        tracks = await filterWorkingTracks(tracks);
+                        
+                        if (tracks.length < gameState.numQuestions) {
+                            alert(`⚠️ Seulement ${tracks.length} musiques valides. Ajuste le nombre de questions.`);
+                            hideLoading();
+                            return;
+                        }
+                        
+                        alert(`✅ ${tracks.length} musiques Deezer prêtes !`);
                         hideLoading();
-                        return;
                     }
-                    
-                    alert(`✅ ${tracks.length} musiques Deezer prêtes !`);
-                    hideLoading();
                 }
                 
                 // Vérifier qu'on a assez de musiques
@@ -3843,6 +3853,9 @@
             // Attendre que la room soit recréée par l'hôte
             console.log(`🔄 ${savedName} attend que l'hôte recrée la partie (code: ${savedCode})`);
             
+            // Variable pour éviter les rejoins multiples
+            let hasRejoined = false;
+            
             // Écouter la room pour détecter quand l'hôte recrée
             const roomRef = db.ref(`rooms/${savedCode}`);
             
@@ -3854,60 +3867,76 @@
                 const room = snapshot.val();
                 
                 if (!room) {
-                    console.log('⏳ Room pas encore recréée...');
+                    console.log(`⏳ ${savedName}: Room pas encore recréée...`);
                     return;
                 }
                 
-                // Si la room existe et n'a pas démarré
-                if (!room.started) {
-                    console.log('✅ Room détectée ! Tentative de rejoin...');
+                // Éviter les rejoins multiples
+                if (hasRejoined) {
+                    console.log(`⚠️ ${savedName}: Déjà rejoint, on ignore cet événement`);
+                    return;
+                }
+                
+                // Si la room existe, n'a pas démarré, et a des questions (= nouvelle room créée)
+                if (!room.started && room.questions && room.questions.length > 0) {
+                    console.log(`✅ ${savedName}: Room détectée ! Questions: ${room.questions.length}`);
+                    
+                    // Marquer qu'on a rejoint pour éviter les doublons
+                    hasRejoined = true;
+                    
+                    // Arrêter d'écouter maintenant
+                    roomRef.off();
                     
                     // Vérifier si notre pseudo existe déjà
                     const pseudoExists = room.players.some(p => p.name.toLowerCase() === savedName.toLowerCase());
                     
                     if (pseudoExists) {
-                        console.log('✅ Pseudo déjà dans la room, reconnexion...');
-                        roomRef.off(); // Arrêter d'écouter
+                        console.log(`✅ ${savedName}: Pseudo déjà dans la room, reconnexion...`);
                         
-                        // Récupérer la room complète depuis Firebase avant d'afficher
-                        db.ref(`rooms/${savedCode}`).once('value', freshSnapshot => {
+                        // Rejoindre directement
+                        gameState.room = room;
+                        gameState.playerIndex = room.players.findIndex(p => p.name === savedName);
+                        gameState.isHost = false;
+                        gameState.hostDisplayOnly = false;
+                        
+                        console.log(`✅ ${savedName}: playerIndex = ${gameState.playerIndex}`);
+                        
+                        saveSession();
+                        goToLobby();
+                        
+                    } else {
+                        console.log(`🔄 ${savedName}: Rejoindre comme nouveau joueur...`);
+                        
+                        // Rejoindre comme nouveau joueur
+                        const newPlayer = { name: savedName, score: 0, isHost: false };
+                        const updatedPlayers = [...room.players, newPlayer];
+                        
+                        db.ref(`rooms/${savedCode}/players`).set(updatedPlayers).then(() => {
+                            console.log(`✅ ${savedName}: Ajouté à la room`);
+                            
+                            // Récupérer la room mise à jour
+                            return db.ref(`rooms/${savedCode}`).once('value');
+                        }).then(freshSnapshot => {
                             const freshRoom = freshSnapshot.val();
                             if (freshRoom) {
-                                // Rejoindre la room avec les données fraîches
                                 gameState.room = freshRoom;
                                 gameState.playerIndex = freshRoom.players.findIndex(p => p.name === savedName);
                                 gameState.isHost = false;
                                 gameState.hostDisplayOnly = false;
                                 
+                                console.log(`✅ ${savedName}: playerIndex = ${gameState.playerIndex}`);
+                                
                                 saveSession();
                                 goToLobby();
                             }
-                        });
-                        
-                    } else {
-                        console.log('🔄 Rejoindre comme nouveau joueur...');
-                        roomRef.off(); // Arrêter d'écouter
-                        
-                        // Rejoindre comme nouveau joueur
-                        const newPlayer = { name: savedName, score: 0, isHost: false };
-                        room.players.push(newPlayer);
-                        
-                        db.ref(`rooms/${savedCode}/players`).set(room.players).then(() => {
-                            // Récupérer la room complète depuis Firebase
-                            db.ref(`rooms/${savedCode}`).once('value', freshSnapshot => {
-                                const freshRoom = freshSnapshot.val();
-                                if (freshRoom) {
-                                    gameState.room = freshRoom;
-                                    gameState.playerIndex = freshRoom.players.findIndex(p => p.name === savedName);
-                                    gameState.isHost = false;
-                                    gameState.hostDisplayOnly = false;
-                                    
-                                    saveSession();
-                                    goToLobby();
-                                }
-                            });
+                        }).catch(err => {
+                            console.error(`❌ ${savedName}: Erreur lors du rejoin:`, err);
+                            alert('❌ Erreur lors du rejoin. Retour au menu.');
+                            goToMenu();
                         });
                     }
+                } else {
+                    console.log(`⏳ ${savedName}: Room existe mais pas prête (started: ${room.started}, questions: ${room.questions?.length || 0})`);
                 }
             });
         }
