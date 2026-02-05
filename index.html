@@ -953,9 +953,9 @@
                         TAPER LE NOM DE L'ARTISTE
                     </p>
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
-                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">⚠️ ATTENTION</p>
-                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe parfaite !</p>
-                        <p style="font-size: 1rem; color: white;">PENSEZ À VALIDER</p>
+                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
+                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
                 <div class="spinner" style="margin: 3rem auto;"></div>
@@ -974,9 +974,10 @@
                         TAPER LE TITRE ET LE NOM DE L'ARTISTE
                     </p>
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
-                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">⚠️ ATTENTION</p>
-                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe parfaite !</p>
-                        <p style="font-size: 1rem; color: white;">PENSEZ À VALIDER</p>
+                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
+                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">Un champ = une réponse (titre OU artiste)</p>
+                        <p style="font-size: 1rem; color: white;">Trouvez les 2 pour le bonus !</p>
                     </div>
                 </div>
                 <div class="spinner" style="margin: 3rem auto;"></div>
@@ -1117,7 +1118,12 @@
             <h1 class="leaderboard-title">🏆 CLASSEMENT FINAL 🏆</h1>
             <div id="podium-container" class="podium"></div>
             <div id="leaderboard-container" class="leaderboard"></div>
-            <button class="btn large" onclick="restartGame()">🏠 Nouvelle partie</button>
+            
+            <!-- Boutons en mode hôte uniquement -->
+            <div id="replay-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                <button class="btn large secondary" onclick="replayWithSamePlayers()" id="replay-btn" style="display: none;">🔄 Relancer (mêmes joueurs)</button>
+                <button class="btn large" onclick="restartGame()">🏠 Nouvelle partie</button>
+            </div>
         </div>
 
         <!-- BOUTON SECOURS -->
@@ -1163,6 +1169,43 @@
             hostDisplayOnly: false,
             distanceMode: false
         };
+        
+        // ===========================================
+        // WAKE LOCK - Empêcher la mise en veille
+        // ===========================================
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('✅ Wake Lock activé - écran restera allumé');
+                    
+                    wakeLock.addEventListener('release', () => {
+                        console.log('⚠️ Wake Lock désactivé');
+                    });
+                } else {
+                    console.log('⚠️ Wake Lock API non supportée sur ce navigateur');
+                }
+            } catch (err) {
+                console.error('❌ Erreur Wake Lock:', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release();
+                wakeLock = null;
+                console.log('🔓 Wake Lock libéré');
+            }
+        }
+
+        // Réactiver le Wake Lock si l'utilisateur revient sur la page
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
 
         // ===========================================
         // SESSION (reconnexion après rafraîchissement)
@@ -1406,6 +1449,10 @@
             if (gameState.roomRef) gameState.roomRef.off();
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
             clearSession();
+            
+            // Désactiver le Wake Lock
+            releaseWakeLock();
+            
             gameState = {
                 room: null,
                 playerIndex: 0,
@@ -2119,6 +2166,13 @@
                 
                 if (!room) { alert('❌ Code invalide !'); return; }
                 if (room.started) { alert('❌ Partie déjà lancée !'); return; }
+                
+                // Vérifier si le pseudo existe déjà
+                const pseudoExists = room.players.some(p => p.name.toLowerCase() === name.toLowerCase());
+                if (pseudoExists) {
+                    alert('❌ Ce pseudo est déjà pris ! Choisis-en un autre.');
+                    return;
+                }
 
                 room.players.push({ name, score: 0 });
                 db.ref(`rooms/${code}`).update({ players: room.players });
@@ -2189,6 +2243,27 @@
 
                 const oldCurrentQ = gameState.room ? gameState.room.currentQ : -1;
                 gameState.room = data;
+                
+                // Écouter si l'hôte a créé une nouvelle partie
+                if (data.newGameCode && !gameState.isHost) {
+                    console.log('🔄 Redirection vers nouvelle partie:', data.newGameCode);
+                    alert(`🎉 L'hôte a lancé une nouvelle partie !\nNouveau code : ${data.newGameCode}`);
+                    
+                    // Rejoindre automatiquement la nouvelle partie
+                    db.ref(`rooms/${data.newGameCode}`).once('value', newSnapshot => {
+                        const newRoom = newSnapshot.val();
+                        if (newRoom) {
+                            gameState.room = newRoom;
+                            // Trouver mon index dans la nouvelle room
+                            const myName = gameState.room.players[gameState.playerIndex].name;
+                            gameState.playerIndex = newRoom.players.findIndex(p => p.name === myName);
+                            gameState.roomRef.off(); // Arrêter d'écouter l'ancienne room
+                            saveSession();
+                            goToLobby();
+                        }
+                    });
+                    return;
+                }
 
                 if (currentScreen === 'lobby') {
                     updatePlayersList();
@@ -2239,6 +2314,9 @@
         // GAME
         // ===========================================
         function goToGame() {
+            // Activer le Wake Lock pour empêcher la mise en veille
+            requestWakeLock();
+            
             // Lancer avec compte à rebours de 10 secondes
             startGameWithCountdown();
         }
@@ -2465,7 +2543,13 @@
             scoreboard.style.display = 'block';
             container.innerHTML = '';
 
-            const sorted = [...gameState.room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
+            const sorted = [...gameState.room.players].sort((a, b) => {
+                const scoreA = a.score || 0;
+                const scoreB = b.score || 0;
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                // Départage par timestamp
+                return (a.lastAnswerTime || 0) - (b.lastAnswerTime || 0);
+            });
 
             sorted.forEach(p => {
                 // En mode hôte, ne pas afficher l'hôte dans le scoreboard
@@ -3022,8 +3106,60 @@
                 ? { match: true, score: 1.0 } 
                 : isAnswerSimilar(userInput, artistString);  // Fallback : comparer avec la string complète
 
-            const titleOk = titleResult.match;
-            const artistOk = artistResult.match;
+            let titleOk = titleResult.match;
+            let artistOk = artistResult.match;
+            
+            // NOUVEAU : Vérifier si l'utilisateur a écrit TITRE + ARTISTE en même temps
+            // Exemples : "Last Christmas Wham", "Wham Last Christmas", "Last Christmas - Wham"
+            if (!titleOk || !artistOk) {
+                // Essayer de séparer l'input en plusieurs parties
+                const separators = [' - ', ' – ', ' — ', '  ']; // Séparateurs courants
+                let parts = [userInput]; // Par défaut, pas de séparation
+                
+                // Essayer chaque séparateur
+                for (const sep of separators) {
+                    if (userInput.includes(sep)) {
+                        parts = userInput.split(sep).map(p => p.trim()).filter(p => p.length > 0);
+                        break;
+                    }
+                }
+                
+                // Si pas de séparateur détecté, essayer de découper par espaces (pour "Title Artist")
+                if (parts.length === 1 && userInput.includes(' ')) {
+                    const words = userInput.split(' ').filter(w => w.length > 0);
+                    
+                    // Tester différentes combinaisons
+                    for (let i = 1; i < words.length; i++) {
+                        const part1 = words.slice(0, i).join(' ');
+                        const part2 = words.slice(i).join(' ');
+                        
+                        const p1Title = isAnswerSimilar(part1, q.title).match;
+                        const p1Artist = artists.some(a => isAnswerSimilar(part1, a).match);
+                        const p2Title = isAnswerSimilar(part2, q.title).match;
+                        const p2Artist = artists.some(a => isAnswerSimilar(part2, a).match);
+                        
+                        // Si on trouve une combinaison valide
+                        if ((p1Title && p2Artist) || (p1Artist && p2Title)) {
+                            parts = [part1, part2];
+                            break;
+                        }
+                    }
+                }
+                
+                // Vérifier chaque partie
+                if (parts.length >= 2) {
+                    for (const part of parts) {
+                        if (!titleOk && isAnswerSimilar(part, q.title).match) {
+                            titleOk = true;
+                            console.log('🎵 Titre détecté dans:', part);
+                        }
+                        if (!artistOk && artists.some(a => isAnswerSimilar(part, a).match)) {
+                            artistOk = true;
+                            console.log('🎤 Artiste détecté dans:', part);
+                        }
+                    }
+                }
+            }
 
             // Mettre à jour les badges
             const badgeTitle = document.getElementById('badge-title');
@@ -3302,6 +3438,8 @@
                 for (let i = 0; i < currentPlayers.length; i++) {
                     if (currentPlayers[i].name === myName) {
                         currentPlayers[i].score = (currentPlayers[i].score || 0) + pts;
+                        // Ajouter un timestamp pour départager les égalités
+                        currentPlayers[i].lastAnswerTime = Date.now();
                         break;
                     }
                 }
@@ -3334,9 +3472,31 @@
             clearSession();
 
             showScreen('leaderboard-screen');
+            
+            // Afficher le bouton "Relancer" UNIQUEMENT pour l'hôte
+            const replayBtn = document.getElementById('replay-btn');
+            if (gameState.isHost) {
+                replayBtn.style.display = 'inline-block';
+            } else {
+                replayBtn.style.display = 'none';
+            }
 
             const players = gameState.room.players || [];
-            let sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+            // Tri avec départage : 1) Score décroissant, 2) Si égalité → temps de réponse croissant (plus rapide = meilleur)
+            let sorted = [...players].sort((a, b) => {
+                const scoreA = a.score || 0;
+                const scoreB = b.score || 0;
+                
+                // Si les scores sont différents, trier par score
+                if (scoreB !== scoreA) {
+                    return scoreB - scoreA;
+                }
+                
+                // Si égalité de score, départager par timestamp (le plus petit = le plus rapide)
+                const timeA = a.lastAnswerTime || 0;
+                const timeB = b.lastAnswerTime || 0;
+                return timeA - timeB;
+            });
 
             // En mode hôte (affichage seulement), enlever l'hôte du classement
             if (gameState.room.hostMode) {
@@ -3487,6 +3647,179 @@
                 showScreen('game-screen');
                 loadQuestion(); // Charger la vraie question
             }, 4000); // 4 secondes pour lire les instructions
+        }
+
+        function replayWithSamePlayers() {
+            if (!gameState.isHost) {
+                alert('❌ Seul l\'hôte peut relancer une partie !');
+                return;
+            }
+            
+            // Demander si on garde les mêmes paramètres ou si on les change
+            const choice = confirm('🔄 Relancer avec les MÊMES PARAMÈTRES ?\n\n✅ OUI = Même mode + même playlist\n❌ NON = Choisir nouveau mode/playlist');
+            
+            if (choice) {
+                // Garder les mêmes paramètres
+                replayWithSameSettings();
+            } else {
+                // Changer les paramètres
+                alert('📋 Tu vas pouvoir choisir un nouveau mode et une nouvelle playlist.\nLes joueurs actuels resteront dans la partie.');
+                goToReplaySettings();
+            }
+        }
+        
+        function replayWithSameSettings() {
+            // Réinitialiser les scores des joueurs
+            const resetPlayers = gameState.room.players.map(p => ({
+                name: p.name,
+                score: 0,
+                isHost: p.name === gameState.room.host,
+                lastAnswerTime: 0
+            }));
+            
+            // Créer un nouveau code pour la nouvelle partie
+            const newCode = genCode();
+            const oldCode = gameState.room.code;
+            
+            // Créer la nouvelle room avec les mêmes paramètres
+            const newRoom = {
+                code: newCode,
+                host: gameState.room.host,
+                hostMode: gameState.room.hostMode,
+                distanceMode: gameState.room.distanceMode,
+                players: resetPlayers,
+                questions: gameState.room.questions, // Mêmes questions
+                currentQ: 0,
+                started: false
+            };
+            
+            // Sauvegarder la nouvelle room dans Firebase
+            db.ref(`rooms/${newCode}`).set(newRoom).then(() => {
+                console.log('✅ Nouvelle partie créée:', newCode);
+                
+                // Envoyer un message aux autres joueurs avec le nouveau code
+                db.ref(`rooms/${oldCode}/newGameCode`).set(newCode);
+                
+                // Nettoyer l'ancienne room après 5 secondes
+                setTimeout(() => {
+                    db.ref(`rooms/${oldCode}`).remove();
+                }, 5000);
+                
+                // Mettre à jour gameState
+                gameState.room = newRoom;
+                gameState.playerIndex = resetPlayers.findIndex(p => p.name === gameState.room.host);
+                
+                saveSession();
+                goToLobby();
+                
+                alert(`🎉 Nouvelle partie créée ! Nouveau code : ${newCode}\nLes autres joueurs vont être redirigés automatiquement.`);
+            });
+        }
+        
+        function goToReplaySettings() {
+            // Sauvegarder temporairement les joueurs actuels
+            localStorage.setItem('replayPlayers', JSON.stringify(gameState.room.players));
+            localStorage.setItem('replayHost', gameState.room.host);
+            localStorage.setItem('replayHostMode', gameState.room.hostMode);
+            localStorage.setItem('replayDistanceMode', gameState.room.distanceMode);
+            localStorage.setItem('oldRoomCode', gameState.room.code);
+            
+            // Retourner à l'écran de création
+            loadPlaylistsSelect();
+            
+            // Pré-remplir avec les anciens paramètres
+            document.getElementById('create-name').value = gameState.room.host;
+            document.getElementById('host-mode').checked = gameState.room.hostMode;
+            document.getElementById('distance-mode').checked = gameState.room.distanceMode;
+            
+            showScreen('create-screen');
+            
+            // Changer le texte du bouton
+            const createBtn = document.querySelector('#create-screen .btn.large[onclick="loadAndCreate()"]');
+            if (createBtn) {
+                createBtn.textContent = '🔄 Relancer avec nouveaux paramètres';
+                createBtn.onclick = createReplayGame;
+            }
+        }
+        
+        async function createReplayGame() {
+            const name = document.getElementById('create-name').value.trim();
+            const mode = document.getElementById('create-mode').value;
+            const hostMode = document.getElementById('host-mode').checked;
+            const distanceMode = document.getElementById('distance-mode').checked;
+
+            if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
+
+            // Récupérer les joueurs sauvegardés
+            const replayPlayers = JSON.parse(localStorage.getItem('replayPlayers') || '[]');
+            const oldCode = localStorage.getItem('oldRoomCode');
+            
+            if (replayPlayers.length === 0) {
+                alert('❌ Erreur : impossible de récupérer les joueurs.');
+                return;
+            }
+
+            showLoading('Chargement de la playlist...');
+            const tracks = await getSelectedPlaylist();
+            if (!tracks || tracks.length === 0) {
+                hideLoading();
+                alert('⚠️ Sélectionne une playlist !');
+                return;
+            }
+
+            hideLoading();
+
+            // Créer la nouvelle room
+            const newCode = genCode();
+            gameState.musicDB = tracks;
+            gameState.hostDisplayOnly = hostMode && true;
+            gameState.distanceMode = distanceMode;
+            
+            const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
+            
+            // Réinitialiser les scores
+            const resetPlayers = replayPlayers.map(p => ({
+                name: p.name,
+                score: 0,
+                isHost: p.name === name,
+                lastAnswerTime: 0
+            }));
+
+            const room = {
+                code: newCode,
+                host: name,
+                hostMode: hostMode,
+                distanceMode: distanceMode,
+                players: resetPlayers,
+                questions: questions,
+                currentQ: 0,
+                started: false
+            };
+
+            await db.ref(`rooms/${newCode}`).set(room);
+            
+            // Notifier les anciens joueurs
+            await db.ref(`rooms/${oldCode}/newGameCode`).set(newCode);
+            
+            // Nettoyer
+            setTimeout(() => {
+                db.ref(`rooms/${oldCode}`).remove();
+            }, 5000);
+            
+            localStorage.removeItem('replayPlayers');
+            localStorage.removeItem('replayHost');
+            localStorage.removeItem('replayHostMode');
+            localStorage.removeItem('replayDistanceMode');
+            localStorage.removeItem('oldRoomCode');
+
+            gameState.room = room;
+            gameState.isHost = true;
+            gameState.playerIndex = 0;
+
+            saveSession();
+            goToLobby();
+            
+            alert(`🎉 Nouvelle partie créée avec nouveaux paramètres !\nCode : ${newCode}\nLes autres joueurs vont être redirigés.`);
         }
 
         function restartGame() {
