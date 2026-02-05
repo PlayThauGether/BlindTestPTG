@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1432,7 +1432,7 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
+        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
 
         function goToPlaylists() {
             const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
@@ -2077,7 +2077,8 @@
             const code = genCode();
             
             gameState.musicDB = tracks;
-            gameState.hostDisplayOnly = hostMode;
+            // hostDisplayOnly UNIQUEMENT pour l'hôte (pas les autres joueurs)
+            gameState.hostDisplayOnly = hostMode && true; // true car on EST l'hôte ici
             gameState.distanceMode = distanceMode;
             
             const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
@@ -2127,6 +2128,10 @@
                 gameState.isHost = false;
                 gameState.distanceMode = room.distanceMode || false;
                 gameState.musicDB = room.questions;
+                // Les joueurs qui rejoignent ne sont JAMAIS en mode display-only
+                gameState.hostDisplayOnly = false;
+                
+                console.log('👥 Joueur rejoint - hostDisplayOnly forcé à false:', gameState.hostDisplayOnly);
 
                 saveSession();
                 goToLobby();
@@ -2426,11 +2431,16 @@
             }
 
             // MODE HÔTE : ne pas afficher les questions, mais on a déjà généré les options ci-dessus
+            console.log('🔍 loadQuestion - isHost:', gameState.isHost, 'hostDisplayOnly:', gameState.hostDisplayOnly);
+            
             if (gameState.hostDisplayOnly) {
+                console.log('🎮 Mode Affichage Hôte activé - pas de questions affichées');
                 document.getElementById('question-text').textContent = '🎮 Mode Affichage';
                 startTimer();
                 return;
             }
+
+            console.log('✅ Affichage normal des questions pour ce joueur');
 
             // RÉVÉLER les réponses après 500ms (quand l'audio commence)
             setTimeout(() => {
