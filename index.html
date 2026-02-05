@@ -2384,57 +2384,36 @@
 
         function listenToRoom() {
             if (gameState.roomRef) gameState.roomRef.off();
+            if (gameState.currentQRef) gameState.currentQRef.off();
+            if (gameState.startedRef) gameState.startedRef.off();
+            if (gameState.playersRef) gameState.playersRef.off();
             
-            const ref = db.ref(`rooms/${gameState.room.code}`);
-            gameState.roomRef = ref;
-
-            ref.on('value', snapshot => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                const oldCurrentQ = gameState.room ? gameState.room.currentQ : -1;
-                gameState.room = data;
+            const roomCode = gameState.room.code;
+            
+            // Au lieu d'écouter toute la room, on écoute seulement les paths nécessaires
+            
+            // 1. Écouter currentQ (changement de question)
+            const currentQRef = db.ref(`rooms/${roomCode}/currentQ`);
+            gameState.currentQRef = currentQRef;
+            
+            currentQRef.on('value', snapshot => {
+                const newCurrentQ = snapshot.val();
+                if (newCurrentQ === null || newCurrentQ === undefined) return;
                 
-                // Écouter si l'hôte a créé une nouvelle partie
-                if (data.newGameCode && !gameState.isHost) {
-                    console.log('🔄 Redirection vers nouvelle partie:', data.newGameCode);
-                    alert(`🎉 L'hôte a lancé une nouvelle partie !\nNouveau code : ${data.newGameCode}`);
-                    
-                    // Rejoindre automatiquement la nouvelle partie
-                    db.ref(`rooms/${data.newGameCode}`).once('value', newSnapshot => {
-                        const newRoom = newSnapshot.val();
-                        if (newRoom) {
-                            gameState.room = newRoom;
-                            // Trouver mon index dans la nouvelle room
-                            const myName = gameState.room.players[gameState.playerIndex].name;
-                            gameState.playerIndex = newRoom.players.findIndex(p => p.name === myName);
-                            gameState.roomRef.off(); // Arrêter d'écouter l'ancienne room
-                            saveSession();
-                            goToLobby();
-                        }
-                    });
-                    return;
-                }
-
-                if (currentScreen === 'lobby') {
-                    updatePlayersList();
-                    if (data.started) {
-                        goToGame();
-                    }
-                }
-
+                const oldCurrentQ = gameState.room.currentQ;
+                gameState.room.currentQ = newCurrentQ;
+                
                 if (currentScreen === 'game') {
                     updateScoreboard();
-
+                    
                     // CAS 1 : On est en attente après rafraîchissement
                     if (gameState.waitingForNextQ) {
-                        if (data.currentQ !== gameState.lastSeenQ && data.currentQ < data.questions.length) {
+                        if (newCurrentQ !== gameState.lastSeenQ && newCurrentQ < gameState.room.questions.length) {
                             console.log('✅ Nouvelle question détectée après rafraîchissement, on reprend !');
                             gameState.waitingForNextQ = false;
                             gameState.lastSeenQ = null;
                             loadQuestion();
                         }
-                        // Sinon on ne fait rien, on attend
                         return;
                     }
 
@@ -2444,17 +2423,46 @@
                     }
                     
                     // CAS 3 : Nouvelle question normale
-                    if (data.currentQ !== oldCurrentQ && data.currentQ < data.questions.length) {
-                        console.log('📢 Nouvelle question:', data.currentQ);
+                    if (newCurrentQ !== oldCurrentQ && newCurrentQ < gameState.room.questions.length) {
+                        console.log('📢 Nouvelle question:', newCurrentQ);
                         loadQuestion();
                     }
                     
-                    if (data.currentQ >= data.questions.length) {
-                        console.log('🏁 Fin du jeu !');
+                    // CAS 4 : Partie terminée
+                    if (newCurrentQ >= gameState.room.questions.length && !gameState.isHost) {
                         goToLeaderboard();
                     }
                 }
             });
+            
+            // 2. Écouter started (démarrage du jeu) - Seulement dans le lobby
+            if (currentScreen === 'lobby') {
+                const startedRef = db.ref(`rooms/${roomCode}/started`);
+                gameState.startedRef = startedRef;
+                
+                startedRef.on('value', snapshot => {
+                    if (currentScreen === 'lobby' && snapshot.val() === true) {
+                        goToGame();
+                    }
+                });
+                
+                // 3. Écouter players (changements de joueurs) - Seulement dans le lobby
+                const playersRef = db.ref(`rooms/${roomCode}/players`);
+                gameState.playersRef = playersRef;
+                
+                playersRef.on('value', snapshot => {
+                    if (currentScreen === 'lobby') {
+                        const players = snapshot.val();
+                        if (players) {
+                            gameState.room.players = players;
+                            updatePlayersList();
+                        }
+                    }
+                });
+            }
+            
+            // Garder une référence pour pouvoir unsubscribe
+            gameState.roomRef = currentQRef;
         }
 
         function startGame() {
@@ -2692,29 +2700,38 @@
             }
             
             scoreboard.style.display = 'block';
-            container.innerHTML = '';
+            
+            // Lire les scores depuis Firebase (optimisé : .once() = 1 lecture)
+            db.ref(`rooms/${gameState.room.code}/players`).once('value', snapshot => {
+                const players = snapshot.val();
+                if (!players) return;
+                
+                gameState.room.players = players; // Mettre à jour le cache local
+                
+                container.innerHTML = '';
 
-            const sorted = [...gameState.room.players].sort((a, b) => {
-                const scoreA = a.score || 0;
-                const scoreB = b.score || 0;
-                if (scoreB !== scoreA) return scoreB - scoreA;
-                // Départage par timestamp
-                return (a.lastAnswerTime || 0) - (b.lastAnswerTime || 0);
-            });
+                const sorted = [...players].sort((a, b) => {
+                    const scoreA = a.score || 0;
+                    const scoreB = b.score || 0;
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    // Départage par timestamp
+                    return (a.lastAnswerTime || 0) - (b.lastAnswerTime || 0);
+                });
 
-            sorted.forEach(p => {
-                // En mode hôte, ne pas afficher l'hôte dans le scoreboard
-                if (gameState.room.hostMode && p.name === gameState.room.host) return;
-                const div = document.createElement('div');
-                div.className = 'score-item';
-                if (p.name === gameState.room.players[gameState.playerIndex].name) {
-                    div.classList.add('me');
-                }
+                sorted.forEach(p => {
+                    // En mode hôte, ne pas afficher l'hôte dans le scoreboard
+                    if (gameState.room.hostMode && p.name === gameState.room.host) return;
+                    const div = document.createElement('div');
+                    div.className = 'score-item';
+                    if (p.name === gameState.room.players[gameState.playerIndex].name) {
+                        div.classList.add('me');
+                    }
                 div.innerHTML = `
                     <span class="score-name">${p.name}</span>
                     <span class="score-points">${p.score || 0}</span>
                 `;
                 container.appendChild(div);
+                });
             });
         }
 
