@@ -3907,12 +3907,27 @@
                     } else {
                         console.log(`🔄 ${savedName}: Rejoindre comme nouveau joueur...`);
                         
-                        // Rejoindre comme nouveau joueur
-                        const newPlayer = { name: savedName, score: 0, isHost: false };
-                        const updatedPlayers = [...room.players, newPlayer];
-                        
-                        db.ref(`rooms/${savedCode}/players`).set(updatedPlayers).then(() => {
-                            console.log(`✅ ${savedName}: Ajouté à la room`);
+                        // Utiliser une transaction pour éviter les conflits entre joueurs
+                        db.ref(`rooms/${savedCode}/players`).transaction(currentPlayers => {
+                            // Si pas de players, initialiser avec un array vide
+                            if (!currentPlayers) {
+                                console.log(`⚠️ ${savedName}: Pas de players, on initialise`);
+                                return [{ name: savedName, score: 0, isHost: false }];
+                            }
+                            
+                            // Vérifier si le joueur existe déjà
+                            const exists = currentPlayers.some(p => p.name.toLowerCase() === savedName.toLowerCase());
+                            
+                            if (exists) {
+                                console.log(`⚠️ ${savedName}: Déjà dans la liste, on garde tel quel`);
+                                return currentPlayers; // Ne rien changer
+                            }
+                            
+                            // Ajouter le nouveau joueur
+                            console.log(`➕ ${savedName}: Ajout à la liste (total: ${currentPlayers.length + 1})`);
+                            return [...currentPlayers, { name: savedName, score: 0, isHost: false }];
+                        }).then(() => {
+                            console.log(`✅ ${savedName}: Transaction réussie, récupération de la room...`);
                             
                             // Récupérer la room mise à jour
                             return db.ref(`rooms/${savedCode}`).once('value');
@@ -3924,7 +3939,8 @@
                                 gameState.isHost = false;
                                 gameState.hostDisplayOnly = false;
                                 
-                                console.log(`✅ ${savedName}: playerIndex = ${gameState.playerIndex}`);
+                                console.log(`✅ ${savedName}: playerIndex = ${gameState.playerIndex}, total joueurs = ${freshRoom.players.length}`);
+                                console.log(`👥 ${savedName}: Liste des joueurs:`, freshRoom.players.map(p => p.name));
                                 
                                 saveSession();
                                 goToLobby();
