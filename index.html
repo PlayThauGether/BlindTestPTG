@@ -3229,12 +3229,14 @@
                 
             } else if (levelInfo.askFor === 'both') {
                 // ========== NIVEAU 2 : TITRE + ARTISTE (SYSTÈME CUMULATIF) ==========
-                let somethingNew = false;
+                let titleJustFound = false;
+                let artistJustFound = false;
                 let ptsGagnes = 0;
                 
                 // Vérifier le TITRE (seulement si pas déjà trouvé)
                 if (titleOk && !levelInfo.titleFound) {
                     levelInfo.titleFound = true;
+                    titleJustFound = true;
                     badgeTitle.classList.add('found');
                     badgeTitle.querySelector('.badge-status').textContent = '✓';
                     
@@ -3248,13 +3250,13 @@
                     }
                     gameState.currentQuestionPoints += titlePts;
                     
-                    showWritingFeedback(`🎵 Titre trouvé ! +${titlePts}pts`, 'success');
-                    somethingNew = true;
+                    console.log(`🎵 Titre trouvé ! +${titlePts}pts`);
                 }
                 
                 // Vérifier l'ARTISTE (seulement si pas déjà trouvé)
                 if (artistOk && !levelInfo.artistFound) {
                     levelInfo.artistFound = true;
+                    artistJustFound = true;
                     badgeArtist.classList.add('found');
                     badgeArtist.querySelector('.badge-status').textContent = '✓';
                     
@@ -3268,48 +3270,27 @@
                     }
                     gameState.currentQuestionPoints += artistPts;
                     
-                    showWritingFeedback(`🎤 Artiste trouvé ! +${artistPts}pts`, 'success');
-                    somethingNew = true;
+                    console.log(`🎤 Artiste trouvé ! +${artistPts}pts`);
                 }
                 
-                // Si rien de nouveau trouvé
-                if (!somethingNew) {
-                    if (levelInfo.titleFound && levelInfo.artistFound) {
-                        showWritingFeedback('✅ Déjà trouvé les 2 !', 'success');
-                    } else if (levelInfo.titleFound && titleOk) {
-                        showWritingFeedback('🎵 Titre déjà trouvé ! Cherche l\'artiste', 'warning');
-                    } else if (levelInfo.artistFound && artistOk) {
-                        showWritingFeedback('🎤 Artiste déjà trouvé ! Cherche le titre', 'warning');
-                    } else {
-                        showWritingFeedback('❌ Faux, réessaye !', 'error');
-                    }
-                    // VIDER L'INPUT même si faux (pour pouvoir réécrire directement)
-                    document.getElementById('input-answer').value = '';
-                    return;
-                }
-                
-                // Attribuer les points IMMÉDIATEMENT
-                if (ptsGagnes > 0) {
-                    updateScore(ptsGagnes);
-                }
-                
-                // Vider l'input après validation
+                // Vider l'input AVANT de gérer les feedbacks
                 document.getElementById('input-answer').value = '';
                 
-                // Si les DEUX sont trouvés → BONUS + BLOQUER
-                if (levelInfo.titleFound && levelInfo.artistFound) {
+                // Gérer les différents cas
+                if (titleJustFound && artistJustFound) {
+                    // LES DEUX EN MÊME TEMPS ! 🎉
                     const bonus = 50;
                     const totalPts = gameState.currentQuestionPoints + bonus;
+                    ptsGagnes += bonus;
                     
-                    showWritingFeedback(`✅ Parfait ! Les 2 trouvés ! +${bonus}pts BONUS (Total: ${totalPts}pts)`, 'success');
+                    showWritingFeedback(`✅ Parfait ! Les 2 en même temps ! +${bonus}pts BONUS (Total: ${totalPts}pts)`, 'success');
                     
-                    // Donner le bonus
-                    updateScore(bonus);
+                    // Attribuer TOUS les points (titre + artiste + bonus)
+                    updateScore(ptsGagnes);
                     
                     gameState.answered = true;
-                    gameState.pendingScore = 0; // Déjà donné
+                    gameState.pendingScore = 0; // Points déjà attribués
                     gameState.pendingCorrect = true;
-                    gameState.pendingFeedback = `✅ Parfait ! Total: ${totalPts}pts`;
                     
                     disableWritingInputs();
                     
@@ -3322,20 +3303,75 @@
                     
                     // Réinitialiser pour la prochaine question
                     gameState.currentQuestionPoints = 0;
-                } else {
-                    // Un seul trouvé → Continuer
-                    gameState.answered = false; // Pas encore fini
-                    document.getElementById('input-answer').placeholder = levelInfo.titleFound 
-                        ? "Maintenant l'artiste..."
-                        : "Maintenant le titre...";
+                    
+                } else if (titleJustFound || artistJustFound) {
+                    // UN SEUL TROUVÉ (mais pas l'autre)
+                    
+                    // Afficher le bon feedback
+                    if (titleJustFound && artistJustFound) {
+                        // Déjà géré au-dessus
+                    } else if (titleJustFound) {
+                        showWritingFeedback(`🎵 Titre trouvé ! +${ptsGagnes}pts`, 'success');
+                    } else if (artistJustFound) {
+                        showWritingFeedback(`🎤 Artiste trouvé ! +${ptsGagnes}pts`, 'success');
+                    }
+                    
+                    // Attribuer les points immédiatement
+                    updateScore(ptsGagnes);
+                    
+                    // Vérifier si les DEUX sont maintenant trouvés (cas où on trouve le 2ème)
+                    if (levelInfo.titleFound && levelInfo.artistFound) {
+                        const bonus = 50;
+                        const totalPts = gameState.currentQuestionPoints + bonus;
                         
-                    // Pousser dans Firebase qu'on a partiellement répondu
-                    const myName = gameState.room.players[gameState.playerIndex].name;
-                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
-                        correct: false, // Pas complètement fini
-                        partial: true,
-                        questionIndex: gameState.room.currentQ
-                    });
+                        showWritingFeedback(`✅ Parfait ! Les 2 trouvés ! +${bonus}pts BONUS (Total: ${totalPts}pts)`, 'success');
+                        
+                        // Donner le bonus
+                        updateScore(bonus);
+                        
+                        gameState.answered = true;
+                        gameState.pendingScore = 0; // Déjà donné
+                        gameState.pendingCorrect = true;
+                        
+                        disableWritingInputs();
+                        
+                        // Pousser le résultat dans Firebase
+                        const myName = gameState.room.players[gameState.playerIndex].name;
+                        db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                            correct: true,
+                            questionIndex: gameState.room.currentQ
+                        });
+                        
+                        // Réinitialiser pour la prochaine question
+                        gameState.currentQuestionPoints = 0;
+                    } else {
+                        // Un seul trouvé → Continuer
+                        gameState.answered = false; // Pas encore fini
+                        document.getElementById('input-answer').placeholder = levelInfo.titleFound 
+                            ? "Maintenant l'artiste..."
+                            : "Maintenant le titre...";
+                            
+                        // Pousser dans Firebase qu'on a partiellement répondu
+                        const myName = gameState.room.players[gameState.playerIndex].name;
+                        db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                            correct: false, // Pas complètement fini
+                            partial: true,
+                            questionIndex: gameState.room.currentQ
+                        });
+                    }
+                    
+                } else {
+                    // RIEN DE NOUVEAU TROUVÉ
+                    if (levelInfo.titleFound && levelInfo.artistFound) {
+                        showWritingFeedback('✅ Déjà trouvé les 2 !', 'success');
+                    } else if (levelInfo.titleFound && titleOk) {
+                        showWritingFeedback('🎵 Titre déjà trouvé ! Cherche l\'artiste', 'warning');
+                    } else if (levelInfo.artistFound && artistOk) {
+                        showWritingFeedback('🎤 Artiste déjà trouvé ! Cherche le titre', 'warning');
+                    } else {
+                        showWritingFeedback('❌ Faux, réessaye !', 'error');
+                    }
+                    return;
                 }
                 
             } else if (levelInfo.askFor === 'both_year') {
