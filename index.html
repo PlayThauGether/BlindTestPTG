@@ -3202,7 +3202,6 @@
                     gameState.answered = true;
                     gameState.pendingScore = pts;
                     gameState.pendingCorrect = true;
-                    gameState.pendingFeedback = `✅ Correct ! +${pts}pts`;
                     
                     // Vider l'input et bloquer
                     document.getElementById('input-answer').value = '';
@@ -3291,6 +3290,7 @@
                     gameState.answered = true;
                     gameState.pendingScore = 0; // Points déjà attribués
                     gameState.pendingCorrect = true;
+                    gameState.pendingFeedback = `✅ Parfait ! Total: ${totalPts}pts`;
                     
                     disableWritingInputs();
                     
@@ -3332,6 +3332,7 @@
                         gameState.answered = true;
                         gameState.pendingScore = 0; // Déjà donné
                         gameState.pendingCorrect = true;
+                        gameState.pendingFeedback = `✅ Parfait ! Total: ${totalPts}pts`;
                         
                         disableWritingInputs();
                         
@@ -3476,9 +3477,16 @@
             container.classList.remove('hidden', 'correct', 'wrong');
             container.classList.add(isCorrect ? 'correct' : 'wrong');
             
-            if (pts > 0) {
-                container.textContent = `🎉 ${feedback} +${pts} pts`;
+            // Si correct ET que les points ont déjà été donnés (pts = 0)
+            if (isCorrect) {
+                if (pts > 0) {
+                    container.textContent = `🎉 ${feedback} +${pts} pts`;
+                } else {
+                    // Points déjà donnés → Afficher juste le feedback de succès
+                    container.textContent = feedback || `✅ Correct !`;
+                }
             } else {
+                // Faux → Afficher la réponse
                 container.textContent = `❌ ${answer}`;
             }
         }
