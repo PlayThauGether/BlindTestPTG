@@ -2204,12 +2204,16 @@
         function createRoom(name, mode, tracks, hostMode, distanceMode) {
             const code = genCode();
             
+            console.log(`🎮 Création de la room avec le code: ${code}`);
+            
             gameState.musicDB = tracks;
             // hostDisplayOnly UNIQUEMENT pour l'hôte (pas les autres joueurs)
             gameState.hostDisplayOnly = hostMode && true; // true car on EST l'hôte ici
             gameState.distanceMode = distanceMode;
             
             const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
+            
+            console.log(`✅ Questions générées: ${questions.length}`);
 
             const room = {
                 code,
@@ -2222,14 +2226,20 @@
                 started: false
             };
 
-            db.ref(`rooms/${code}`).set(room);
-            
-            gameState.room = room;
-            gameState.playerIndex = 0;
-            gameState.isHost = true;
-            
-            saveSession();
-            goToLobby();
+            // Supprimer l'ancienne room si elle existe, puis créer la nouvelle
+            db.ref(`rooms/${code}`).remove().then(() => {
+                console.log(`🗑️ Ancienne room ${code} supprimée`);
+                return db.ref(`rooms/${code}`).set(room);
+            }).then(() => {
+                console.log(`✅ Nouvelle room ${code} créée avec ${questions.length} questions`);
+                
+                gameState.room = room;
+                gameState.playerIndex = 0;
+                gameState.isHost = true;
+                
+                saveSession();
+                goToLobby();
+            });
         }
 
         // ===========================================
@@ -3746,6 +3756,14 @@
         }
 
         function startGameWithCountdown() {
+            // Vérifier que les questions existent
+            if (!gameState.room.questions || gameState.room.questions.length === 0) {
+                console.error('❌ Pas de questions disponibles !');
+                alert('❌ Erreur : Aucune question n\'a été générée. Retour au menu.');
+                goToMenu();
+                return;
+            }
+            
             const q = gameState.room.questions[0];
             let modeTitle = '🎮 MODE QCM';
             if (q.mode === 'mix') {
