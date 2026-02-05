@@ -2245,12 +2245,48 @@
             gameState.room.players.forEach((p, i) => {
                 const div = document.createElement('div');
                 div.className = 'player';
+                
+                // Bouton kick visible seulement pour l'hôte (et pas pour se kick soi-même)
+                const kickBtn = (gameState.isHost && p.name !== gameState.room.host) 
+                    ? `<button class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: linear-gradient(135deg, #ff006e, #ff4444); margin-left: auto;" onclick="kickPlayer('${p.name.replace(/'/g, "\\'")}')">❌ Kick</button>`
+                    : '';
+                
                 div.innerHTML = `
                     <span class="player-num">${i + 1}</span>
                     <span class="player-name">${p.name}</span>
                     ${p.name === gameState.room.host ? '<span>👑</span>' : ''}
+                    ${kickBtn}
                 `;
                 list.appendChild(div);
+            });
+        }
+        
+        function kickPlayer(playerName) {
+            if (!gameState.isHost) {
+                alert('❌ Seul l\'hôte peut expulser des joueurs !');
+                return;
+            }
+            
+            if (playerName === gameState.room.host) {
+                alert('❌ L\'hôte ne peut pas s\'expulser lui-même !');
+                return;
+            }
+            
+            const confirm = window.confirm(`🚫 Expulser ${playerName} de la partie ?`);
+            if (!confirm) return;
+            
+            // Supprimer le joueur de la liste
+            const updatedPlayers = gameState.room.players.filter(p => p.name !== playerName);
+            
+            // Mettre à jour Firebase
+            db.ref(`rooms/${gameState.room.code}/players`).set(updatedPlayers).then(() => {
+                console.log(`✅ ${playerName} a été expulsé`);
+                
+                // Envoyer un signal au joueur expulsé pour le rediriger
+                db.ref(`rooms/${gameState.room.code}/kickedPlayers/${playerName.replace(/[.#$[\]]/g, '_')}`).set({
+                    kicked: true,
+                    timestamp: Date.now()
+                });
             });
         }
 
@@ -2266,6 +2302,19 @@
 
                 const oldCurrentQ = gameState.room ? gameState.room.currentQ : -1;
                 gameState.room = data;
+                
+                // Vérifier si on a été expulsé
+                if (!gameState.isHost && data.kickedPlayers) {
+                    const myName = gameState.room.players[gameState.playerIndex]?.name;
+                    const sanitizedName = myName?.replace(/[.#$[\]]/g, '_');
+                    if (sanitizedName && data.kickedPlayers[sanitizedName]) {
+                        alert('🚫 Vous avez été expulsé de la partie par l\'hôte.');
+                        gameState.roomRef.off();
+                        clearSession();
+                        goToMenu();
+                        return;
+                    }
+                }
                 
                 // Écouter si l'hôte a créé une nouvelle partie
                 if (data.newGameCode && !gameState.isHost) {
@@ -2866,11 +2915,27 @@
                     }
                     
                     // AFFICHER LE FEEDBACK (ÉCRITURE)
-                    if (q.type === 'writing' && gameState.answered) {
-                        const pts = gameState.pendingScore || 0;
-                        const isCorrect = gameState.pendingCorrect || false;
-                        const feedback = gameState.pendingFeedback || '';
-                        showResult(isCorrect, pts, `${q.title} - ${q.artist}`, feedback);
+                    if (q.type === 'writing') {
+                        const levelInfo = gameState.currentWritingLevel || {};
+                        
+                        if (gameState.answered) {
+                            // Complètement réussi (les 2 en niveau 2, ou l'artiste en niveau 1)
+                            const pts = gameState.pendingScore || 0;
+                            const isCorrect = gameState.pendingCorrect || false;
+                            const feedback = gameState.pendingFeedback || '';
+                            showResult(isCorrect, pts, `${q.title} - ${q.artist}`, feedback);
+                        } else if (levelInfo.titleFound || levelInfo.artistFound) {
+                            // Partiellement réussi (seulement 1 sur 2 en niveau 2)
+                            const totalPts = gameState.currentQuestionPoints || 0;
+                            if (levelInfo.titleFound && !levelInfo.artistFound) {
+                                showResult(true, 0, '', `🎵 Titre seulement : +${totalPts}pts`);
+                            } else if (levelInfo.artistFound && !levelInfo.titleFound) {
+                                showResult(true, 0, '', `🎤 Artiste seulement : +${totalPts}pts`);
+                            }
+                        } else {
+                            // Rien trouvé
+                            showResult(false, 0, `${q.title} - ${q.artist}`);
+                        }
                     }
                     
                     // DONNER LES POINTS MAINTENANT (seulement QCM et niveau 1 écriture)
