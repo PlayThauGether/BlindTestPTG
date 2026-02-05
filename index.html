@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵</title>
+    <title>PTG - Blind Test🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -35,12 +35,13 @@
             z-index: 1;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 1rem;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            padding-top: 3rem;
         }
 
         .hidden { display: none !important; }
@@ -97,13 +98,14 @@
             width: 100%;
             max-width: 400px;
             padding: 1rem;
-            margin: 0.5rem 0;
+            margin: 0.5rem auto;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #8338ec;
             border-radius: 10px;
             color: white;
             font-size: 1rem;
             font-family: 'Montserrat', sans-serif;
+            display: block;
         }
 
         .input::placeholder { color: rgba(255, 255, 255, 0.5); }
@@ -295,6 +297,7 @@
             width: 100%;
             max-width: 1200px;
             align-items: flex-start;
+            justify-content: center;
         }
 
         .game-main {
@@ -302,6 +305,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
+            max-width: 700px;
         }
 
         .scoreboard-side {
@@ -397,6 +402,8 @@
             font-weight: 800;
             color: #00f5ff;
             margin-bottom: 1.5rem;
+            word-wrap: break-word;
+            padding: 0 0.5rem;
         }
 
         .options {
@@ -409,13 +416,19 @@
         .opt {
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid #8338ec;
-            padding: 1.5rem;
+            padding: 1.5rem 1rem;
             border-radius: 15px;
             color: white;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             transition: all 0.3s;
+            word-wrap: break-word;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .opt:hover { background: rgba(131, 56, 236, 0.2); transform: scale(1.05); }
@@ -538,13 +551,156 @@
             font-family: 'Montserrat', sans-serif;
         }
 
+        /* BADGES MODE ÉCRITURE */
+        .writing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .writing-badge.found {
+            background: rgba(0, 255, 100, 0.2);
+            border-color: #00ff64;
+        }
+
+        .badge-icon {
+            font-size: 1.2rem;
+        }
+
+        .badge-label {
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-status {
+            font-size: 1.1rem;
+            color: #ff0033;
+        }
+
+        .writing-badge.found .badge-status {
+            color: #00ff64;
+        }
+
         @media (max-width: 768px) {
-            .title { font-size: 2.5rem; }
-            .options { grid-template-columns: 1fr; }
-            .cover { height: 300px; }
-            .code-value { font-size: 3rem; }
-            .game-container { flex-direction: column; }
-            .scoreboard-side { width: 100%; position: relative; }
+            .screen {
+                padding: 1.5rem 0.75rem;
+                padding-top: 2rem;
+            }
+            .title { 
+                font-size: 2.5rem; 
+            }
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            .game-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 1rem;
+                text-align: center;
+            }
+            .timer, .score {
+                font-size: 1.1rem;
+            }
+            .options { 
+                grid-template-columns: 1fr; 
+                gap: 0.75rem;
+            }
+            .opt {
+                padding: 1.2rem 0.8rem;
+                font-size: 0.95rem;
+            }
+            .cover { 
+                height: 280px; 
+            }
+            .img-box {
+                max-width: 100%;
+                margin-bottom: 1rem;
+            }
+            .q-text {
+                font-size: 1.2rem;
+                padding: 0 0.25rem;
+            }
+            .code-value { 
+                font-size: 3rem; 
+            }
+            .game-container { 
+                flex-direction: column; 
+            }
+            .scoreboard-side { 
+                width: 100%; 
+                position: relative;
+                order: -1;
+                margin-bottom: 1rem;
+            }
+            .game-main {
+                width: 100%;
+            }
+            .input, .select {
+                font-size: 0.95rem;
+                padding: 0.9rem;
+            }
+            .btn {
+                font-size: 0.95rem;
+                padding: 0.7rem 1.3rem;
+            }
+            .btn.large {
+                padding: 1.2rem 2rem;
+                font-size: 1.1rem;
+            }
+            .menu-buttons {
+                padding: 0 1rem;
+            }
+            .writing-badge {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.7rem;
+            }
+            .badge-icon {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+            }
+            .subtitle {
+                font-size: 0.8rem;
+                letter-spacing: 0.1em;
+            }
+            .q-text {
+                font-size: 1.1rem;
+            }
+            .opt {
+                font-size: 0.9rem;
+                padding: 1rem 0.6rem;
+                min-height: 50px;
+            }
+            .cover {
+                height: 250px;
+            }
+            .game-header {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+            .timer, .score {
+                font-size: 1rem;
+            }
+            .writing-badge {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.6rem;
+                gap: 0.3rem;
+            }
+            .badge-icon {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -919,17 +1075,29 @@
                         </div>
                     </div>
 
-                    <div id="audio-box" class="audio-box hidden">
-                        <audio id="audio-player" loop></audio>
-                        <button class="audio-btn" onclick="toggleAudio()">🎵 Play</button>
-                    </div>
+                    <!-- Audio caché (pour mode distance) -->
+                    <audio id="audio-player" loop style="display: none;"></audio>
 
                     <div class="question-box">
                         <h3 id="question-text" class="q-text"></h3>
                         <div id="options-container" class="options hidden"></div>
                         <div id="writing-container" class="hidden">
-                            <input id="input-title" class="input" placeholder="Titre">
-                            <input id="input-artist" class="input" placeholder="Artiste">
+                            <!-- Badges de progression (affichés au-dessus) -->
+                            <div id="writing-badges" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
+                                <div id="badge-title" class="writing-badge" style="display: none;">
+                                    <span class="badge-icon">🎵</span>
+                                    <span class="badge-label">TITRE</span>
+                                    <span class="badge-status">✗</span>
+                                </div>
+                                <div id="badge-artist" class="writing-badge" style="display: none;">
+                                    <span class="badge-icon">🎤</span>
+                                    <span class="badge-label">ARTISTE</span>
+                                    <span class="badge-status">✗</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Un seul input -->
+                            <input id="input-answer" class="input" placeholder="Écris ta réponse..." onkeypress="handleWritingEnter(event)">
                             <button class="btn" onclick="submitWriting()">Valider</button>
                         </div>
                         <div id="result-container" class="result hidden"></div>
@@ -1264,7 +1432,7 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
+        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
 
         function goToPlaylists() {
             const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
@@ -2146,7 +2314,10 @@
             gameState.lastMode = currentMode;
             gameState.lastLevel = currentLevel;
 
-            gameState.currentTime = 20;
+            // Timer : 30 secondes pour écriture, 20 secondes pour QCM
+            const timerDuration = q.type === 'qcm' ? 20 : 30;
+            gameState.currentTime = timerDuration;
+            gameState.timerDuration = timerDuration; // Stocker pour le calcul du blur
             gameState.answered = false;
             gameState.audioPlaying = false;
             gameState.pendingScore = 0;
@@ -2157,7 +2328,7 @@
             document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
             document.getElementById('total-q').textContent = gameState.room.questions.length;
             document.getElementById('player-score').textContent = player.score || 0;
-            document.getElementById('timer').textContent = '20';
+            document.getElementById('timer').textContent = timerDuration;
 
             // Badge niveau
             const lvlBadge = document.getElementById('level-badge');
@@ -2205,12 +2376,10 @@
 
             updateScoreboard();
 
-            // Audio
-            const audioBox = document.getElementById('audio-box');
+            // Audio (mode distance uniquement)
             const audio = document.getElementById('audio-player');
             
             if (gameState.distanceMode || gameState.isHost) {
-                audioBox.classList.remove('hidden');
                 audio.src = q.preview;
                 audio.load();
                 
@@ -2467,47 +2636,68 @@
             
             document.getElementById('options-container').classList.add('hidden');
             document.getElementById('writing-container').classList.remove('hidden');
-            document.getElementById('input-title').value = '';
-            document.getElementById('input-artist').value = '';
             
-            // Afficher/cacher inputs selon niveau
-            const titleInput = document.getElementById('input-title');
-            const artistInput = document.getElementById('input-artist');
+            const answerInput = document.getElementById('input-answer');
+            const badgeTitle = document.getElementById('badge-title');
+            const badgeArtist = document.getElementById('badge-artist');
+            const submitBtn = document.querySelector('#writing-container .btn');
             
-            // RÉINITIALISER les styles (enlever orange/vert/rouge)
-            titleInput.style.borderColor = '';
-            titleInput.style.background = '';
-            artistInput.style.borderColor = '';
-            artistInput.style.background = '';
+            // Vider et réactiver l'input
+            answerInput.value = '';
+            answerInput.disabled = false;
+            answerInput.style.opacity = '1';
+            answerInput.style.cursor = 'text';
+            answerInput.style.borderColor = '';
+            answerInput.style.background = '';
+            
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+            
+            // Réinitialiser les badges
+            badgeTitle.classList.remove('found');
+            badgeArtist.classList.remove('found');
+            badgeTitle.querySelector('.badge-status').textContent = '✗';
+            badgeArtist.querySelector('.badge-status').textContent = '✗';
+            
+            // IMPORTANT : Réinitialiser les points cumulés pour cette question
+            gameState.currentQuestionPoints = 0;
             
             if (askFor === 'artist') {
                 // LVL 1: Artiste seulement
                 document.getElementById('question-text').textContent = "Écris l'artiste (Facile)";
-                titleInput.style.display = 'none';
-                artistInput.style.display = 'block';
-                artistInput.placeholder = "Artiste";
+                badgeTitle.style.display = 'none';
+                badgeArtist.style.display = 'inline-flex';
+                answerInput.placeholder = "Écris l'artiste...";
             } else if (askFor === 'both') {
                 // LVL 2: Titre + Artiste
                 document.getElementById('question-text').textContent = "Écris le titre et l'artiste";
-                titleInput.style.display = 'block';
-                artistInput.style.display = 'block';
-                titleInput.placeholder = "Titre";
-                artistInput.placeholder = "Artiste";
+                badgeTitle.style.display = 'inline-flex';
+                badgeArtist.style.display = 'inline-flex';
+                answerInput.placeholder = "Écris le titre ou l'artiste...";
             } else if (askFor === 'both_year') {
                 // LVL 3: Titre + Artiste + Année
                 document.getElementById('question-text').textContent = "Écris le titre, l'artiste et l'année (Difficile)";
-                titleInput.style.display = 'block';
-                artistInput.style.display = 'block';
-                titleInput.placeholder = "Titre";
-                artistInput.placeholder = "Artiste + Année";
+                badgeTitle.style.display = 'inline-flex';
+                badgeArtist.style.display = 'inline-flex';
+                answerInput.placeholder = "Écris le titre, l'artiste et l'année...";
             }
             
             // Stocker le niveau dans gameState
             gameState.currentWritingLevel = {
                 level,
                 askFor,
-                year: q.year
+                year: q.year,
+                titleFound: false,
+                artistFound: false
             };
+            
+            // AUTO-FOCUS sur l'input pour pouvoir écrire directement
+            setTimeout(() => {
+                answerInput.focus();
+            }, 100);
         }
 
         function startTimer() {
@@ -2518,7 +2708,8 @@
                 document.getElementById('timer').textContent = gameState.currentTime;
 
                 if (!gameState.answered) {
-                    const blur = (gameState.currentTime / 20) * 25;
+                    const maxTime = gameState.timerDuration || 20;
+                    const blur = (gameState.currentTime / maxTime) * 25;
                     document.getElementById('cover-img').style.filter = `blur(${blur}px)`;
                 }
 
@@ -2528,6 +2719,11 @@
                     document.getElementById('cover-img').style.filter = 'blur(0px)';
                     
                     const q = gameState.room.questions[gameState.room.currentQ];
+                    
+                    // BLOQUER LES INPUTS MODE ÉCRITURE (empêche de valider après timer=0)
+                    if (q.type === 'writing') {
+                        disableWritingInputs();
+                    }
                     
                     // AFFICHER LA RÉPONSE
                     document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
@@ -2556,41 +2752,17 @@
                     
                     // AFFICHER LE FEEDBACK (ÉCRITURE)
                     if (q.type === 'writing' && gameState.answered) {
-                        const titleInputEl = document.getElementById('input-title');
-                        const artistInputEl = document.getElementById('input-artist');
-                        const titleOk = gameState.pendingTitleOk;
-                        const artistOk = gameState.pendingArtistOk;
-                        
-                        // Changer ORANGE → VERT/ROUGE
-                        if (titleInputEl.value.trim()) {
-                            if (titleOk) {
-                                titleInputEl.style.borderColor = '#00ff64';
-                                titleInputEl.style.background = 'rgba(0, 255, 100, 0.2)';
-                            } else {
-                                titleInputEl.style.borderColor = '#ff0033';
-                                titleInputEl.style.background = 'rgba(255, 0, 51, 0.2)';
-                            }
-                        }
-                        
-                        if (artistInputEl.value.trim()) {
-                            if (artistOk) {
-                                artistInputEl.style.borderColor = '#00ff64';
-                                artistInputEl.style.background = 'rgba(0, 255, 100, 0.2)';
-                            } else {
-                                artistInputEl.style.borderColor = '#ff0033';
-                                artistInputEl.style.background = 'rgba(255, 0, 51, 0.2)';
-                            }
-                        }
-                        
                         const pts = gameState.pendingScore || 0;
                         const isCorrect = gameState.pendingCorrect || false;
                         const feedback = gameState.pendingFeedback || '';
                         showResult(isCorrect, pts, `${q.title} - ${q.artist}`, feedback);
                     }
                     
-                    // DONNER LES POINTS MAINTENANT
-                    if (gameState.answered && gameState.pendingScore) {
+                    // DONNER LES POINTS MAINTENANT (seulement QCM et niveau 1 écriture)
+                    // Pour niveau 2 écriture, les points sont déjà donnés immédiatement
+                    if (gameState.answered && gameState.pendingScore > 0) {
                         updateScore(gameState.pendingScore);
+                        gameState.pendingScore = 0; // Éviter de redonner
                     }
 
                     // Afficher les joueurs qui ont bien répondu (uniquement sur l'écran de l'hôte)
@@ -2652,102 +2824,445 @@
             // PAS de feedback immédiat ! Attendre 0s
         }
 
+        function normalizeAnswer(text) {
+            if (!text) return '';
+            
+            return text
+                .toLowerCase()
+                .trim()
+                // Supprimer accents EN PREMIER (avant tout le reste)
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                // Supprimer les articles
+                .replace(/^(the|le|la|les|l'|un|une|des|a|an)\s+/gi, '')
+                .replace(/\s+(the|le|la|les|l'|un|une|des|a|an)$/gi, '')
+                // Supprimer ponctuation
+                .replace(/['''`]/g, '')
+                .replace(/[^\w\s]/g, '')
+                // Normaliser espaces
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function levenshteinDistance(a, b) {
+            if (!a || !b) return Math.max(a?.length || 0, b?.length || 0);
+            
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function isAnswerSimilar(input, correct) {
+            const normalizedInput = normalizeAnswer(input);
+            const normalizedCorrect = normalizeAnswer(correct);
+            
+            // Si vide, refuser
+            if (!normalizedInput) {
+                return { match: false, score: 0 };
+            }
+            
+            // Exact match
+            if (normalizedInput === normalizedCorrect) return { match: true, score: 1.0 };
+            
+            // Calcul Levenshtein
+            const distance = levenshteinDistance(normalizedInput, normalizedCorrect);
+            const maxLen = Math.max(normalizedInput.length, normalizedCorrect.length);
+            const similarity = 1 - (distance / maxLen);
+            
+            // Système adaptatif selon la longueur TOTALE (pas par mot)
+            let threshold;
+            if (maxLen <= 4) {
+                // Très courts (2-4 caractères) : très strict, 90% de similarité
+                threshold = 0.90;
+            } else if (maxLen <= 8) {
+                // Moyens (5-8 caractères) : 85% de similarité
+                threshold = 0.85;
+            } else if (maxLen <= 15) {
+                // Longs (9-15 caractères) : 80% de similarité
+                threshold = 0.80;
+            } else {
+                // Très longs (16+ caractères) : 75% de similarité
+                threshold = 0.75;
+            }
+            
+            if (similarity >= threshold) {
+                return { match: true, score: similarity };
+            }
+            
+            return { match: false, score: similarity };
+        }
+
+        function showWritingFeedback(message, type) {
+            // Créer ou récupérer l'élément de feedback
+            let feedbackEl = document.getElementById('writing-feedback');
+            if (!feedbackEl) {
+                feedbackEl = document.createElement('div');
+                feedbackEl.id = 'writing-feedback';
+                feedbackEl.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    padding: 1.5rem 2rem;
+                    border-radius: 15px;
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    z-index: 10000;
+                    animation: fadeInOut 0.5s;
+                `;
+                document.body.appendChild(feedbackEl);
+            }
+
+            // Style selon le type
+            if (type === 'success') {
+                feedbackEl.style.background = 'rgba(0, 200, 100, 0.95)';
+                feedbackEl.style.color = 'white';
+                feedbackEl.style.border = '3px solid #00f5a0';
+            } else if (type === 'error') {
+                feedbackEl.style.background = 'rgba(255, 50, 50, 0.95)';
+                feedbackEl.style.color = 'white';
+                feedbackEl.style.border = '3px solid #ff6b6b';
+            } else if (type === 'partial') {
+                feedbackEl.style.background = 'rgba(255, 165, 0, 0.95)';
+                feedbackEl.style.color = 'white';
+                feedbackEl.style.border = '3px solid #ffa500';
+            } else {
+                feedbackEl.style.background = 'rgba(200, 200, 200, 0.95)';
+                feedbackEl.style.color = '#333';
+                feedbackEl.style.border = '3px solid #999';
+            }
+
+            feedbackEl.textContent = message;
+            feedbackEl.style.display = 'block';
+
+            // Cacher après 1.5 secondes (sauf pour les erreurs - 1 seconde)
+            const delay = type === 'error' ? 1000 : 1500;
+            setTimeout(() => {
+                feedbackEl.style.display = 'none';
+            }, delay);
+        }
+
+        function disableWritingInputs() {
+            const answerInput = document.getElementById('input-answer');
+            const submitBtn = document.querySelector('#writing-container .btn');
+            
+            if (answerInput) {
+                answerInput.disabled = true;
+                answerInput.style.opacity = '0.6';
+                answerInput.style.cursor = 'not-allowed';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        function handleWritingEnter(event) {
+            // Détecte la touche Entrée (code 13 ou key 'Enter')
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault(); // Empêche le comportement par défaut
+                submitWriting(); // Appelle la fonction de validation
+            }
+        }
+
         function submitWriting() {
-            if (gameState.answered) return;
-            
             const q = gameState.room.questions[gameState.room.currentQ];
-            const levelInfo = gameState.currentWritingLevel || { askFor: 'both' };
-            const titleInput = document.getElementById('input-title').value.toLowerCase().trim();
-            const artistInput = document.getElementById('input-artist').value.toLowerCase().trim();
+            const levelInfo = gameState.currentWritingLevel || { askFor: 'both', titleFound: false, artistFound: false };
+            const userInput = document.getElementById('input-answer').value.trim();
 
-            // VALIDATION selon niveau
-            if (levelInfo.askFor === 'artist' && !artistInput) {
-                alert('⚠️ Entre l\'artiste !');
-                return;
-            }
-            if (levelInfo.askFor === 'both' && !titleInput && !artistInput) {
-                alert('⚠️ Entre au moins le titre OU l\'artiste !');
-                return;
-            }
-            if (levelInfo.askFor === 'both_year' && (!titleInput || !artistInput)) {
-                alert('⚠️ Entre le titre ET l\'artiste (+ année optionnelle) !');
+            // VALIDATION de base
+            if (!userInput) {
+                showWritingFeedback('⚠️ Entre quelque chose !', 'warning');
                 return;
             }
 
-            gameState.answered = true;
-
-            // VALIDATION PARFAITE : Écriture exacte (ignorer majuscules)
-            const titleNormalized = q.title.toLowerCase().trim();
-            const artistNormalized = q.artist.toLowerCase().trim();
+            // Vérifier avec le nouveau système tolérant
+            const titleResult = isAnswerSimilar(userInput, q.title);
             
-            const titleOk = titleInput && titleInput === titleNormalized;
-            const artistOk = artistInput && artistNormalized.split(/[,&]|feat\.?/).map(a => a.trim()).includes(artistInput);
+            // Pour l'artiste, améliorer le split pour gérer les cas complexes
+            // Exemples : "La Fouine, Kaaris" ou "Artist feat. Someone" ou "A & B"
+            const artistString = q.artist || '';
+            const artists = artistString
+                .split(/[,&]|feat\.?|ft\.?/gi)  // Split par virgule, &, feat, feat., ft, ft.
+                .map(a => a.trim())
+                .filter(a => a.length > 0);  // Enlever les éléments vides
+            
+            console.log('🎤 Artistes détectés:', artists);
+            
+            // Vérifier si l'input correspond à UN des artistes
+            const artistResult = artists.some(a => isAnswerSimilar(userInput, a).match) 
+                ? { match: true, score: 1.0 } 
+                : isAnswerSimilar(userInput, artistString);  // Fallback : comparer avec la string complète
 
-            // Check ANNÉE (Lvl 3)
-            let yearOk = true;
-            if (levelInfo.askFor === 'both_year' && levelInfo.year) {
-                const yearMatch = artistInput.match(/\d{4}/);
-                if (yearMatch) {
-                    const guessYear = parseInt(yearMatch[0]);
-                    yearOk = Math.abs(guessYear - levelInfo.year) <= 5;
-                }
-            }
+            const titleOk = titleResult.match;
+            const artistOk = artistResult.match;
 
-            let isCorrect = false;
-            let pts = 0;
-            let feedback = '';
-
-            // SCORING selon niveau
+            // Mettre à jour les badges
+            const badgeTitle = document.getElementById('badge-title');
+            const badgeArtist = document.getElementById('badge-artist');
+            
             if (levelInfo.askFor === 'artist') {
-                // Lvl 1: Artiste seulement
-                if (artistOk) {
-                    isCorrect = true;
-                    pts = 50 + gameState.currentTime * 10;
-                    feedback = 'Parfait !';
+                // ========== NIVEAU 1 : ARTISTE SEULEMENT ==========
+                if (artistOk && !levelInfo.artistFound) {
+                    levelInfo.artistFound = true;
+                    badgeArtist.classList.add('found');
+                    badgeArtist.querySelector('.badge-status').textContent = '✓';
+                    
+                    // Calculer les points pour l'artiste
+                    const pts = 50 + gameState.currentTime * 10;
+                    showWritingFeedback(`✅ Correct ! +${pts}pts`, 'success');
+                    
+                    gameState.answered = true;
+                    gameState.pendingScore = pts;
+                    gameState.pendingCorrect = true;
+                    gameState.pendingFeedback = `✅ Correct ! +${pts}pts`;
+                    
+                    // Vider l'input et bloquer
+                    document.getElementById('input-answer').value = '';
+                    disableWritingInputs();
+                    
+                    // Pousser le résultat dans Firebase
+                    const myName = gameState.room.players[gameState.playerIndex].name;
+                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                        correct: true,
+                        questionIndex: gameState.room.currentQ
+                    });
+                    
+                    return;
+                } else if (levelInfo.artistFound) {
+                    // Déjà trouvé
+                    showWritingFeedback('✅ Déjà trouvé !', 'success');
+                    document.getElementById('input-answer').value = '';
+                    return;
+                } else if (!artistOk) {
+                    showWritingFeedback('❌ Faux, réessaye !', 'error');
+                    document.getElementById('input-answer').value = '';
+                    return;
                 }
+                
             } else if (levelInfo.askFor === 'both') {
-                // Lvl 2: Titre + Artiste
-                if (titleOk && artistOk) {
-                    isCorrect = true;
-                    pts = 50 + gameState.currentTime * 10;
-                    feedback = 'Parfait !';
-                } else if (titleOk) {
-                    pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
-                    feedback = 'Bon titre ! (50%)';
-                } else if (artistOk) {
-                    pts = Math.floor((50 + gameState.currentTime * 10) * 0.5);
-                    feedback = 'Bon artiste ! (50%)';
+                // ========== NIVEAU 2 : TITRE + ARTISTE (SYSTÈME CUMULATIF) ==========
+                let somethingNew = false;
+                let ptsGagnes = 0;
+                
+                // Vérifier le TITRE (seulement si pas déjà trouvé)
+                if (titleOk && !levelInfo.titleFound) {
+                    levelInfo.titleFound = true;
+                    badgeTitle.classList.add('found');
+                    badgeTitle.querySelector('.badge-status').textContent = '✓';
+                    
+                    // Calculer les points pour le titre
+                    const titlePts = 50 + gameState.currentTime * 10;
+                    ptsGagnes += titlePts;
+                    
+                    // Stocker dans gameState pour les cumuler
+                    if (!gameState.currentQuestionPoints) {
+                        gameState.currentQuestionPoints = 0;
+                    }
+                    gameState.currentQuestionPoints += titlePts;
+                    
+                    showWritingFeedback(`🎵 Titre trouvé ! +${titlePts}pts`, 'success');
+                    somethingNew = true;
+                }
+                
+                // Vérifier l'ARTISTE (seulement si pas déjà trouvé)
+                if (artistOk && !levelInfo.artistFound) {
+                    levelInfo.artistFound = true;
+                    badgeArtist.classList.add('found');
+                    badgeArtist.querySelector('.badge-status').textContent = '✓';
+                    
+                    // Calculer les points pour l'artiste
+                    const artistPts = 50 + gameState.currentTime * 10;
+                    ptsGagnes += artistPts;
+                    
+                    // Stocker dans gameState pour les cumuler
+                    if (!gameState.currentQuestionPoints) {
+                        gameState.currentQuestionPoints = 0;
+                    }
+                    gameState.currentQuestionPoints += artistPts;
+                    
+                    showWritingFeedback(`🎤 Artiste trouvé ! +${artistPts}pts`, 'success');
+                    somethingNew = true;
+                }
+                
+                // Si rien de nouveau trouvé
+                if (!somethingNew) {
+                    if (levelInfo.titleFound && levelInfo.artistFound) {
+                        showWritingFeedback('✅ Déjà trouvé les 2 !', 'success');
+                    } else if (levelInfo.titleFound && titleOk) {
+                        showWritingFeedback('🎵 Titre déjà trouvé ! Cherche l\'artiste', 'warning');
+                    } else if (levelInfo.artistFound && artistOk) {
+                        showWritingFeedback('🎤 Artiste déjà trouvé ! Cherche le titre', 'warning');
+                    } else {
+                        showWritingFeedback('❌ Faux, réessaye !', 'error');
+                    }
+                    // VIDER L'INPUT même si faux (pour pouvoir réécrire directement)
+                    document.getElementById('input-answer').value = '';
+                    return;
+                }
+                
+                // Attribuer les points IMMÉDIATEMENT
+                if (ptsGagnes > 0) {
+                    updateScore(ptsGagnes);
+                }
+                
+                // Vider l'input après validation
+                document.getElementById('input-answer').value = '';
+                
+                // Si les DEUX sont trouvés → BONUS + BLOQUER
+                if (levelInfo.titleFound && levelInfo.artistFound) {
+                    const bonus = 50;
+                    const totalPts = gameState.currentQuestionPoints + bonus;
+                    
+                    showWritingFeedback(`✅ Parfait ! Les 2 trouvés ! +${bonus}pts BONUS (Total: ${totalPts}pts)`, 'success');
+                    
+                    // Donner le bonus
+                    updateScore(bonus);
+                    
+                    gameState.answered = true;
+                    gameState.pendingScore = 0; // Déjà donné
+                    gameState.pendingCorrect = true;
+                    gameState.pendingFeedback = `✅ Parfait ! Total: ${totalPts}pts`;
+                    
+                    disableWritingInputs();
+                    
+                    // Pousser le résultat dans Firebase
+                    const myName = gameState.room.players[gameState.playerIndex].name;
+                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                        correct: true,
+                        questionIndex: gameState.room.currentQ
+                    });
+                    
+                    // Réinitialiser pour la prochaine question
+                    gameState.currentQuestionPoints = 0;
+                } else {
+                    // Un seul trouvé → Continuer
+                    gameState.answered = false; // Pas encore fini
+                    document.getElementById('input-answer').placeholder = levelInfo.titleFound 
+                        ? "Maintenant l'artiste..."
+                        : "Maintenant le titre...";
+                        
+                    // Pousser dans Firebase qu'on a partiellement répondu
+                    const myName = gameState.room.players[gameState.playerIndex].name;
+                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                        correct: false, // Pas complètement fini
+                        partial: true,
+                        questionIndex: gameState.room.currentQ
+                    });
+                }
+                
+            } else if (levelInfo.askFor === 'both_year') {
+                // ========== NIVEAU 3 : TITRE + ARTISTE + ANNÉE (SYSTÈME CUMULATIF) ==========
+                let somethingNew = false;
+                let ptsGagnes = 0;
+                
+                if (titleOk && !levelInfo.titleFound) {
+                    levelInfo.titleFound = true;
+                    badgeTitle.classList.add('found');
+                    badgeTitle.querySelector('.badge-status').textContent = '✓';
+                    
+                    const titlePts = 50 + gameState.currentTime * 10;
+                    ptsGagnes += titlePts;
+                    
+                    if (!gameState.currentQuestionPoints) {
+                        gameState.currentQuestionPoints = 0;
+                    }
+                    gameState.currentQuestionPoints += titlePts;
+                    
+                    showWritingFeedback(`🎵 Titre trouvé ! +${titlePts}pts`, 'success');
+                    somethingNew = true;
+                }
+                
+                if (artistOk && !levelInfo.artistFound) {
+                    levelInfo.artistFound = true;
+                    badgeArtist.classList.add('found');
+                    badgeArtist.querySelector('.badge-status').textContent = '✓';
+                    
+                    const artistPts = 50 + gameState.currentTime * 10;
+                    ptsGagnes += artistPts;
+                    
+                    if (!gameState.currentQuestionPoints) {
+                        gameState.currentQuestionPoints = 0;
+                    }
+                    gameState.currentQuestionPoints += artistPts;
+                    
+                    showWritingFeedback(`🎤 Artiste trouvé ! +${artistPts}pts`, 'success');
+                    somethingNew = true;
+                }
+                
+                if (!somethingNew) {
+                    if (levelInfo.titleFound && titleOk) {
+                        showWritingFeedback('🎵 Titre déjà trouvé !', 'warning');
+                    } else if (levelInfo.artistFound && artistOk) {
+                        showWritingFeedback('🎤 Artiste déjà trouvé !', 'warning');
+                    } else {
+                        showWritingFeedback('❌ Faux, réessaye !', 'error');
+                    }
+                    // VIDER L'INPUT même si faux
+                    document.getElementById('input-answer').value = '';
+                    return;
+                }
+                
+                // Attribuer les points IMMÉDIATEMENT
+                if (ptsGagnes > 0) {
+                    updateScore(ptsGagnes);
+                }
+                
+                document.getElementById('input-answer').value = '';
+                
+                if (levelInfo.titleFound && levelInfo.artistFound) {
+                    const bonus = 50;
+                    const totalPts = gameState.currentQuestionPoints + bonus;
+                    
+                    showWritingFeedback(`✅ Parfait ! +${bonus}pts BONUS (Total: ${totalPts}pts)`, 'success');
+                    
+                    updateScore(bonus);
+                    
+                    gameState.answered = true;
+                    gameState.pendingScore = 0;
+                    gameState.pendingCorrect = true;
+                    gameState.pendingFeedback = `✅ Parfait ! Total: ${totalPts}pts`;
+                    
+                    disableWritingInputs();
+                    
+                    const myName = gameState.room.players[gameState.playerIndex].name;
+                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                        correct: true,
+                        questionIndex: gameState.room.currentQ
+                    });
+                    
+                    gameState.currentQuestionPoints = 0;
+                } else {
+                    gameState.answered = false;
+                    
+                    const myName = gameState.room.players[gameState.playerIndex].name;
+                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
+                        correct: false,
+                        partial: true,
+                        questionIndex: gameState.room.currentQ
+                    });
                 }
             }
-
-            // STOCKER le score en attente (sera appliqué à 0s)
-            gameState.pendingScore = pts;
-            gameState.pendingCorrect = isCorrect;
-            gameState.pendingFeedback = feedback;
-            gameState.pendingTitleOk = titleOk;
-            gameState.pendingArtistOk = artistOk;
-
-            // Pousser le résultat dans Firebase pour que l'hôte puisse voir qui a bien répondu
-            const myName = gameState.room.players[gameState.playerIndex].name;
-            db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
-                correct: pts > 0,
-                questionIndex: gameState.room.currentQ
-            });
-            
-            // Mettre les inputs en ORANGE (attente)
-            const titleInputEl = document.getElementById('input-title');
-            const artistInputEl = document.getElementById('input-artist');
-            
-            if (titleInputEl.value.trim()) {
-                titleInputEl.style.borderColor = '#ff8c00';
-                titleInputEl.style.background = 'rgba(255, 140, 0, 0.1)';
-            }
-            if (artistInputEl.value.trim()) {
-                artistInputEl.style.borderColor = '#ff8c00';
-                artistInputEl.style.background = 'rgba(255, 140, 0, 0.1)';
-            }
-            
-            // PAS de feedback immédiat ! Attendre 0s
         }
 
         // VALIDATION AUTOMATIQUE en temps réel
