@@ -876,6 +876,10 @@
                 <div class="code-label">Code de la partie</div>
                 <div class="code-value" id="lobby-code">000000</div>
             </div>
+            
+            <button id="change-code-btn" class="btn secondary hidden" onclick="changeRoomCode()" style="margin-top: 1rem;">
+                🔄 Changer le code pour les prochaines parties
+            </button>
 
             <div class="players-box">
                 <h3>👥 Joueurs (<span id="player-count">0</span>)</h3>
@@ -1119,9 +1123,8 @@
             <div id="podium-container" class="podium"></div>
             <div id="leaderboard-container" class="leaderboard"></div>
             
-            <!-- Boutons en mode hôte uniquement -->
-            <div id="replay-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
-                <button class="btn large secondary" onclick="replayWithSamePlayers()" id="replay-btn" style="display: none;">🔄 Relancer (mêmes joueurs)</button>
+            <!-- Bouton retour menu -->
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
                 <button class="btn large" onclick="restartGame()">🏠 Nouvelle partie</button>
             </div>
         </div>
@@ -1394,7 +1397,25 @@
         }
 
         function genCode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
+            // Essayer de récupérer le code sauvegardé
+            const savedCode = localStorage.getItem('quiz_party_room_code');
+            if (savedCode) {
+                console.log('✅ Code sauvegardé trouvé:', savedCode);
+                return savedCode;
+            }
+            
+            // Sinon, générer un nouveau code et le sauvegarder
+            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('quiz_party_room_code', newCode);
+            console.log('✅ Nouveau code généré et sauvegardé:', newCode);
+            return newCode;
+        }
+        
+        function changeRoomCode() {
+            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('quiz_party_room_code', newCode);
+            alert(`✅ Nouveau code généré : ${newCode}\n\nCe code sera utilisé pour vos prochaines parties.`);
+            console.log('✅ Code changé:', newCode);
         }
 
         function showScreen(screenId) {
@@ -2202,9 +2223,11 @@
             
             if (gameState.isHost) {
                 document.getElementById('start-btn').classList.remove('hidden');
+                document.getElementById('change-code-btn').classList.remove('hidden');
                 document.getElementById('waiting-div').classList.add('hidden');
             } else {
                 document.getElementById('start-btn').classList.add('hidden');
+                document.getElementById('change-code-btn').classList.add('hidden');
                 document.getElementById('waiting-div').classList.remove('hidden');
             }
 
@@ -3472,14 +3495,6 @@
             clearSession();
 
             showScreen('leaderboard-screen');
-            
-            // Afficher le bouton "Relancer" UNIQUEMENT pour l'hôte
-            const replayBtn = document.getElementById('replay-btn');
-            if (gameState.isHost) {
-                replayBtn.style.display = 'inline-block';
-            } else {
-                replayBtn.style.display = 'none';
-            }
 
             const players = gameState.room.players || [];
             // Tri avec départage : 1) Score décroissant, 2) Si égalité → temps de réponse croissant (plus rapide = meilleur)
@@ -3647,179 +3662,6 @@
                 showScreen('game-screen');
                 loadQuestion(); // Charger la vraie question
             }, 4000); // 4 secondes pour lire les instructions
-        }
-
-        function replayWithSamePlayers() {
-            if (!gameState.isHost) {
-                alert('❌ Seul l\'hôte peut relancer une partie !');
-                return;
-            }
-            
-            // Demander si on garde les mêmes paramètres ou si on les change
-            const choice = confirm('🔄 Relancer avec les MÊMES PARAMÈTRES ?\n\n✅ OUI = Même mode + même playlist\n❌ NON = Choisir nouveau mode/playlist');
-            
-            if (choice) {
-                // Garder les mêmes paramètres
-                replayWithSameSettings();
-            } else {
-                // Changer les paramètres
-                alert('📋 Tu vas pouvoir choisir un nouveau mode et une nouvelle playlist.\nLes joueurs actuels resteront dans la partie.');
-                goToReplaySettings();
-            }
-        }
-        
-        function replayWithSameSettings() {
-            // Réinitialiser les scores des joueurs
-            const resetPlayers = gameState.room.players.map(p => ({
-                name: p.name,
-                score: 0,
-                isHost: p.name === gameState.room.host,
-                lastAnswerTime: 0
-            }));
-            
-            // Créer un nouveau code pour la nouvelle partie
-            const newCode = genCode();
-            const oldCode = gameState.room.code;
-            
-            // Créer la nouvelle room avec les mêmes paramètres
-            const newRoom = {
-                code: newCode,
-                host: gameState.room.host,
-                hostMode: gameState.room.hostMode,
-                distanceMode: gameState.room.distanceMode,
-                players: resetPlayers,
-                questions: gameState.room.questions, // Mêmes questions
-                currentQ: 0,
-                started: false
-            };
-            
-            // Sauvegarder la nouvelle room dans Firebase
-            db.ref(`rooms/${newCode}`).set(newRoom).then(() => {
-                console.log('✅ Nouvelle partie créée:', newCode);
-                
-                // Envoyer un message aux autres joueurs avec le nouveau code
-                db.ref(`rooms/${oldCode}/newGameCode`).set(newCode);
-                
-                // Nettoyer l'ancienne room après 5 secondes
-                setTimeout(() => {
-                    db.ref(`rooms/${oldCode}`).remove();
-                }, 5000);
-                
-                // Mettre à jour gameState
-                gameState.room = newRoom;
-                gameState.playerIndex = resetPlayers.findIndex(p => p.name === gameState.room.host);
-                
-                saveSession();
-                goToLobby();
-                
-                alert(`🎉 Nouvelle partie créée ! Nouveau code : ${newCode}\nLes autres joueurs vont être redirigés automatiquement.`);
-            });
-        }
-        
-        function goToReplaySettings() {
-            // Sauvegarder temporairement les joueurs actuels
-            localStorage.setItem('replayPlayers', JSON.stringify(gameState.room.players));
-            localStorage.setItem('replayHost', gameState.room.host);
-            localStorage.setItem('replayHostMode', gameState.room.hostMode);
-            localStorage.setItem('replayDistanceMode', gameState.room.distanceMode);
-            localStorage.setItem('oldRoomCode', gameState.room.code);
-            
-            // Retourner à l'écran de création
-            loadPlaylistsSelect();
-            
-            // Pré-remplir avec les anciens paramètres
-            document.getElementById('create-name').value = gameState.room.host;
-            document.getElementById('host-mode').checked = gameState.room.hostMode;
-            document.getElementById('distance-mode').checked = gameState.room.distanceMode;
-            
-            showScreen('create-screen');
-            
-            // Changer le texte du bouton
-            const createBtn = document.querySelector('#create-screen .btn.large[onclick="loadAndCreate()"]');
-            if (createBtn) {
-                createBtn.textContent = '🔄 Relancer avec nouveaux paramètres';
-                createBtn.onclick = createReplayGame;
-            }
-        }
-        
-        async function createReplayGame() {
-            const name = document.getElementById('create-name').value.trim();
-            const mode = document.getElementById('create-mode').value;
-            const hostMode = document.getElementById('host-mode').checked;
-            const distanceMode = document.getElementById('distance-mode').checked;
-
-            if (!name) { alert('⚠️ Entre ton pseudo !'); return; }
-
-            // Récupérer les joueurs sauvegardés
-            const replayPlayers = JSON.parse(localStorage.getItem('replayPlayers') || '[]');
-            const oldCode = localStorage.getItem('oldRoomCode');
-            
-            if (replayPlayers.length === 0) {
-                alert('❌ Erreur : impossible de récupérer les joueurs.');
-                return;
-            }
-
-            showLoading('Chargement de la playlist...');
-            const tracks = await getSelectedPlaylist();
-            if (!tracks || tracks.length === 0) {
-                hideLoading();
-                alert('⚠️ Sélectionne une playlist !');
-                return;
-            }
-
-            hideLoading();
-
-            // Créer la nouvelle room
-            const newCode = genCode();
-            gameState.musicDB = tracks;
-            gameState.hostDisplayOnly = hostMode && true;
-            gameState.distanceMode = distanceMode;
-            
-            const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
-            
-            // Réinitialiser les scores
-            const resetPlayers = replayPlayers.map(p => ({
-                name: p.name,
-                score: 0,
-                isHost: p.name === name,
-                lastAnswerTime: 0
-            }));
-
-            const room = {
-                code: newCode,
-                host: name,
-                hostMode: hostMode,
-                distanceMode: distanceMode,
-                players: resetPlayers,
-                questions: questions,
-                currentQ: 0,
-                started: false
-            };
-
-            await db.ref(`rooms/${newCode}`).set(room);
-            
-            // Notifier les anciens joueurs
-            await db.ref(`rooms/${oldCode}/newGameCode`).set(newCode);
-            
-            // Nettoyer
-            setTimeout(() => {
-                db.ref(`rooms/${oldCode}`).remove();
-            }, 5000);
-            
-            localStorage.removeItem('replayPlayers');
-            localStorage.removeItem('replayHost');
-            localStorage.removeItem('replayHostMode');
-            localStorage.removeItem('replayDistanceMode');
-            localStorage.removeItem('oldRoomCode');
-
-            gameState.room = room;
-            gameState.isHost = true;
-            gameState.playerIndex = 0;
-
-            saveSession();
-            goToLobby();
-            
-            alert(`🎉 Nouvelle partie créée avec nouveaux paramètres !\nCode : ${newCode}\nLes autres joueurs vont être redirigés.`);
         }
 
         function restartGame() {
