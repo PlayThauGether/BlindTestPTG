@@ -1123,9 +1123,16 @@
             <div id="podium-container" class="podium"></div>
             <div id="leaderboard-container" class="leaderboard"></div>
             
-            <!-- Bouton retour menu -->
-            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
-                <button class="btn large" onclick="restartGame()">🏠 Nouvelle partie</button>
+            <!-- Boutons de fin de partie -->
+            <div id="leaderboard-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                <!-- Bouton pour l'HÔTE -->
+                <button id="host-new-game-btn" class="btn large secondary hidden" onclick="goToCreate()">🎮 Créer une nouvelle partie</button>
+                
+                <!-- Bouton pour les JOUEURS -->
+                <button id="player-rejoin-btn" class="btn large hidden" onclick="rejoinSameRoom()">🔄 Rejouer (attendre l'hôte)</button>
+                
+                <!-- Bouton menu pour tout le monde -->
+                <button class="btn large" onclick="restartGame()">🏠 Menu principal</button>
             </div>
         </div>
 
@@ -2533,8 +2540,8 @@
             console.log('🔍 loadQuestion - isHost:', gameState.isHost, 'hostDisplayOnly:', gameState.hostDisplayOnly);
             
             if (gameState.hostDisplayOnly) {
-                console.log('🎮 Mode Affichage Hôte activé - pas de questions affichées');
-                document.getElementById('question-text').textContent = '🎮 Mode Affichage';
+                console.log('Mode Affichage Hôte activé - pas de questions affichées');
+                document.getElementById('question-text').textContent = '';
                 startTimer();
                 return;
             }
@@ -2844,8 +2851,8 @@
                     document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
                     document.getElementById('answer-reveal').classList.remove('hidden');
                     
-                    // AFFICHER LE FEEDBACK (QCM)
-                    if (q.type === 'qcm' && gameState.answered) {
+                    // AFFICHER LE FEEDBACK (QCM) - Sauf pour l'hôte en mode display-only
+                    if (q.type === 'qcm' && gameState.answered && !gameState.hostDisplayOnly) {
                         const correct = q[q.qType];
                         document.querySelectorAll('.opt').forEach(btn => {
                             // Enlever le style jaune d'attente
@@ -2865,8 +2872,8 @@
                         showResult(isCorrect, pts, `${q.title} - ${q.artist}`);
                     }
                     
-                    // AFFICHER LE FEEDBACK (ÉCRITURE)
-                    if (q.type === 'writing') {
+                    // AFFICHER LE FEEDBACK (ÉCRITURE) - Sauf pour l'hôte en mode display-only
+                    if (q.type === 'writing' && !gameState.hostDisplayOnly) {
                         const levelInfo = gameState.currentWritingLevel || {};
                         
                         if (gameState.answered) {
@@ -3611,6 +3618,18 @@
 
             // Afficher all-time leaderboard
             displayAllTimeLeaderboard();
+            
+            // Afficher les bons boutons selon le rôle
+            const hostBtn = document.getElementById('host-new-game-btn');
+            const playerBtn = document.getElementById('player-rejoin-btn');
+            
+            if (gameState.isHost) {
+                hostBtn.classList.remove('hidden');
+                playerBtn.classList.add('hidden');
+            } else {
+                hostBtn.classList.add('hidden');
+                playerBtn.classList.remove('hidden');
+            }
         }
 
         async function saveToAllTimeLeaderboard(players) {
@@ -3722,6 +3741,84 @@
                 showScreen('game-screen');
                 loadQuestion(); // Charger la vraie question
             }, 4000); // 4 secondes pour lire les instructions
+        }
+
+        function rejoinSameRoom() {
+            // Le joueur veut rejouer dans la même room
+            // On garde son pseudo et le code de la room
+            const playerName = gameState.room?.players[gameState.playerIndex]?.name;
+            const roomCode = gameState.room?.code;
+            
+            if (!playerName || !roomCode) {
+                alert('❌ Impossible de rejoindre. Retour au menu.');
+                goToMenu();
+                return;
+            }
+            
+            // Réinitialiser gameState mais garder les infos essentielles
+            const savedName = playerName;
+            const savedCode = roomCode;
+            
+            clearSession();
+            
+            // Attendre que la room soit recréée par l'hôte
+            console.log(`🔄 ${savedName} attend que l'hôte recrée la partie (code: ${savedCode})`);
+            
+            // Écouter la room pour détecter quand l'hôte recrée
+            const roomRef = db.ref(`rooms/${savedCode}`);
+            
+            // Message à l'utilisateur
+            alert(`⏳ En attente...\n\nRestez sur cette page, vous rejoindrez automatiquement dès que l'hôte créera une nouvelle partie avec le code ${savedCode}.`);
+            
+            // Écouter les changements
+            roomRef.on('value', snapshot => {
+                const room = snapshot.val();
+                
+                if (!room) {
+                    console.log('⏳ Room pas encore recréée...');
+                    return;
+                }
+                
+                // Si la room existe et n'a pas démarré
+                if (!room.started) {
+                    console.log('✅ Room détectée ! Tentative de rejoin...');
+                    
+                    // Vérifier si notre pseudo existe déjà
+                    const pseudoExists = room.players.some(p => p.name.toLowerCase() === savedName.toLowerCase());
+                    
+                    if (pseudoExists) {
+                        console.log('✅ Pseudo déjà dans la room, reconnexion...');
+                        roomRef.off(); // Arrêter d'écouter
+                        
+                        // Rejoindre la room
+                        gameState.room = room;
+                        gameState.playerIndex = room.players.findIndex(p => p.name === savedName);
+                        gameState.isHost = false;
+                        gameState.hostDisplayOnly = false;
+                        
+                        saveSession();
+                        goToLobby();
+                        
+                    } else {
+                        console.log('🔄 Rejoindre comme nouveau joueur...');
+                        roomRef.off(); // Arrêter d'écouter
+                        
+                        // Rejoindre comme nouveau joueur
+                        const newPlayer = { name: savedName, score: 0, isHost: false };
+                        room.players.push(newPlayer);
+                        
+                        db.ref(`rooms/${savedCode}/players`).set(room.players).then(() => {
+                            gameState.room = room;
+                            gameState.playerIndex = room.players.length - 1;
+                            gameState.isHost = false;
+                            gameState.hostDisplayOnly = false;
+                            
+                            saveSession();
+                            goToLobby();
+                        });
+                    }
+                }
+            });
         }
 
         function restartGame() {
