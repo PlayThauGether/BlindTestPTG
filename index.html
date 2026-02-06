@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵</title>
+    <title>PTG - Blind Test 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -990,29 +990,14 @@
             </div>
         </div>
 
-        <!-- QCM LEVEL 1 INTRO -->
-        <div id="qcm-lvl1-intro-screen" class="screen hidden">
+        <!-- QCM INTRO (unique) -->
+        <div id="qcm-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 700px; margin: 0 auto;">
                 <h1 style="font-size: 3.5rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
                     🎯 MODE QCM
                 </h1>
                 <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 1</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">2 CHOIX DE RÉPONSE</p>
-                </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
-            </div>
-        </div>
-
-        <!-- QCM LEVEL 2 INTRO -->
-        <div id="qcm-lvl2-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
-                    🎯 MODE QCM
-                </h1>
-                <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 2</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">4 CHOIX DE RÉPONSE</p>
+                    <p style="font-size: 1.8rem; color: white; font-weight: 800;">4 CHOIX DE RÉPONSE</p>
                 </div>
                 <div class="spinner" style="margin: 3rem auto;"></div>
             </div>
@@ -1616,7 +1601,7 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
+        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
 
         function goToPlaylists() {
             const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
@@ -2049,19 +2034,9 @@
             let trackIndex = 0;
             
             if (mode === 'qcm') {
-                // === NIVEAU 1 : 2 choix ===
-                for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'qcm',
-                        level: 1,
-                        qType: Math.random() > 0.5 ? 'artist' : 'title',
-                        optionsCount: 2
-                    });
-                }
-                
-                // === NIVEAU 2 : 4 choix ===
-                for (let i = 0; i < lvl2Count && trackIndex < shuffled.length; i++) {
+                // QCM : toutes les questions avec 4 choix
+                const totalQcm = lvl1Count + lvl2Count; // Utiliser tout le quota
+                for (let i = 0; i < totalQcm && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
                         type: 'qcm',
@@ -2094,36 +2069,20 @@
                 
             } else if (mode === 'soiree') {
                 // MODE SOIRÉE : QCM D'ABORD, PUIS ÉCRITURE
-                // Structure : QCM Lvl1 → QCM Lvl2 → Écriture Lvl1 → Écriture Lvl2
+                // Structure : QCM (4 choix) → Écriture Lvl1 → Écriture Lvl2
                 
                 // Diviser en 2 : 50% QCM, 50% Écriture
                 const qcmTotal = Math.floor(numQuestions / 2);
                 const writingTotal = numQuestions - qcmTotal;
                 
-                // Répartition QCM : 40% Lvl1, 60% Lvl2
-                const qcmLvl1 = Math.floor(qcmTotal * 0.4);
-                const qcmLvl2 = qcmTotal - qcmLvl1;
-                
                 // Répartition Écriture : 40% Lvl1, 60% Lvl2
                 const writingLvl1 = Math.floor(writingTotal * 0.4);
                 const writingLvl2 = writingTotal - writingLvl1;
                 
-                console.log(`📊 Soirée: QCM(${qcmLvl1}+${qcmLvl2}) + Écriture(${writingLvl1}+${writingLvl2})`);
+                console.log(`📊 Soirée: QCM(${qcmTotal}) + Écriture(${writingLvl1}+${writingLvl2})`);
                 
-                // === QCM NIVEAU 1 ===
-                for (let i = 0; i < qcmLvl1 && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'qcm',
-                        level: 1,
-                        mode: 'qcm', // Identifier le mode parent
-                        qType: Math.random() > 0.5 ? 'artist' : 'title',
-                        optionsCount: 2
-                    });
-                }
-                
-                // === QCM NIVEAU 2 ===
-                for (let i = 0; i < qcmLvl2 && trackIndex < shuffled.length; i++) {
+                // === QCM (4 choix uniquement) ===
+                for (let i = 0; i < qcmTotal && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
                         type: 'qcm',
@@ -2225,18 +2184,9 @@
 
             } else if (mode === 'qcm-film') {
                 // MODE QCM FILM : comme QCM normal mais qType = 'artist' uniquement
-                // Niveau 1 : 2 choix, Niveau 2 : 4 choix
-                for (let i = 0; i < lvl1Count && trackIndex < shuffled.length; i++) {
-                    questions.push({
-                        ...shuffled[trackIndex++],
-                        type: 'qcm',
-                        level: 1,
-                        mode: 'qcm-film',
-                        qType: 'artist',
-                        optionsCount: 2
-                    });
-                }
-                for (let i = 0; i < lvl2Count && trackIndex < shuffled.length; i++) {
+                // Toutes les questions : 4 choix
+                const totalQcmFilm = lvl1Count + lvl2Count;
+                for (let i = 0; i < totalQcmFilm && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
                         type: 'qcm',
@@ -2573,8 +2523,8 @@
             if (!prevMode) {
                 if (currentMode === 'mix' && currentLevel === 1) {
                     transitionScreen = 'mix-lvl1-intro-screen';
-                } else if (currentMode === 'qcm' && currentLevel === 1) {
-                    transitionScreen = 'qcm-lvl1-intro-screen';
+                } else if (currentMode === 'qcm' || currentMode === 'qcm-film') {
+                    transitionScreen = 'qcm-intro-screen';
                 } else if (currentMode === 'writing' && currentLevel === 1) {
                     transitionScreen = 'writing-lvl1-intro-screen';
                 }
@@ -2584,18 +2534,16 @@
             if (!transitionScreen && currentMode !== prevMode && prevMode) {
                 if (currentMode === 'writing' && currentLevel === 1) {
                     transitionScreen = 'writing-lvl1-intro-screen';
-                } else if (currentMode === 'qcm' && currentLevel === 1) {
-                    transitionScreen = 'qcm-lvl1-intro-screen';
+                } else if (currentMode === 'qcm' || currentMode === 'qcm-film') {
+                    transitionScreen = 'qcm-intro-screen';
                 } else if (currentMode === 'mix' && currentLevel === 1) {
                     transitionScreen = 'mix-lvl1-intro-screen';
                 }
             }
             
-            // CAS 3 : Changement de niveau dans le même mode
+            // CAS 3 : Changement de niveau dans le même mode (QCM n'a plus de niveaux)
             if (!transitionScreen && currentLevel !== prevLevel && prevLevel !== 0) {
-                if (currentMode === 'qcm' && currentLevel === 2) {
-                    transitionScreen = 'qcm-lvl2-intro-screen';
-                } else if (currentMode === 'writing' && currentLevel === 2) {
+                if (currentMode === 'writing' && currentLevel === 2) {
                     transitionScreen = 'writing-lvl2-intro-screen';
                 } else if (currentMode === 'mix' && currentLevel === 2) {
                     transitionScreen = 'mix-lvl2-intro-screen';
