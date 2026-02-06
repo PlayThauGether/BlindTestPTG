@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1418,6 +1418,17 @@
             }
         }
 
+        // Nettoyer les titres Deezer (supprimer parenthèses, crochets, "Remaster", etc.)
+        function cleanDeezerTitle(title) {
+            if (!title) return '';
+            return title
+                // Supprimer tout ce qui est entre parenthèses ou crochets
+                .replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '')
+                // Supprimer suffixes type "- Remastered", "- Single", etc.
+                .replace(/\s*-\s*(?:single|remaster(?:ed)?|deluxe|bonus track|radio edit|live version|edit).*$/gi, '')
+                .trim();
+        }
+
         async function getDeezerPlaylist(id) {
             try {
                 console.log('🎵 Chargement playlist via TON serveur:', id);
@@ -1433,7 +1444,7 @@
                 const tracks = data.tracks.data
                     .filter(t => t && t.preview && t.album && t.album.cover_big && t.title && t.artist)
                     .map(t => ({
-                        title: t.title,
+                        title: cleanDeezerTitle(t.title),
                         artist: t.artist.name,
                         cover: t.album.cover_big,
                         preview: t.preview,
@@ -1601,7 +1612,7 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'ElenaPTG'; // ← Change ce mot de passe
+        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
 
         function goToPlaylists() {
             const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
@@ -2588,6 +2599,8 @@
             gameState.answered = false;
             gameState.audioPlaying = false;
             gameState.pendingScore = 0;
+            gameState.pendingCorrect = false;
+            gameState.pendingFeedback = '';
 
             // Cacher le bloc "bien répondu" à droite
             document.getElementById('correct-players-side').classList.add('hidden');
@@ -3122,6 +3135,10 @@
             return text
                 .toLowerCase()
                 .trim()
+                // Supprimer tout ce qui est entre parenthèses/crochets (ex: "(2005 Remaster)", "[Deluxe]")
+                .replace(/\s*[\(\[][^\)\]]*[\)\]]\s*/g, ' ')
+                // Supprimer suffixes Deezer courants (ex: "- Single", "- Remastered")
+                .replace(/\s*-\s*(single|remaster(ed)?|deluxe|bonus track|radio edit|live|version|edit).*$/gi, '')
                 // Supprimer accents EN PREMIER (avant tout le reste)
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
@@ -3654,16 +3671,16 @@
             container.classList.remove('hidden', 'correct', 'wrong');
             container.classList.add(isCorrect ? 'correct' : 'wrong');
             
-            // Si correct ET que les points ont déjà été donnés (pts = 0)
             if (isCorrect) {
-                if (pts > 0) {
-                    container.textContent = `🎉 ${feedback} +${pts} pts`;
+                if (feedback) {
+                    // Feedback personnalisé (ex: "✅ Parfait ! Total: 450pts")
+                    container.textContent = `🎉 ${feedback}`;
+                } else if (pts > 0) {
+                    container.textContent = `🎉 +${pts} pts`;
                 } else {
-                    // Points déjà donnés → Afficher juste le feedback de succès
-                    container.textContent = feedback || `✅ Correct !`;
+                    container.textContent = `✅ Correct !`;
                 }
             } else {
-                // Faux → Afficher la réponse
                 container.textContent = `❌ ${answer}`;
             }
         }
