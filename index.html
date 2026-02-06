@@ -1276,6 +1276,7 @@
             timerInterval: null,
             answered: false,
             roomRef: null,
+            roomListeners: [],
             audioPlaying: false,
             hostDisplayOnly: false,
             distanceMode: false
@@ -1592,6 +1593,7 @@
                 timerInterval: null,
                 answered: false,
                 roomRef: null,
+                roomListeners: [],
                 audioPlaying: false,
                 hostDisplayOnly: false,
                 distanceMode: false
@@ -2382,79 +2384,162 @@
             });
         }
 
+        // ======= OPTIMISATION FIREBASE : Listeners granulaires =======
+        // Au lieu d'écouter toute la room (~25KB par update),
+        // on écoute seulement les chemins qui changent (quelques bytes).
+        // Questions (~20KB) chargées UNE SEULE FOIS au démarrage.
+        // Réduction estimée : ~90% de bande passante.
+
+        function cleanupRoomListeners() {
+            if (gameState.roomListeners) {
+                gameState.roomListeners.forEach(ref => ref.off());
+            }
+            gameState.roomListeners = [];
+        }
+
         function listenToRoom() {
+            // Nettoyer les anciens listeners
+            cleanupRoomListeners();
+            // Compat avec l'ancien code qui fait gameState.roomRef.off()
             if (gameState.roomRef) gameState.roomRef.off();
-            
-            const ref = db.ref(`rooms/${gameState.room.code}`);
-            gameState.roomRef = ref;
+            gameState.roomRef = { off: cleanupRoomListeners };
 
-            ref.on('value', snapshot => {
-                const data = snapshot.val();
-                if (!data) return;
+            const code = gameState.room.code;
+            const roomBase = `rooms/${code}`;
 
-                const oldCurrentQ = gameState.room ? gameState.room.currentQ : -1;
-                gameState.room = data;
-                
-                // Écouter si l'hôte a créé une nouvelle partie
-                if (data.newGameCode && !gameState.isHost) {
-                    console.log('🔄 Redirection vers nouvelle partie:', data.newGameCode);
-                    alert(`🎉 L'hôte a lancé une nouvelle partie !\nNouveau code : ${data.newGameCode}`);
-                    
-                    // Rejoindre automatiquement la nouvelle partie
-                    db.ref(`rooms/${data.newGameCode}`).once('value', newSnapshot => {
-                        const newRoom = newSnapshot.val();
-                        if (newRoom) {
-                            gameState.room = newRoom;
-                            // Trouver mon index dans la nouvelle room
-                            const myName = gameState.room.players[gameState.playerIndex].name;
-                            gameState.playerIndex = newRoom.players.findIndex(p => p.name === myName);
-                            gameState.roomRef.off(); // Arrêter d'écouter l'ancienne room
-                            saveSession();
-                            goToLobby();
-                        }
-                    });
-                    return;
-                }
+            // Helper pour tracker les listeners
+            function addListener(path, callback) {
+                const ref = db.ref(path);
+                ref.on('value', callback);
+                gameState.roomListeners.push(ref);
+                return ref;
+            }
 
-                if (currentScreen === 'lobby') {
-                    updatePlayersList();
-                    if (data.started) {
+            // --- 1. LISTENER : started (1 boolean, quelques bytes) ---
+            addListener(`${roomBase}/started`, snapshot => {
+                const started = snapshot.val();
+                gameState.room.started = started;
+
+                if (started && currentScreen === 'lobby') {
+                    // OPTIMISATION CLÉ : Détacher le listener players
+                    // En jeu, on utilise .once() au changement de question (pas de download continu)
+                    if (gameState._playersListenerRef) {
+                        gameState._playersListenerRef.off();
+                        gameState.roomListeners = gameState.roomListeners.filter(r => r !== gameState._playersListenerRef);
+                        gameState._playersListenerRef = null;
+                        console.log('🔧 Players listener détaché (passage au jeu - économie de bande passante)');
+                    }
+
+                    // S'assurer que les questions sont chargées avant de démarrer
+                    if (!gameState.room.questions || gameState.room.questions.length === 0) {
+                        console.log('📥 Chargement des questions avant démarrage...');
+                        db.ref(`${roomBase}/questions`).once('value', s => {
+                            gameState.room.questions = s.val();
+                            goToGame();
+                        });
+                    } else {
                         goToGame();
                     }
                 }
+            });
 
-                if (currentScreen === 'game') {
-                    // CAS 1 : On est en attente après rafraîchissement
-                    if (gameState.waitingForNextQ) {
-                        if (data.currentQ !== gameState.lastSeenQ && data.currentQ < data.questions.length) {
-                            console.log('✅ Nouvelle question détectée après rafraîchissement, on reprend !');
-                            gameState.waitingForNextQ = false;
-                            gameState.lastSeenQ = null;
+            // --- 2. LISTENER : players (LOBBY SEULEMENT) ---
+            // Détaché automatiquement quand le jeu démarre (voir listener started)
+            // Pendant le jeu, on utilise .once() uniquement au changement de question
+            // Si on est déjà en jeu (reconnexion), on n'ajoute pas le listener
+            if (currentScreen === 'lobby') {
+                gameState._playersListenerRef = addListener(`${roomBase}/players`, snapshot => {
+                    const players = snapshot.val();
+                    if (!players) return;
+                    gameState.room.players = players;
+                    updatePlayersList();
+                });
+            } else {
+                gameState._playersListenerRef = null;
+            }
+
+            // --- 3. LISTENER : currentQ (1 entier, quelques bytes) — LE PLUS IMPORTANT ---
+            addListener(`${roomBase}/currentQ`, snapshot => {
+                const newCurrentQ = snapshot.val();
+                if (newCurrentQ === null || newCurrentQ === undefined) return;
+
+                const oldCurrentQ = gameState.room.currentQ;
+                gameState.room.currentQ = newCurrentQ;
+
+                if (currentScreen !== 'game') return;
+                if (!gameState.room.questions) return;
+
+                // CAS 1 : Attente après rafraîchissement
+                if (gameState.waitingForNextQ) {
+                    if (newCurrentQ !== gameState.lastSeenQ && newCurrentQ < gameState.room.questions.length) {
+                        console.log('✅ Nouvelle question détectée après rafraîchissement, on reprend !');
+                        gameState.waitingForNextQ = false;
+                        gameState.lastSeenQ = null;
+                        // Rafraîchir les scores avant d'afficher
+                        db.ref(`${roomBase}/players`).once('value', s => {
+                            gameState.room.players = s.val() || gameState.room.players;
                             loadQuestion();
-                            updateScoreboard(); // Mettre à jour le scoreboard ici
-                        }
-                        // Sinon on ne fait rien, on attend
-                        return;
+                            updateScoreboard();
+                        });
                     }
+                    return;
+                }
 
-                    // CAS 2 : En cours de transition (on bloque loadQuestion)
-                    if (gameState.transitionInProgress) {
-                        return;
-                    }
-                    
-                    // CAS 3 : Nouvelle question normale
-                    if (data.currentQ !== oldCurrentQ && data.currentQ < data.questions.length) {
-                        console.log('📢 Nouvelle question:', data.currentQ);
+                // CAS 2 : Transition en cours
+                if (gameState.transitionInProgress) return;
+
+                // CAS 3 : Nouvelle question
+                if (newCurrentQ !== oldCurrentQ && newCurrentQ < gameState.room.questions.length) {
+                    console.log('📢 Nouvelle question:', newCurrentQ);
+                    // Rafraîchir les scores avant d'afficher la nouvelle question
+                    db.ref(`${roomBase}/players`).once('value', s => {
+                        gameState.room.players = s.val() || gameState.room.players;
                         loadQuestion();
-                        updateScoreboard(); // Mettre à jour le scoreboard ici aussi
-                    }
-                    
-                    if (data.currentQ >= data.questions.length) {
-                        console.log('🏁 Fin du jeu !');
+                        updateScoreboard();
+                    });
+                }
+
+                // CAS 4 : Fin du jeu
+                if (newCurrentQ >= gameState.room.questions.length) {
+                    console.log('🏁 Fin du jeu !');
+                    // Récupérer les scores finaux
+                    db.ref(`${roomBase}/players`).once('value', s => {
+                        gameState.room.players = s.val() || gameState.room.players;
                         goToLeaderboard();
-                    }
+                    });
                 }
             });
+
+            // --- 4. LISTENER : newGameCode (pour redirection nouvelle partie) ---
+            addListener(`${roomBase}/newGameCode`, snapshot => {
+                const newGameCode = snapshot.val();
+                if (!newGameCode || gameState.isHost) return;
+
+                console.log('🔄 Redirection vers nouvelle partie:', newGameCode);
+                alert(`🎉 L'hôte a lancé une nouvelle partie !\nNouveau code : ${newGameCode}`);
+
+                db.ref(`rooms/${newGameCode}`).once('value', newSnapshot => {
+                    const newRoom = newSnapshot.val();
+                    if (newRoom) {
+                        const myName = gameState.room.players[gameState.playerIndex].name;
+                        gameState.room = newRoom;
+                        gameState.playerIndex = newRoom.players.findIndex(p => p.name === myName);
+                        cleanupRoomListeners();
+                        saveSession();
+                        goToLobby();
+                    }
+                });
+            });
+
+            // --- 5. LISTENER : currentOptions (pour sync QCM entre joueurs) ---
+            addListener(`${roomBase}/currentOptions`, snapshot => {
+                const opts = snapshot.val();
+                if (opts) {
+                    gameState.room.currentOptions = opts;
+                }
+            });
+
+            console.log(`🔧 Listeners optimisés activés pour room ${code} (5 listeners granulaires au lieu de 1 global)`);
         }
 
         function startGame() {
