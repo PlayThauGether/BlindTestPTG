@@ -877,8 +877,22 @@
                 <h3 style="color: #00f5ff; margin-bottom: 1rem;">📚 Mes Playlists JSON</h3>
                 <div id="json-playlists-list"></div>
                 <p id="no-json-playlists" style="color: #aaa; font-size: 0.9rem; margin-top: 0.5rem;">
-                    Aucune playlist JSON sauvegardée. Créez-en une dans "Créer une partie" → Onglet "🎨 Nouvelle Playlist".
+                    Aucune playlist JSON sauvegardée.
                 </p>
+                
+                <!-- Création de playlist JSON -->
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h4 style="color: #ffbe0b; margin-bottom: 0.8rem;">➕ Ajouter une playlist JSON</h4>
+                    <p style="margin-bottom: 0.8rem; font-size: 0.85rem; color: #aaa;">
+                        📝 Colle le contenu de ton fichier JSON ici :
+                    </p>
+                    <textarea id="admin-json-input" class="input" placeholder='{"playlist": [{"title": "...", "artist": "...", "preview": "...", "cover": "..."}]}' style="min-height: 180px; font-family: monospace; font-size: 0.85rem; resize: vertical; max-width: 100%;"></textarea>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #00f5ff;">
+                        💡 Utilise le <a href="playlist-generator.html" target="_blank" style="color: #ffbe0b; font-weight: 600;">générateur JSON</a> pour créer ta playlist facilement !
+                    </p>
+                    <input id="admin-json-name" class="input" placeholder="Nom de la playlist" style="max-width: 100%; margin-top: 0.5rem;">
+                    <button class="btn" onclick="adminSaveJsonPlaylist()" style="margin-top: 0.8rem;">💾 Sauvegarder</button>
+                </div>
             </div>
 
             <div id="add-playlist-form" class="section hidden">
@@ -943,9 +957,6 @@
                     <button class="btn large" onclick="switchPlaylistTab('saved')" id="tab-saved" style="flex: 1; background: rgba(255,255,255,0.1);">
                         📚 Mes Playlists
                     </button>
-                    <button class="btn large" onclick="switchPlaylistTab('custom')" id="tab-custom" style="flex: 1; background: rgba(255,255,255,0.1);">
-                        🎨 Nouvelle Playlist
-                    </button>
                 </div>
                 
                 <!-- DEEZER TAB -->
@@ -972,18 +983,9 @@
                     </p>
                 </div>
                 
-                <!-- CUSTOM TAB -->
+                <!-- CUSTOM TAB (hidden, kept for JSON loading compatibility) -->
                 <div id="custom-tab" style="display: none;">
-                    <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #aaa;">
-                        📝 Colle le contenu de ton fichier JSON ici :
-                    </p>
-                    <textarea id="custom-json" class="input" placeholder='{"playlist": [{"title": "...", "artist": "...", "preview": "...", "cover": "..."}]}' style="min-height: 200px; font-family: monospace; font-size: 0.85rem; resize: vertical;"></textarea>
-                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #00f5ff;">
-                        💡 Utilise le <a href="playlist-generator.html" target="_blank" style="color: #ffbe0b; font-weight: 600;">générateur JSON</a> pour créer ta playlist facilement !
-                    </p>
-                    <button class="btn large" style="background: #48bb78; color: white; margin-top: 1rem; width: 100%;" onclick="saveCurrentPlaylist()">
-                        💾 Sauvegarder cette playlist pour plus tard
-                    </button>
+                    <textarea id="custom-json" class="input" style="display:none;"></textarea>
                 </div>
                 
                 <button class="btn large" onclick="loadAndCreate()">🚀 Créer la partie</button>
@@ -2009,15 +2011,13 @@
             const customTab = document.getElementById('custom-tab');
             const deezerBtn = document.getElementById('tab-deezer');
             const savedBtn = document.getElementById('tab-saved');
-            const customBtn = document.getElementById('tab-custom');
             
             // Cacher tous les onglets
             deezerTab.style.display = 'none';
             savedTab.style.display = 'none';
-            customTab.style.display = 'none';
+            if (customTab) customTab.style.display = 'none';
             deezerBtn.style.background = 'rgba(255,255,255,0.1)';
             savedBtn.style.background = 'rgba(255,255,255,0.1)';
-            customBtn.style.background = 'rgba(255,255,255,0.1)';
             
             // Afficher l'onglet sélectionné
             if (tab === 'deezer') {
@@ -2027,57 +2027,21 @@
                 savedTab.style.display = 'block';
                 savedBtn.style.background = '#ffbe0b';
                 refreshSavedPlaylistsList();
-            } else if (tab === 'custom') {
-                customTab.style.display = 'block';
-                customBtn.style.background = '#ffbe0b';
             }
         }
 
+        // Plus utilisé directement (déplacé dans admin), gardé pour compatibilité
         function saveCurrentPlaylist() {
-            const jsonText = document.getElementById('custom-json').value.trim();
-            if (!jsonText) {
-                alert('⚠️ Colle d\'abord ton JSON dans le champ !');
-                return;
-            }
-            
-            try {
-                const data = JSON.parse(jsonText);
-                if (!data.playlist || !Array.isArray(data.playlist)) {
-                    alert('⚠️ JSON invalide ! Il doit contenir une clé "playlist" avec un tableau.');
-                    return;
-                }
-                
-                const name = prompt('📝 Donne un nom à cette playlist :\n(ex: "Disney Complet", "Années 80", "Hits 2023")');
-                if (!name || name.trim() === '') return;
-                
-                // Récupérer les playlists existantes
-                const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
-                
-                // Sauvegarder
-                saved[name.trim()] = {
-                    data: data,
-                    savedAt: new Date().toISOString(),
-                    trackCount: data.playlist.length
-                };
-                
-                localStorage.setItem('savedPlaylists', JSON.stringify(saved));
-                
-                alert(`✅ Playlist "${name.trim()}" sauvegardée avec ${data.playlist.length} tracks !`);
-                
-                // Basculer vers l'onglet "Mes Playlists"
-                switchPlaylistTab('saved');
-                
-            } catch (err) {
-                alert('⚠️ Erreur : JSON invalide !');
-            }
+            alert('⚠️ La création de playlists JSON est réservée aux administrateurs.\nRendez-vous dans "Gérer Playlists".');
         }
 
-        function refreshSavedPlaylistsList() {
+        async function refreshSavedPlaylistsList() {
             const select = document.getElementById('saved-playlist-select');
             const noPlaylistsMsg = document.getElementById('no-saved-playlists');
             const actions = document.getElementById('saved-playlist-actions');
             
-            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            const snap = await db.ref('jsonPlaylists').once('value');
+            const saved = snap.val() || {};
             const names = Object.keys(saved);
             
             // Vider le select
@@ -2097,7 +2061,7 @@
             }
         }
 
-        function loadSavedPlaylist() {
+        async function loadSavedPlaylist() {
             const select = document.getElementById('saved-playlist-select');
             const actions = document.getElementById('saved-playlist-actions');
             const name = select.value;
@@ -2109,8 +2073,8 @@
             
             actions.style.display = 'block';
             
-            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
-            const playlist = saved[name];
+            const snap = await db.ref(`jsonPlaylists/${name}`).once('value');
+            const playlist = snap.val();
             
             if (!playlist) {
                 alert('⚠️ Playlist introuvable !');
@@ -2121,7 +2085,7 @@
             document.getElementById('custom-json').value = JSON.stringify(playlist.data, null, 2);
         }
 
-        function deleteSavedPlaylist() {
+        async function deleteSavedPlaylist() {
             const select = document.getElementById('saved-playlist-select');
             const name = select.value;
             
@@ -2131,19 +2095,18 @@
                 return;
             }
             
-            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
-            delete saved[name];
-            localStorage.setItem('savedPlaylists', JSON.stringify(saved));
+            await db.ref(`jsonPlaylists/${name}`).remove();
             
             alert(`✅ Playlist "${name}" supprimée !`);
             refreshSavedPlaylistsList();
         }
 
-        function loadJsonPlaylistsManager() {
+        async function loadJsonPlaylistsManager() {
             const container = document.getElementById('json-playlists-list');
             const noMsg = document.getElementById('no-json-playlists');
             
-            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
+            const snap = await db.ref('jsonPlaylists').once('value');
+            const saved = snap.val() || {};
             const names = Object.keys(saved);
             
             container.innerHTML = '';
@@ -2168,17 +2131,51 @@
             });
         }
 
-        function deleteJsonPlaylistFromManager(name) {
+        async function deleteJsonPlaylistFromManager(name) {
             if (!confirm(`🗑️ Supprimer la playlist "${name}" ?\nCette action est irréversible.`)) {
                 return;
             }
             
-            const saved = JSON.parse(localStorage.getItem('savedPlaylists') || '{}');
-            delete saved[name];
-            localStorage.setItem('savedPlaylists', JSON.stringify(saved));
+            await db.ref(`jsonPlaylists/${name}`).remove();
             
             alert(`✅ Playlist "${name}" supprimée !`);
-            loadJsonPlaylistsManager(); // Recharger la liste
+            loadJsonPlaylistsManager();
+        }
+
+        async function adminSaveJsonPlaylist() {
+            if (!currentUser || !currentUser.isAdmin) return;
+
+            const jsonText = document.getElementById('admin-json-input').value.trim();
+            const name = document.getElementById('admin-json-name').value.trim();
+
+            if (!jsonText) { alert('⚠️ Colle d\'abord ton JSON !'); return; }
+            if (!name) { alert('⚠️ Donne un nom à la playlist !'); return; }
+
+            try {
+                const data = JSON.parse(jsonText);
+                if (!data.playlist || !Array.isArray(data.playlist)) {
+                    alert('⚠️ JSON invalide ! Il doit contenir une clé "playlist" avec un tableau.');
+                    return;
+                }
+
+                const safeKey = name.replace(/[.#$[\]/]/g, '_');
+
+                await db.ref(`jsonPlaylists/${safeKey}`).set({
+                    data: data,
+                    savedAt: new Date().toISOString(),
+                    trackCount: data.playlist.length,
+                    createdBy: currentUser.username
+                });
+
+                document.getElementById('admin-json-input').value = '';
+                document.getElementById('admin-json-name').value = '';
+
+                alert(`✅ Playlist "${name}" sauvegardée avec ${data.playlist.length} tracks !`);
+                loadJsonPlaylistsManager();
+
+            } catch (err) {
+                alert('⚠️ Erreur : JSON invalide !');
+            }
         }
 
         async function loadAndCreate() {
