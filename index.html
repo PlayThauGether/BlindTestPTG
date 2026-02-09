@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵</title>
+    <title>PTG - Blind Test 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -788,7 +788,7 @@
         </div>
 
         <!-- LOGIN -->
-        <div id="login-screen" class="screen">
+        <div id="login-screen" class="screen hidden">
             <div class="logo">
                 <img src="logo.png" alt="logo" style="height: 200px; width: auto; display: block; margin: 0 auto 0.5rem;">
                 <h1 class="title" style="margin: 0;">BLIND TEST</h1>
@@ -799,6 +799,7 @@
                 <input id="login-password" class="input" type="password" placeholder="Mot de passe" autocomplete="current-password">
                 <button class="btn large" onclick="doLogin()" style="width: 100%; margin-top: 1rem;">🔑 Connexion</button>
                 <p id="login-error" style="color: #ff006e; text-align: center; margin-top: 1rem; display: none;"></p>
+                <button class="btn" onclick="goToMenu()" style="width: 100%; margin-top: 0.5rem; background: rgba(255,255,255,0.1);">← Retour</button>
             </div>
         </div>
 
@@ -844,18 +845,19 @@
         </div>
 
         <!-- MENU -->
-        <div id="menu-screen" class="screen hidden">
+        <div id="menu-screen" class="screen">
             <div class="logo">
                 <img src="logo.png" alt="logo" style="height: 200px; width: auto; display: block; margin: 0 auto 0.5rem;">
                 <h1 class="title" style="margin: 0;">BLIND TEST</h1>
                 <p class="subtitle">BY PLAY THAU'GETHER</p>
             </div>
             <div class="menu-buttons">
-                <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
+                <button class="btn large" onclick="requireLoginThen(goToCreate)">🎮 Créer une partie</button>
                 <button class="btn large secondary" onclick="goToJoin()">👥 Rejoindre une partie</button>
-                <button class="btn" onclick="goToPlaylists()">📋 Gérer Playlists</button>
+                <button id="playlists-menu-btn" class="btn" onclick="goToPlaylists()" style="display: none;">📋 Gérer Playlists</button>
                 <button id="admin-menu-btn" class="btn" onclick="goToAdmin()" style="display: none;">👥 Gérer les comptes</button>
-                <button class="btn danger" onclick="doLogout()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
+                <button id="logout-btn" class="btn danger" onclick="doLogout()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
+                <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion Organisateur</button>
             </div>
         </div>
 
@@ -1319,44 +1321,65 @@
         }
 
         async function initAuth() {
-            // Vérifier s'il y a des utilisateurs dans Firebase
-            const usersSnap = await db.ref('appUsers').once('value');
-            const users = usersSnap.val();
-
-            if (!users || Object.keys(users).length === 0) {
-                // Aucun utilisateur → écran de setup initial
-                showScreen('setup-screen');
-                return;
-            }
-
             // Vérifier session locale
             const saved = localStorage.getItem('quizPartyAuth');
             if (saved) {
                 try {
                     const session = JSON.parse(saved);
-                    // Vérifier que l'utilisateur existe toujours
                     const userSnap = await db.ref(`appUsers/${session.username}`).once('value');
                     if (userSnap.val()) {
                         currentUser = { username: session.username, isAdmin: userSnap.val().isAdmin || false };
-                        showMenuLoggedIn();
-                        return;
                     }
-                } catch(e) {}
-                localStorage.removeItem('quizPartyAuth');
+                } catch(e) {
+                    localStorage.removeItem('quizPartyAuth');
+                }
             }
+            // Toujours afficher le menu (connecté ou pas)
+            updateMenuButtons();
+        }
 
-            // Pas de session → écran de login
-            showScreen('login-screen');
+        function updateMenuButtons() {
+            if (currentUser) {
+                // Connecté → montrer options organisateur
+                document.getElementById('logged-user').textContent = currentUser.username;
+                document.getElementById('logout-btn').style.display = '';
+                document.getElementById('login-menu-btn').style.display = 'none';
+                document.getElementById('playlists-menu-btn').style.display = currentUser.isAdmin ? '' : 'none';
+                document.getElementById('admin-menu-btn').style.display = currentUser.isAdmin ? '' : 'none';
+            } else {
+                // Pas connecté → montrer bouton connexion
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('login-menu-btn').style.display = '';
+                document.getElementById('playlists-menu-btn').style.display = 'none';
+                document.getElementById('admin-menu-btn').style.display = 'none';
+            }
         }
 
         function showMenuLoggedIn() {
-            document.getElementById('logged-user').textContent = currentUser.username;
-            if (currentUser.isAdmin) {
-                document.getElementById('admin-menu-btn').style.display = '';
-            } else {
-                document.getElementById('admin-menu-btn').style.display = 'none';
-            }
+            updateMenuButtons();
             showScreen('menu-screen');
+        }
+
+        function showLoginScreen() {
+            showScreen('login-screen');
+        }
+
+        // Vérifie si connecté, sinon redirige vers login puis exécute l'action
+        let pendingAction = null;
+        function requireLoginThen(action) {
+            if (currentUser) {
+                action();
+                return;
+            }
+            // Pas connecté → vérifier si des comptes existent
+            pendingAction = action;
+            db.ref('appUsers').once('value', snap => {
+                if (!snap.val() || Object.keys(snap.val()).length === 0) {
+                    showScreen('setup-screen');
+                } else {
+                    showScreen('login-screen');
+                }
+            });
         }
 
         async function doSetup() {
@@ -1383,6 +1406,7 @@
 
             alert(`✅ Compte admin "${username}" créé ! Bienvenue !`);
             showMenuLoggedIn();
+            if (pendingAction) { const action = pendingAction; pendingAction = null; action(); }
         }
 
         async function doLogin() {
@@ -1413,15 +1437,18 @@
             localStorage.setItem('quizPartyAuth', JSON.stringify({ username: safeKey }));
 
             showMenuLoggedIn();
+            if (pendingAction) { const action = pendingAction; pendingAction = null; action(); }
         }
 
         function doLogout() {
             currentUser = null;
+            pendingAction = null;
             localStorage.removeItem('quizPartyAuth');
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
             document.getElementById('login-error').style.display = 'none';
-            showScreen('login-screen');
+            updateMenuButtons();
+            showScreen('menu-screen');
         }
 
         // --- Admin : gestion des comptes ---
@@ -1501,7 +1528,7 @@
         // ===========================================
         // ÉTAT GLOBAL
         // ===========================================
-        let currentScreen = 'login';
+        let currentScreen = 'menu';
         let gameState = {
             room: null,
             playerIndex: 0,
@@ -1848,7 +1875,8 @@
             };
 
             if (!currentUser) {
-                showScreen('login-screen');
+                updateMenuButtons();
+                showScreen('menu-screen');
                 return;
             }
             showMenuLoggedIn();
@@ -1869,17 +1897,13 @@
             showScreen('join-screen');
         }
 
-        const PLAYLIST_PASSWORD = 'changeme'; // ← Change ce mot de passe
-
         function goToPlaylists() {
-            const pwd = prompt('🔐 Mot de passe pour gérer les playlists :');
-            if (pwd === null) return; // annulé
-            if (pwd !== PLAYLIST_PASSWORD) {
-                alert('❌ Mot de passe incorrect !');
+            if (!currentUser || !currentUser.isAdmin) {
+                alert('⚠️ Réservé aux administrateurs');
                 return;
             }
             loadPlaylists();
-            loadJsonPlaylistsManager(); // Charger aussi les playlists JSON
+            loadJsonPlaylistsManager();
             showScreen('playlists-screen');
         }
 
