@@ -787,8 +787,64 @@
             <div class="loading-text" id="loading-text">Chargement...</div>
         </div>
 
+        <!-- LOGIN -->
+        <div id="login-screen" class="screen">
+            <div class="logo">
+                <img src="logo.png" alt="logo" style="height: 200px; width: auto; display: block; margin: 0 auto 0.5rem;">
+                <h1 class="title" style="margin: 0;">BLIND TEST</h1>
+                <p class="subtitle">BY PLAY THAU'GETHER</p>
+            </div>
+            <div style="width: 100%; max-width: 400px;">
+                <input id="login-username" class="input" placeholder="Nom d'utilisateur" autocomplete="username">
+                <input id="login-password" class="input" type="password" placeholder="Mot de passe" autocomplete="current-password">
+                <button class="btn large" onclick="doLogin()" style="width: 100%; margin-top: 1rem;">🔑 Connexion</button>
+                <p id="login-error" style="color: #ff006e; text-align: center; margin-top: 1rem; display: none;"></p>
+            </div>
+        </div>
+
+        <!-- ADMIN : Gestion des utilisateurs -->
+        <div id="admin-screen" class="screen hidden">
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Gestion des comptes</h2>
+            
+            <div class="playlists-box" style="margin-bottom: 2rem;">
+                <h3 style="color: #00f5ff; margin-bottom: 1rem;">➕ Ajouter un utilisateur</h3>
+                <input id="admin-new-user" class="input" placeholder="Nom d'utilisateur" style="max-width: 100%;">
+                <input id="admin-new-pass" class="input" type="password" placeholder="Mot de passe" style="max-width: 100%;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="admin-new-isadmin">
+                    <span>Administrateur</span>
+                </label>
+                <button class="btn" onclick="adminAddUser()">✅ Créer le compte</button>
+            </div>
+
+            <div class="playlists-box">
+                <h3 style="color: #00f5ff; margin-bottom: 1rem;">📋 Utilisateurs existants</h3>
+                <div id="admin-users-list"></div>
+            </div>
+
+            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
+        </div>
+
+        <!-- SETUP INITIAL (premier admin) -->
+        <div id="setup-screen" class="screen hidden">
+            <div class="logo">
+                <img src="logo.png" alt="logo" style="height: 150px; width: auto; display: block; margin: 0 auto 0.5rem;">
+                <h1 class="title" style="margin: 0; font-size: 2.5rem;">BLIND TEST</h1>
+                <p class="subtitle">PREMIÈRE INSTALLATION</p>
+            </div>
+            <div style="width: 100%; max-width: 400px;">
+                <p style="text-align: center; color: #00f5ff; margin-bottom: 1.5rem; font-size: 1.1rem;">
+                    Crée ton compte administrateur pour commencer :
+                </p>
+                <input id="setup-username" class="input" placeholder="Ton nom d'utilisateur">
+                <input id="setup-password" class="input" type="password" placeholder="Ton mot de passe">
+                <input id="setup-password2" class="input" type="password" placeholder="Confirme le mot de passe">
+                <button class="btn large" onclick="doSetup()" style="width: 100%; margin-top: 1rem;">🚀 Créer le compte admin</button>
+            </div>
+        </div>
+
         <!-- MENU -->
-        <div id="menu-screen" class="screen">
+        <div id="menu-screen" class="screen hidden">
             <div class="logo">
                 <img src="logo.png" alt="logo" style="height: 200px; width: auto; display: block; margin: 0 auto 0.5rem;">
                 <h1 class="title" style="margin: 0;">BLIND TEST</h1>
@@ -798,6 +854,8 @@
                 <button class="btn large" onclick="goToCreate()">🎮 Créer une partie</button>
                 <button class="btn large secondary" onclick="goToJoin()">👥 Rejoindre une partie</button>
                 <button class="btn" onclick="goToPlaylists()">📋 Gérer Playlists</button>
+                <button id="admin-menu-btn" class="btn" onclick="goToAdmin()" style="display: none;">👥 Gérer les comptes</button>
+                <button class="btn danger" onclick="doLogout()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
             </div>
         </div>
 
@@ -1248,9 +1306,202 @@
         const db = firebase.database();
 
         // ===========================================
+        // AUTHENTIFICATION
+        // ===========================================
+        let currentUser = null; // { username, isAdmin }
+
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + '_quizparty_salt');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function initAuth() {
+            // Vérifier s'il y a des utilisateurs dans Firebase
+            const usersSnap = await db.ref('appUsers').once('value');
+            const users = usersSnap.val();
+
+            if (!users || Object.keys(users).length === 0) {
+                // Aucun utilisateur → écran de setup initial
+                showScreen('setup-screen');
+                return;
+            }
+
+            // Vérifier session locale
+            const saved = localStorage.getItem('quizPartyAuth');
+            if (saved) {
+                try {
+                    const session = JSON.parse(saved);
+                    // Vérifier que l'utilisateur existe toujours
+                    const userSnap = await db.ref(`appUsers/${session.username}`).once('value');
+                    if (userSnap.val()) {
+                        currentUser = { username: session.username, isAdmin: userSnap.val().isAdmin || false };
+                        showMenuLoggedIn();
+                        return;
+                    }
+                } catch(e) {}
+                localStorage.removeItem('quizPartyAuth');
+            }
+
+            // Pas de session → écran de login
+            showScreen('login-screen');
+        }
+
+        function showMenuLoggedIn() {
+            document.getElementById('logged-user').textContent = currentUser.username;
+            if (currentUser.isAdmin) {
+                document.getElementById('admin-menu-btn').style.display = '';
+            } else {
+                document.getElementById('admin-menu-btn').style.display = 'none';
+            }
+            showScreen('menu-screen');
+        }
+
+        async function doSetup() {
+            const username = document.getElementById('setup-username').value.trim();
+            const pass = document.getElementById('setup-password').value;
+            const pass2 = document.getElementById('setup-password2').value;
+
+            if (!username || username.length < 2) { alert('⚠️ Nom d\'utilisateur trop court (2 caractères min)'); return; }
+            if (!pass || pass.length < 4) { alert('⚠️ Mot de passe trop court (4 caractères min)'); return; }
+            if (pass !== pass2) { alert('⚠️ Les mots de passe ne correspondent pas !'); return; }
+
+            const hash = await hashPassword(pass);
+            const safeKey = username.replace(/[.#$[\]/]/g, '_');
+
+            await db.ref(`appUsers/${safeKey}`).set({
+                username: username,
+                passwordHash: hash,
+                isAdmin: true,
+                createdAt: Date.now()
+            });
+
+            currentUser = { username: safeKey, isAdmin: true };
+            localStorage.setItem('quizPartyAuth', JSON.stringify({ username: safeKey }));
+
+            alert(`✅ Compte admin "${username}" créé ! Bienvenue !`);
+            showMenuLoggedIn();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+
+            if (!username || !pass) {
+                errorEl.textContent = '⚠️ Remplis tous les champs';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const safeKey = username.replace(/[.#$[\]/]/g, '_');
+            const hash = await hashPassword(pass);
+
+            const userSnap = await db.ref(`appUsers/${safeKey}`).once('value');
+            const userData = userSnap.val();
+
+            if (!userData || userData.passwordHash !== hash) {
+                errorEl.textContent = '❌ Nom d\'utilisateur ou mot de passe incorrect';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            errorEl.style.display = 'none';
+            currentUser = { username: safeKey, isAdmin: userData.isAdmin || false };
+            localStorage.setItem('quizPartyAuth', JSON.stringify({ username: safeKey }));
+
+            showMenuLoggedIn();
+        }
+
+        function doLogout() {
+            currentUser = null;
+            localStorage.removeItem('quizPartyAuth');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+            showScreen('login-screen');
+        }
+
+        // --- Admin : gestion des comptes ---
+        async function goToAdmin() {
+            if (!currentUser || !currentUser.isAdmin) return;
+            showScreen('admin-screen');
+            await refreshAdminUsersList();
+        }
+
+        async function refreshAdminUsersList() {
+            const snap = await db.ref('appUsers').once('value');
+            const users = snap.val() || {};
+            const list = document.getElementById('admin-users-list');
+            list.innerHTML = '';
+
+            Object.keys(users).forEach(key => {
+                const u = users[key];
+                const div = document.createElement('div');
+                div.style.cssText = 'background: rgba(0,0,0,0.3); padding: 0.8rem 1rem; border-radius: 10px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
+                
+                const isMe = key === currentUser.username;
+                div.innerHTML = `
+                    <div>
+                        <span style="font-weight: 800; color: ${u.isAdmin ? '#ffbe0b' : 'white'};">${u.username || key}</span>
+                        ${u.isAdmin ? '<span style="color: #ffbe0b; font-size: 0.8rem; margin-left: 0.5rem;">👑 Admin</span>' : ''}
+                        ${isMe ? '<span style="color: #00f5ff; font-size: 0.8rem; margin-left: 0.5rem;">(toi)</span>' : ''}
+                    </div>
+                    ${!isMe ? `<button class="btn danger" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;" onclick="adminDeleteUser('${key}')">🗑️</button>` : ''}
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function adminAddUser() {
+            if (!currentUser || !currentUser.isAdmin) return;
+
+            const username = document.getElementById('admin-new-user').value.trim();
+            const pass = document.getElementById('admin-new-pass').value;
+            const isAdmin = document.getElementById('admin-new-isadmin').checked;
+
+            if (!username || username.length < 2) { alert('⚠️ Nom trop court (2 caractères min)'); return; }
+            if (!pass || pass.length < 4) { alert('⚠️ Mot de passe trop court (4 caractères min)'); return; }
+
+            const safeKey = username.replace(/[.#$[\]/]/g, '_');
+
+            // Vérifier si le nom existe déjà
+            const existing = await db.ref(`appUsers/${safeKey}`).once('value');
+            if (existing.val()) { alert('❌ Ce nom d\'utilisateur existe déjà !'); return; }
+
+            const hash = await hashPassword(pass);
+            await db.ref(`appUsers/${safeKey}`).set({
+                username: username,
+                passwordHash: hash,
+                isAdmin: isAdmin,
+                createdAt: Date.now()
+            });
+
+            document.getElementById('admin-new-user').value = '';
+            document.getElementById('admin-new-pass').value = '';
+            document.getElementById('admin-new-isadmin').checked = false;
+
+            alert(`✅ Compte "${username}" créé !`);
+            await refreshAdminUsersList();
+        }
+
+        async function adminDeleteUser(key) {
+            if (!currentUser || !currentUser.isAdmin) return;
+            if (key === currentUser.username) { alert('❌ Tu ne peux pas supprimer ton propre compte !'); return; }
+            
+            if (!confirm(`Supprimer le compte "${key}" ?`)) return;
+
+            await db.ref(`appUsers/${key}`).remove();
+            alert(`✅ Compte "${key}" supprimé`);
+            await refreshAdminUsersList();
+        }
+
+        // ===========================================
         // ÉTAT GLOBAL
         // ===========================================
-        let currentScreen = 'menu';
+        let currentScreen = 'login';
         let gameState = {
             room: null,
             playerIndex: 0,
@@ -1529,7 +1780,8 @@
             currentScreen = screenId.replace('-screen', '');
             
             const emergency = document.getElementById('emergency-btn');
-            if (screenId === 'menu-screen' || screenId === 'leaderboard-screen') {
+            const hideEmergency = ['menu-screen', 'leaderboard-screen', 'login-screen', 'setup-screen', 'admin-screen'];
+            if (hideEmergency.includes(screenId)) {
                 emergency.classList.add('hidden');
             } else {
                 emergency.classList.remove('hidden');
@@ -1594,7 +1846,12 @@
                 hostDisplayOnly: false,
                 distanceMode: false
             };
-            showScreen('menu-screen');
+
+            if (!currentUser) {
+                showScreen('login-screen');
+                return;
+            }
+            showMenuLoggedIn();
         }
 
         function goToCreate() {
@@ -4081,7 +4338,17 @@
         // INIT
         // ===========================================
         console.log('✅ Quiz Party V2 chargé !');
-        tryReconnect(); // Tentative de reconnexion si rafraîchissement
+        
+        // Lancer l'auth d'abord, puis tryReconnect si connecté
+        initAuth().then(() => {
+            if (currentUser) {
+                tryReconnect();
+            }
+        });
+
+        // Enter key sur login/setup
+        document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+        document.getElementById('setup-password2').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
     </script>
 </body>
 </html>
