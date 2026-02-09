@@ -1478,7 +1478,10 @@
                         ${u.isAdmin ? '<span style="color: #ffbe0b; font-size: 0.8rem; margin-left: 0.5rem;">👑 Admin</span>' : ''}
                         ${isMe ? '<span style="color: #00f5ff; font-size: 0.8rem; margin-left: 0.5rem;">(toi)</span>' : ''}
                     </div>
-                    ${!isMe ? `<button class="btn danger" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;" onclick="adminDeleteUser('${key}')">🗑️</button>` : ''}
+                    <div style="display: flex; gap: 0.4rem;">
+                        <button class="btn" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; background: rgba(0,245,255,0.2);" onclick="adminResetPassword('${key}')">🔑</button>
+                        ${!isMe ? `<button class="btn danger" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;" onclick="adminDeleteUser('${key}')">🗑️</button>` : ''}
+                    </div>
                 `;
                 list.appendChild(div);
             });
@@ -1525,6 +1528,19 @@
             await db.ref(`appUsers/${key}`).remove();
             alert(`✅ Compte "${key}" supprimé`);
             await refreshAdminUsersList();
+        }
+
+        async function adminResetPassword(key) {
+            if (!currentUser || !currentUser.isAdmin) return;
+
+            const newPass = prompt(`🔑 Nouveau mot de passe pour "${key}" :`);
+            if (!newPass) return;
+            if (newPass.length < 4) { alert('⚠️ Mot de passe trop court (4 caractères min)'); return; }
+
+            const hash = await hashPassword(newPass);
+            await db.ref(`appUsers/${key}/passwordHash`).set(hash);
+
+            alert(`✅ Mot de passe de "${key}" réinitialisé !`);
         }
 
         // ===========================================
