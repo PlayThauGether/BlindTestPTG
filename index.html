@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG - Blind Test 🎵</title>
+    <title>Quiz Party 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -919,7 +919,7 @@
                     <option value="title-only">Titres uniquement</option>
                     <option value="soiree">Soirée (Mix QCM + Écriture)</option>
                     <option value="mix">🎧 Mix (Normal → Reverse → Extrait)</option>
-                    <option value="qcm-film">🎬 QCM Film (Trouve le film)</option>
+                    <option value="qcm-film">🎬 Film / Série (QCM + Écriture)</option>
                 </select>
             </div>
 
@@ -1060,6 +1060,26 @@
                 </h1>
                 <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem;">
                     <p style="font-size: 1.8rem; color: white; font-weight: 800;">4 CHOIX DE RÉPONSE</p>
+                </div>
+                <div class="spinner" style="margin: 3rem auto;"></div>
+            </div>
+        </div>
+
+        <!-- FILM WRITING INTRO -->
+        <div id="film-writing-intro-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
+                    🎬 MODE FILM / SÉRIE
+                </h1>
+                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
+                    <p style="font-size: 1.8rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
+                        ✍️ TAPE LE NOM DU FILM OU DE LA SÉRIE
+                    </p>
+                    <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
+                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
+                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
+                    </div>
                 </div>
                 <div class="spinner" style="margin: 3rem auto;"></div>
             </div>
@@ -1207,6 +1227,11 @@
                         <h3 id="question-text" class="q-text"></h3>
                         <div id="options-container" class="options hidden"></div>
                         <div id="writing-container" class="hidden">
+                            <!-- Indice Pendu (mode Film uniquement) -->
+                            <div id="hangman-hint" style="display: none; margin-bottom: 1.2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 12px; border: 2px solid rgba(0,245,255,0.3);">
+                                <div id="hangman-letters" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; font-family: 'Courier New', monospace; font-size: 1.6rem; font-weight: 800; letter-spacing: 2px;"></div>
+                            </div>
+                            
                             <!-- Badges de progression (affichés au-dessus) -->
                             <div id="writing-badges" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
                                 <div id="badge-title" class="writing-badge" style="display: none;">
@@ -1223,7 +1248,9 @@
                             
                             <!-- Un seul input -->
                             <input id="input-answer" class="input" placeholder="Écris ta réponse..." onkeypress="handleWritingEnter(event)">
-                            <button class="btn" onclick="submitWriting()">Valider</button>
+                            <div style="text-align: center; margin-top: 0.5rem;">
+                                <button class="btn" onmousedown="event.preventDefault()" onclick="submitWriting(); var inp=document.getElementById('input-answer'); if(inp && !inp.disabled) setTimeout(function(){inp.focus();},50);" style="min-width: 200px;">Valider</button>
+                            </div>
                         </div>
                         <div id="result-container" class="result hidden"></div>
                     </div>
@@ -2488,10 +2515,15 @@
 
 
             } else if (mode === 'qcm-film') {
-                // MODE QCM FILM : comme QCM normal mais qType = 'artist' uniquement
-                // Toutes les questions : 4 choix
-                const totalQcmFilm = lvl1Count + lvl2Count;
-                for (let i = 0; i < totalQcmFilm && trackIndex < shuffled.length; i++) {
+                // MODE FILM : 40% QCM (trouve le film) + 60% Écriture (tape le film)
+                const totalFilm = lvl1Count + lvl2Count;
+                const qcmFilmCount = Math.floor(totalFilm * 0.4);
+                const writingFilmCount = totalFilm - qcmFilmCount;
+
+                console.log(`📊 Film: QCM(${qcmFilmCount}) + Écriture(${writingFilmCount})`);
+
+                // === QCM Film (4 choix) ===
+                for (let i = 0; i < qcmFilmCount && trackIndex < shuffled.length; i++) {
                     questions.push({
                         ...shuffled[trackIndex++],
                         type: 'qcm',
@@ -2499,6 +2531,17 @@
                         mode: 'qcm-film',
                         qType: 'artist',
                         optionsCount: 4
+                    });
+                }
+
+                // === Écriture Film (tape le nom du film) ===
+                for (let i = 0; i < writingFilmCount && trackIndex < shuffled.length; i++) {
+                    questions.push({
+                        ...shuffled[trackIndex++],
+                        type: 'writing',
+                        level: 1,
+                        mode: 'qcm-film',
+                        askFor: 'artist'
                     });
                 }
 
@@ -2816,11 +2859,16 @@
             const q = gameState.room.questions[gameState.room.currentQ];
             const player = gameState.room.players[gameState.playerIndex];
 
+            // Arrêter le pendu de la question précédente
+            stopHangman();
+
             // DÉTECTION CHANGEMENT DE MODE + NIVEAU (transitions pour TOUS les joueurs)
             const prevMode = gameState.lastMode || '';
             const prevLevel = gameState.lastLevel || 0;
+            const prevType = gameState.lastType || '';
             const currentMode = q.mode || q.type;
             const currentLevel = q.level || 2;
+            const currentType = q.type;
             
             let transitionScreen = null;
 
@@ -2828,7 +2876,9 @@
             if (!prevMode) {
                 if (currentMode === 'mix' && currentLevel === 1) {
                     transitionScreen = 'mix-lvl1-intro-screen';
-                } else if (currentMode === 'qcm' || currentMode === 'qcm-film') {
+                } else if (currentMode === 'qcm-film') {
+                    transitionScreen = 'qcm-intro-screen';
+                } else if (currentMode === 'qcm') {
                     transitionScreen = 'qcm-intro-screen';
                 } else if (currentMode === 'writing' && currentLevel === 1) {
                     transitionScreen = 'writing-lvl1-intro-screen';
@@ -2843,6 +2893,15 @@
                     transitionScreen = 'qcm-intro-screen';
                 } else if (currentMode === 'mix' && currentLevel === 1) {
                     transitionScreen = 'mix-lvl1-intro-screen';
+                }
+            }
+
+            // CAS 2b : Mode qcm-film — changement de type QCM → Écriture
+            if (!transitionScreen && currentMode === 'qcm-film' && currentType !== prevType && prevType) {
+                if (currentType === 'writing') {
+                    transitionScreen = 'film-writing-intro-screen';
+                } else if (currentType === 'qcm') {
+                    transitionScreen = 'qcm-intro-screen';
                 }
             }
             
@@ -2860,6 +2919,7 @@
             if (transitionScreen) {
                 gameState.lastMode = currentMode;
                 gameState.lastLevel = currentLevel;
+                gameState.lastType = currentType;
                 gameState.usedQCMValues = []; // Réinitialiser les options utilisées à chaque nouveau niveau
                 gameState.transitionInProgress = true; // Bloquer le listener pendant la transition
 
@@ -2885,8 +2945,7 @@
             
             gameState.lastMode = currentMode;
             gameState.lastLevel = currentLevel;
-
-            // Timer : 30 secondes pour écriture, 20 secondes pour QCM
+            gameState.lastType = currentType;
             const timerDuration = q.type === 'qcm' ? 20 : 30;
             gameState.currentTime = timerDuration;
             gameState.timerDuration = timerDuration; // Stocker pour le calcul du blur
@@ -2922,7 +2981,7 @@
             } else {
                 // Rendre l'image complètement invisible + blur max
                 coverImg.style.visibility = 'hidden';
-                coverImg.style.filter = 'blur(25px)';
+                coverImg.style.filter = 'blur(30px)';
                 coverImg.style.opacity = '0';
                 
                 // Mettre un fond noir temporaire pour cacher le flash
@@ -2933,7 +2992,7 @@
                     setTimeout(() => {
                         coverImg.style.visibility = 'visible';
                         coverImg.style.opacity = '1';
-                        coverImg.style.filter = 'blur(25px)';
+                        coverImg.style.filter = 'blur(30px)';
                         coverBox.style.background = '';
                     }, 50);
                 };
@@ -3212,6 +3271,139 @@
             gameState.correctAnswer = correct;
         }
 
+        // ===========================================
+        // SYSTÈME PENDU (indice progressif mode Film)
+        // ===========================================
+        let hangmanState = {
+            interval: null,
+            answer: '',
+            revealed: [],      // indices des lettres révélées
+            letterPositions: [], // indices des lettres (pas espaces/ponctuation)
+            revealOrder: [],    // ordre aléatoire de révélation
+            revealIndex: 0,     // combien ont été révélées
+            totalToReveal: 0    // 60% du total
+        };
+
+        function initHangman(answer) {
+            stopHangman();
+            
+            const container = document.getElementById('hangman-hint');
+            const lettersDiv = document.getElementById('hangman-letters');
+            container.style.display = 'block';
+            
+            hangmanState.answer = answer;
+            hangmanState.revealed = [];
+            hangmanState.letterPositions = [];
+            hangmanState.revealIndex = 0;
+            
+            // Identifier les positions des lettres (pas espaces ni ponctuation)
+            for (let i = 0; i < answer.length; i++) {
+                if (/[a-zA-ZÀ-ÿ0-9]/.test(answer[i])) {
+                    hangmanState.letterPositions.push(i);
+                }
+            }
+            
+            // Mélanger aléatoirement l'ordre de révélation
+            hangmanState.revealOrder = [...hangmanState.letterPositions];
+            for (let i = hangmanState.revealOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [hangmanState.revealOrder[i], hangmanState.revealOrder[j]] = [hangmanState.revealOrder[j], hangmanState.revealOrder[i]];
+            }
+            
+            // 60% des lettres à révéler sur 30 secondes
+            hangmanState.totalToReveal = Math.floor(hangmanState.letterPositions.length * 0.6);
+            
+            // Afficher l'état initial (tout masqué)
+            renderHangman();
+            
+            // Calculer l'intervalle : révéler une lettre toutes les X ms
+            // On commence à révéler après 3s pour laisser écouter, et on étale sur 25s
+            if (hangmanState.totalToReveal > 0) {
+                const revealDuration = 25000; // 25 secondes (de t=3s à t=28s)
+                const intervalMs = revealDuration / hangmanState.totalToReveal;
+                
+                setTimeout(() => {
+                    hangmanState.interval = setInterval(() => {
+                        if (hangmanState.revealIndex >= hangmanState.totalToReveal) {
+                            clearInterval(hangmanState.interval);
+                            hangmanState.interval = null;
+                            return;
+                        }
+                        
+                        // Révéler la prochaine lettre
+                        const posToReveal = hangmanState.revealOrder[hangmanState.revealIndex];
+                        hangmanState.revealed.push(posToReveal);
+                        hangmanState.revealIndex++;
+                        
+                        renderHangman();
+                    }, intervalMs);
+                }, 3000); // Attendre 3s avant de commencer
+            }
+        }
+
+        function renderHangman() {
+            const lettersDiv = document.getElementById('hangman-letters');
+            lettersDiv.innerHTML = '';
+            
+            // Grouper par mots (séparer aux espaces)
+            const words = [];
+            let currentWord = [];
+            
+            for (let i = 0; i < hangmanState.answer.length; i++) {
+                const char = hangmanState.answer[i];
+                if (char === ' ') {
+                    if (currentWord.length > 0) {
+                        words.push(currentWord);
+                        currentWord = [];
+                    }
+                    words.push([{ type: 'space' }]);
+                } else {
+                    const isLetter = /[a-zA-ZÀ-ÿ0-9]/.test(char);
+                    const isRevealed = hangmanState.revealed.includes(i);
+                    currentWord.push({
+                        type: isLetter ? 'letter' : 'punct',
+                        char: char,
+                        revealed: isRevealed || !isLetter
+                    });
+                }
+            }
+            if (currentWord.length > 0) words.push(currentWord);
+            
+            words.forEach(word => {
+                if (word.length === 1 && word[0].type === 'space') {
+                    const spacer = document.createElement('div');
+                    spacer.style.cssText = 'width: 15px;';
+                    lettersDiv.appendChild(spacer);
+                    return;
+                }
+                
+                const wordDiv = document.createElement('div');
+                wordDiv.style.cssText = 'display: flex; gap: 3px;';
+                
+                word.forEach(letter => {
+                    const span = document.createElement('span');
+                    if (letter.revealed) {
+                        span.textContent = letter.char.toUpperCase();
+                        span.style.cssText = 'display: inline-block; width: 24px; height: 32px; line-height: 32px; text-align: center; color: #00f5ff; text-shadow: 0 0 8px rgba(0,245,255,0.5);';
+                    } else {
+                        span.textContent = '_';
+                        span.style.cssText = 'display: inline-block; width: 24px; height: 32px; line-height: 32px; text-align: center; color: rgba(255,255,255,0.4);';
+                    }
+                    wordDiv.appendChild(span);
+                });
+                
+                lettersDiv.appendChild(wordDiv);
+            });
+        }
+
+        function stopHangman() {
+            if (hangmanState.interval) {
+                clearInterval(hangmanState.interval);
+                hangmanState.interval = null;
+            }
+            document.getElementById('hangman-hint').style.display = 'none';
+        }
+
         // Générer variantes d'orthographe pour Lvl 3
         function loadWriting(q) {
             const level = q.level || 2;
@@ -3249,11 +3441,25 @@
             gameState.currentQuestionPoints = 0;
             
             if (askFor === 'artist') {
-                // LVL 1: Artiste seulement
-                document.getElementById('question-text').textContent = "Écris l'artiste (Facile)";
-                badgeTitle.style.display = 'none';
-                badgeArtist.style.display = 'inline-flex';
-                answerInput.placeholder = "Écris l'artiste...";
+                if (q.mode === 'qcm-film') {
+                    // Mode Film : "artist" = nom du film
+                    document.getElementById('question-text').textContent = "🎬 Écris le nom du film ou de la série";
+                    badgeTitle.style.display = 'none';
+                    badgeArtist.style.display = 'inline-flex';
+                    badgeArtist.querySelector('.badge-icon').textContent = '🎬';
+                    badgeArtist.querySelector('.badge-label').textContent = 'FILM / SÉRIE';
+                    answerInput.placeholder = "Écris le nom du film ou de la série...";
+                    // Initialiser l'indice pendu
+                    initHangman(q.artist);
+                } else {
+                    // LVL 1: Artiste seulement
+                    document.getElementById('question-text').textContent = "Écris l'artiste (Facile)";
+                    badgeTitle.style.display = 'none';
+                    badgeArtist.style.display = 'inline-flex';
+                    badgeArtist.querySelector('.badge-icon').textContent = '🎤';
+                    badgeArtist.querySelector('.badge-label').textContent = 'ARTISTE';
+                    answerInput.placeholder = "Écris l'artiste...";
+                }
             } else if (askFor === 'both') {
                 // LVL 2: Titre + Artiste
                 document.getElementById('question-text').textContent = "Écris le titre et l'artiste";
@@ -3291,9 +3497,10 @@
                 document.getElementById('timer').textContent = gameState.currentTime;
 
                 if (!gameState.answered) {
-                    const maxTime = gameState.timerDuration || 20;
-                    const blur = (gameState.currentTime / maxTime) * 25;
-                    document.getElementById('cover-img').style.filter = `blur(${blur}px)`;
+                    const secsLeft = gameState.currentTime;
+                    // Full blur jusqu'aux 2 dernières secondes, puis déblur rapide
+                    const blurValue = secsLeft > 2 ? 30 : (secsLeft / 2) * 30;
+                    document.getElementById('cover-img').style.filter = `blur(${blurValue}px)`;
                 }
 
                 if (gameState.currentTime <= 0) {
@@ -3562,6 +3769,14 @@
             setTimeout(() => {
                 feedbackEl.style.display = 'none';
             }, delay);
+
+            // Refocus l'input après erreur/warning pour garder le clavier ouvert
+            if (type === 'error' || type === 'warning') {
+                setTimeout(() => {
+                    const inp = document.getElementById('input-answer');
+                    if (inp && !inp.disabled) inp.focus();
+                }, 100);
+            }
         }
 
         function disableWritingInputs() {
@@ -3694,6 +3909,7 @@
                     // Vider l'input et bloquer
                     document.getElementById('input-answer').value = '';
                     disableWritingInputs();
+                    stopHangman();
                     
                     // Pousser le résultat dans Firebase
                     const myName = gameState.room.players[gameState.playerIndex].name;
@@ -4180,7 +4396,7 @@
             } else if (q.mode === 'writing' || q.type === 'writing') {
                 modeTitle = '✍️ MODE ÉCRITURE';
             } else if (q.mode === 'qcm-film') {
-                modeTitle = '🎬 MODE QCM FILM';
+                modeTitle = '🎬 MODE FILM / SÉRIE';
             }
             
             document.getElementById('mode-start-title').textContent = modeTitle;
