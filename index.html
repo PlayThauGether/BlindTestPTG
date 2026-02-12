@@ -3043,6 +3043,7 @@
             const timerDuration = q.type === 'qcm' ? 20 : 30;
             gameState.currentTime = timerDuration;
             gameState.timerDuration = timerDuration; // Stocker pour le calcul du blur
+            gameState.questionStartedAt = Date.now(); // Timestamp pour le classement par vitesse
             gameState.answered = false;
             gameState.audioPlaying = false;
             gameState.pendingScore = 0;
@@ -3239,7 +3240,6 @@
             db.ref(`rooms/${gameState.room.code}/lastAnswers`).once('value', snapshot => {
                 const lastAnswers = snapshot.val() || {};
                 const currentQ = gameState.room.currentQ;
-                const maxTime = gameState.timerDuration || 20;
 
                 // Collecter les joueurs avec leur temps de réponse
                 const results = [];
@@ -3247,8 +3247,7 @@
                     const safeName = p.name.replace(/[.#$[\]]/g, '_');
                     const answer = lastAnswers[safeName];
                     if (answer && answer.questionIndex === currentQ && answer.correct) {
-                        const timeLeft = answer.timeLeft || 0;
-                        const responseTime = maxTime - timeLeft;
+                        const responseTime = answer.responseTime || 0;
                         results.push({ name: p.name, time: responseTime });
                     }
                 });
@@ -3771,7 +3770,7 @@
             db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                 correct: isCorrect,
                 questionIndex: gameState.room.currentQ,
-                timeLeft: gameState.currentTime || 0
+                responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
             });
             
             // Désactiver les boutons + JAUNE sur celui choisi
@@ -4075,7 +4074,7 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
                         questionIndex: gameState.room.currentQ,
-                        timeLeft: gameState.currentTime || 0
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
                     });
                     
                     return;
@@ -4163,7 +4162,7 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
                         questionIndex: gameState.room.currentQ,
-                        timeLeft: gameState.currentTime || 0
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
                     });
                     
                     // Réinitialiser pour la prochaine question
@@ -4206,7 +4205,7 @@
                         db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                             correct: true,
                             questionIndex: gameState.room.currentQ,
-                            timeLeft: gameState.currentTime || 0
+                            responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
                         });
                         
                         // Réinitialiser pour la prochaine question
@@ -4224,7 +4223,7 @@
                             correct: false, // Pas complètement fini
                             partial: true,
                             questionIndex: gameState.room.currentQ,
-                            timeLeft: gameState.currentTime || 0
+                            responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
                         });
                     }
                     
@@ -4320,7 +4319,7 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
                         questionIndex: gameState.room.currentQ,
-                        timeLeft: gameState.currentTime || 0
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
                     });
                     
                     gameState.currentQuestionPoints = 0;
@@ -4332,7 +4331,7 @@
                         correct: false,
                         partial: true,
                         questionIndex: gameState.room.currentQ,
-                        timeLeft: gameState.currentTime || 0
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
                     });
                 }
             }
