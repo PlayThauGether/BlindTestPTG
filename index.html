@@ -382,6 +382,28 @@
             object-fit: contain;
         }
 
+        .host-big-cover .img-box {
+            max-width: 650px;
+        }
+        .host-big-cover .cover {
+            height: 550px;
+        }
+        .host-big-cover .cover.poster-mode {
+            height: auto;
+            max-height: 600px;
+        }
+
+        /* Pendu hôte sous l'image */
+        #host-hangman-hint {
+            display: none;
+            margin: 1rem auto 0;
+            padding: 1rem 1.5rem;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            border: 2px solid rgba(0,245,255,0.3);
+            max-width: 650px;
+        }
+
         .answer-reveal {
             text-align: center;
             margin-top: 1rem;
@@ -703,6 +725,13 @@
                 height: auto;
                 max-height: 350px;
             }
+            .host-big-cover .cover {
+                height: 400px;
+            }
+            .host-big-cover .cover.poster-mode {
+                height: auto;
+                max-height: 450px;
+            }
             .img-box {
                 max-width: 100%;
                 margin-bottom: 1rem;
@@ -929,7 +958,8 @@
                     <option value="title-only">Titres uniquement</option>
                     <option value="soiree">Soirée (Mix QCM + Écriture)</option>
                     <option value="mix">🎧 Mix (Normal → Reverse → Extrait)</option>
-                    <option value="qcm-film">🎬 Film / Série (QCM + Écriture)</option>
+                    <option value="qcm-film">🎬 Film (QCM + Écriture)</option>
+                    <option value="qcm-serie">📺 Série (QCM + Écriture)</option>
                 </select>
             </div>
 
@@ -1079,11 +1109,31 @@
         <div id="film-writing-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 700px; margin: 0 auto;">
                 <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
-                    🎬 MODE FILM / SÉRIE
+                    🎬 MODE FILM
                 </h1>
                 <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
                     <p style="font-size: 1.8rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        ✍️ TAPE LE NOM DU FILM OU DE LA SÉRIE
+                        ✍️ TAPE LE NOM DU FILM
+                    </p>
+                    <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
+                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
+                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
+                    </div>
+                </div>
+                <div class="spinner" style="margin: 3rem auto;"></div>
+            </div>
+        </div>
+
+        <!-- SÉRIE WRITING INTRO -->
+        <div id="serie-writing-intro-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <h1 style="font-size: 3.5rem; color: #a855f7; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(168,85,247,0.5);">
+                    📺 MODE SÉRIE
+                </h1>
+                <div style="background: rgba(168, 85, 247, 0.1); border: 3px solid #a855f7; border-radius: 20px; padding: 2rem;">
+                    <p style="font-size: 1.8rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
+                        ✍️ TAPE LE NOM DE LA SÉRIE
                     </p>
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
@@ -1229,6 +1279,11 @@
                             <div class="answer-text" id="answer-text"></div>
                         </div>
                     </div>
+                    
+                    <!-- Pendu hôte (affiché sous l'image en mode hôte) -->
+                    <div id="host-hangman-hint">
+                        <div id="host-hangman-letters" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; font-family: 'Courier New', monospace; font-size: 1.8rem; font-weight: 800; letter-spacing: 2px;"></div>
+                    </div>
 
                     <!-- Audio caché (pour mode distance) -->
                     <audio id="audio-player" loop style="display: none;"></audio>
@@ -1268,7 +1323,7 @@
 
                 <!-- BLOC DROITE : Joueurs qui ont bien répondu (hôte uniquement, affiché à timer=0) -->
                 <div id="correct-players-side" class="scoreboard-side hidden">
-                    <h3>🎉 Bien répondu !</h3>
+                    <h3>⚡ Classement</h3>
                     <div id="correct-players-list"></div>
                 </div>
             </div>
@@ -2555,6 +2610,35 @@
                     });
                 }
 
+            } else if (mode === 'qcm-serie') {
+                // MODE SÉRIE : 40% QCM + 60% Écriture
+                const totalSerie = lvl1Count + lvl2Count;
+                const qcmSerieCount = Math.floor(totalSerie * 0.4);
+                const writingSerieCount = totalSerie - qcmSerieCount;
+
+                console.log(`📊 Série: QCM(${qcmSerieCount}) + Écriture(${writingSerieCount})`);
+
+                for (let i = 0; i < qcmSerieCount && trackIndex < shuffled.length; i++) {
+                    questions.push({
+                        ...shuffled[trackIndex++],
+                        type: 'qcm',
+                        level: 2,
+                        mode: 'qcm-serie',
+                        qType: 'artist',
+                        optionsCount: 4
+                    });
+                }
+
+                for (let i = 0; i < writingSerieCount && trackIndex < shuffled.length; i++) {
+                    questions.push({
+                        ...shuffled[trackIndex++],
+                        type: 'writing',
+                        level: 1,
+                        mode: 'qcm-serie',
+                        askFor: 'artist'
+                    });
+                }
+
             } else {
                 questions = shuffled.slice(0, numQuestions).map(q => ({
                     ...q,
@@ -2886,7 +2970,7 @@
             if (!prevMode) {
                 if (currentMode === 'mix' && currentLevel === 1) {
                     transitionScreen = 'mix-lvl1-intro-screen';
-                } else if (currentMode === 'qcm-film') {
+                } else if (currentMode === 'qcm-film' || currentMode === 'qcm-serie') {
                     transitionScreen = 'qcm-intro-screen';
                 } else if (currentMode === 'qcm') {
                     transitionScreen = 'qcm-intro-screen';
@@ -2899,17 +2983,17 @@
             if (!transitionScreen && currentMode !== prevMode && prevMode) {
                 if (currentMode === 'writing' && currentLevel === 1) {
                     transitionScreen = 'writing-lvl1-intro-screen';
-                } else if (currentMode === 'qcm' || currentMode === 'qcm-film') {
+                } else if (currentMode === 'qcm' || currentMode === 'qcm-film' || currentMode === 'qcm-serie') {
                     transitionScreen = 'qcm-intro-screen';
                 } else if (currentMode === 'mix' && currentLevel === 1) {
                     transitionScreen = 'mix-lvl1-intro-screen';
                 }
             }
 
-            // CAS 2b : Mode qcm-film — changement de type QCM → Écriture
-            if (!transitionScreen && currentMode === 'qcm-film' && currentType !== prevType && prevType) {
+            // CAS 2b : Mode qcm-film/qcm-serie — changement de type QCM → Écriture
+            if (!transitionScreen && (currentMode === 'qcm-film' || currentMode === 'qcm-serie') && currentType !== prevType && prevType) {
                 if (currentType === 'writing') {
-                    transitionScreen = 'film-writing-intro-screen';
+                    transitionScreen = currentMode === 'qcm-serie' ? 'serie-writing-intro-screen' : 'film-writing-intro-screen';
                 } else if (currentType === 'qcm') {
                     transitionScreen = 'qcm-intro-screen';
                 }
@@ -2988,7 +3072,7 @@
             const coverImg = document.getElementById('cover-img');
             
             // Mode affiche pour les films/séries
-            if (q.mode === 'qcm-film') {
+            if (q.mode === 'qcm-film' || q.mode === 'qcm-serie') {
                 coverImg.classList.add('poster-mode');
             } else {
                 coverImg.classList.remove('poster-mode');
@@ -3080,6 +3164,15 @@
             if (gameState.hostDisplayOnly) {
                 console.log('Mode Affichage Hôte activé - pas de questions affichées');
                 document.getElementById('question-text').textContent = '';
+                
+                // Image plus grande en mode hôte
+                document.querySelector('.game-main').classList.add('host-big-cover');
+                
+                // Pendu hôte pour mode Film/Série écriture
+                if ((q.mode === 'qcm-film' || q.mode === 'qcm-serie') && q.type === 'writing') {
+                    initHangman(q.artist, true); // true = host mode
+                }
+                
                 startTimer();
                 return;
             }
@@ -3146,29 +3239,42 @@
             db.ref(`rooms/${gameState.room.code}/lastAnswers`).once('value', snapshot => {
                 const lastAnswers = snapshot.val() || {};
                 const currentQ = gameState.room.currentQ;
+                const maxTime = gameState.timerDuration || 20;
 
-                // Collecter les noms des joueurs qui ont bien répondu
-                const correctNames = [];
+                // Collecter les joueurs avec leur temps de réponse
+                const results = [];
                 gameState.room.players.forEach(p => {
                     const safeName = p.name.replace(/[.#$[\]]/g, '_');
                     const answer = lastAnswers[safeName];
                     if (answer && answer.questionIndex === currentQ && answer.correct) {
-                        correctNames.push(p.name);
+                        const timeLeft = answer.timeLeft || 0;
+                        const responseTime = maxTime - timeLeft;
+                        results.push({ name: p.name, time: responseTime });
                     }
                 });
 
+                // Trier par vitesse (le plus rapide en premier)
+                results.sort((a, b) => a.time - b.time);
+
                 list.innerHTML = '';
 
-                if (correctNames.length === 0) {
+                if (results.length === 0) {
                     const msg = document.createElement('div');
                     msg.style.cssText = 'text-align:center; color:#aaa; padding:0.8rem 0; font-size:0.95rem;';
                     msg.textContent = '😬 Personne cette fois !';
                     list.appendChild(msg);
                 } else {
-                    correctNames.forEach(name => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    results.forEach((r, idx) => {
                         const div = document.createElement('div');
-                        div.style.cssText = 'background:rgba(0,200,100,0.2); border:1px solid #00c864; border-radius:8px; padding:0.5rem 0.7rem; margin-bottom:0.4rem; color:#fff; font-weight:600; font-size:0.9rem;';
-                        div.textContent = '✅ ' + name;
+                        const medal = medals[idx] || `${idx + 1}.`;
+                        const borderColor = idx === 0 ? '#ffbe0b' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : '#00c864';
+                        const bgOpacity = idx === 0 ? '0.3' : '0.15';
+                        div.style.cssText = `background:rgba(0,200,100,${bgOpacity}); border:2px solid ${borderColor}; border-radius:10px; padding:0.6rem 0.8rem; margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;`;
+                        div.innerHTML = `
+                            <span style="color:#fff; font-weight:700; font-size:0.95rem;">${medal} ${r.name}</span>
+                            <span style="color:#00f5ff; font-weight:800; font-size:0.9rem;">${r.time.toFixed(0)}s</span>
+                        `;
                         list.appendChild(div);
                     });
                 }
@@ -3192,6 +3298,8 @@
                 }
             } else if (q.mode === 'qcm-film') {
                 questionText = '🎬 Quel est le film ?';
+            } else if (q.mode === 'qcm-serie') {
+                questionText = '📺 Quelle est la série ?';
             } else {
                 questionText = (type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
             }
@@ -3302,13 +3410,19 @@
             totalToReveal: 0    // 60% du total
         };
 
-        function initHangman(answer) {
+        function initHangman(answer, isHostMode) {
             stopHangman();
             
-            const container = document.getElementById('hangman-hint');
-            const lettersDiv = document.getElementById('hangman-letters');
+            hangmanState.isHostMode = isHostMode || false;
+            
+            const containerId = isHostMode ? 'host-hangman-hint' : 'hangman-hint';
+            const lettersId = isHostMode ? 'host-hangman-letters' : 'hangman-letters';
+            
+            const container = document.getElementById(containerId);
             container.style.display = 'block';
             
+            hangmanState.containerId = containerId;
+            hangmanState.lettersId = lettersId;
             hangmanState.answer = answer;
             hangmanState.revealed = [];
             hangmanState.letterPositions = [];
@@ -3360,7 +3474,8 @@
         }
 
         function renderHangman() {
-            const lettersDiv = document.getElementById('hangman-letters');
+            const lettersDiv = document.getElementById(hangmanState.lettersId || 'hangman-letters');
+            if (!lettersDiv) return;
             lettersDiv.innerHTML = '';
             
             // Grouper par mots (séparer aux espaces)
@@ -3420,6 +3535,7 @@
                 hangmanState.interval = null;
             }
             document.getElementById('hangman-hint').style.display = 'none';
+            document.getElementById('host-hangman-hint').style.display = 'none';
         }
 
         // Générer variantes d'orthographe pour Lvl 3
@@ -3461,14 +3577,20 @@
             if (askFor === 'artist') {
                 if (q.mode === 'qcm-film') {
                     // Mode Film : "artist" = nom du film
-                    document.getElementById('question-text').textContent = "🎬 Écris le nom du film ou de la série";
+                    document.getElementById('question-text').textContent = "🎬 Écris le nom du film";
                     badgeTitle.style.display = 'none';
                     badgeArtist.style.display = 'inline-flex';
                     badgeArtist.querySelector('.badge-icon').textContent = '🎬';
-                    badgeArtist.querySelector('.badge-label').textContent = 'FILM / SÉRIE';
-                    answerInput.placeholder = "Écris le nom du film ou de la série...";
-                    // Initialiser l'indice pendu
-                    initHangman(q.artist);
+                    badgeArtist.querySelector('.badge-label').textContent = 'FILM';
+                    answerInput.placeholder = "Écris le nom du film...";
+                } else if (q.mode === 'qcm-serie') {
+                    // Mode Série : "artist" = nom de la série
+                    document.getElementById('question-text').textContent = "📺 Écris le nom de la série";
+                    badgeTitle.style.display = 'none';
+                    badgeArtist.style.display = 'inline-flex';
+                    badgeArtist.querySelector('.badge-icon').textContent = '📺';
+                    badgeArtist.querySelector('.badge-label').textContent = 'SÉRIE';
+                    answerInput.placeholder = "Écris le nom de la série...";
                 } else {
                     // LVL 1: Artiste seulement
                     document.getElementById('question-text').textContent = "Écris l'artiste (Facile)";
@@ -3539,6 +3661,10 @@
                     clearInterval(gameState.timerInterval);
                     
                     document.getElementById('cover-img').style.filter = 'blur(0px)';
+                    
+                    // Réduire l'image hôte quand la réponse s'affiche
+                    document.querySelector('.game-main').classList.remove('host-big-cover');
+                    stopHangman();
                     
                     const q = gameState.room.questions[gameState.room.currentQ];
                     
@@ -3644,7 +3770,8 @@
             const myName = gameState.room.players[gameState.playerIndex].name;
             db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                 correct: isCorrect,
-                questionIndex: gameState.room.currentQ
+                questionIndex: gameState.room.currentQ,
+                timeLeft: gameState.currentTime || 0
             });
             
             // Désactiver les boutons + JAUNE sur celui choisi
@@ -3947,7 +4074,8 @@
                     const myName = gameState.room.players[gameState.playerIndex].name;
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
-                        questionIndex: gameState.room.currentQ
+                        questionIndex: gameState.room.currentQ,
+                        timeLeft: gameState.currentTime || 0
                     });
                     
                     return;
@@ -4034,7 +4162,8 @@
                     const myName = gameState.room.players[gameState.playerIndex].name;
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
-                        questionIndex: gameState.room.currentQ
+                        questionIndex: gameState.room.currentQ,
+                        timeLeft: gameState.currentTime || 0
                     });
                     
                     // Réinitialiser pour la prochaine question
@@ -4076,7 +4205,8 @@
                         const myName = gameState.room.players[gameState.playerIndex].name;
                         db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                             correct: true,
-                            questionIndex: gameState.room.currentQ
+                            questionIndex: gameState.room.currentQ,
+                            timeLeft: gameState.currentTime || 0
                         });
                         
                         // Réinitialiser pour la prochaine question
@@ -4093,7 +4223,8 @@
                         db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                             correct: false, // Pas complètement fini
                             partial: true,
-                            questionIndex: gameState.room.currentQ
+                            questionIndex: gameState.room.currentQ,
+                            timeLeft: gameState.currentTime || 0
                         });
                     }
                     
@@ -4188,7 +4319,8 @@
                     const myName = gameState.room.players[gameState.playerIndex].name;
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
-                        questionIndex: gameState.room.currentQ
+                        questionIndex: gameState.room.currentQ,
+                        timeLeft: gameState.currentTime || 0
                     });
                     
                     gameState.currentQuestionPoints = 0;
@@ -4199,7 +4331,8 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: false,
                         partial: true,
-                        questionIndex: gameState.room.currentQ
+                        questionIndex: gameState.room.currentQ,
+                        timeLeft: gameState.currentTime || 0
                     });
                 }
             }
@@ -4428,7 +4561,9 @@
             } else if (q.mode === 'writing' || q.type === 'writing') {
                 modeTitle = '✍️ MODE ÉCRITURE';
             } else if (q.mode === 'qcm-film') {
-                modeTitle = '🎬 MODE FILM / SÉRIE';
+                modeTitle = '🎬 MODE FILM';
+            } else if (q.mode === 'qcm-serie') {
+                modeTitle = '📺 MODE SÉRIE';
             }
             
             document.getElementById('mode-start-title').textContent = modeTitle;
