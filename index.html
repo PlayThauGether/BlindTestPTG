@@ -376,6 +376,12 @@
             transition: filter 0.3s ease, opacity 0.3s ease;
         }
 
+        .cover.poster-mode {
+            height: auto;
+            max-height: 450px;
+            object-fit: contain;
+        }
+
         .answer-reveal {
             text-align: center;
             margin-top: 1rem;
@@ -692,6 +698,10 @@
             }
             .cover { 
                 height: 280px; 
+            }
+            .cover.poster-mode {
+                height: auto;
+                max-height: 350px;
             }
             .img-box {
                 max-width: 100%;
@@ -2976,6 +2986,14 @@
             // COVER
             const coverBox = document.querySelector('.img-box');
             const coverImg = document.getElementById('cover-img');
+            
+            // Mode affiche pour les films/séries
+            if (q.mode === 'qcm-film') {
+                coverImg.classList.add('poster-mode');
+            } else {
+                coverImg.classList.remove('poster-mode');
+            }
+            
             if (gameState.room.hostMode && !gameState.isHost) {
                 coverBox.style.display = 'none';
             } else {
@@ -3505,13 +3523,13 @@
                         const ratio = (secsLeft - 5) / (maxTime - 5);
                         blurValue = 15 + ratio * 15;
                     } else if (secsLeft > 3) {
-                        // 5s → 3s : de 15px → 10px
+                        // 5s → 3s : de 15px → 10px (linéaire)
                         blurValue = 10 + ((secsLeft - 3) / 2) * 5;
                     } else if (secsLeft > 2) {
-                        // 3s → 2s : de 10px → 5px
+                        // 3s → 2s : de 10px → 5px (linéaire)
                         blurValue = 5 + (secsLeft - 2) * 5;
                     } else {
-                        // 2s → 0s : de 5px → 0px
+                        // 2s → 0s : de 5px → 0px (linéaire)
                         blurValue = (secsLeft / 2) * 5;
                     }
                     document.getElementById('cover-img').style.filter = `blur(${blurValue}px)`;
