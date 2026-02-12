@@ -3498,8 +3498,22 @@
 
                 if (!gameState.answered) {
                     const secsLeft = gameState.currentTime;
-                    // Full blur jusqu'aux 2 dernières secondes, puis déblur rapide
-                    const blurValue = secsLeft > 2 ? 30 : (secsLeft / 2) * 30;
+                    const maxTime = gameState.timerDuration || 20;
+                    let blurValue;
+                    if (secsLeft > 5) {
+                        // De maxTime à 5s : dégressif de 30px → 15px
+                        const ratio = (secsLeft - 5) / (maxTime - 5);
+                        blurValue = 15 + ratio * 15;
+                    } else if (secsLeft > 3) {
+                        // 5s → 3s : de 15px → 10px
+                        blurValue = 10 + ((secsLeft - 3) / 2) * 5;
+                    } else if (secsLeft > 2) {
+                        // 3s → 2s : de 10px → 5px
+                        blurValue = 5 + (secsLeft - 2) * 5;
+                    } else {
+                        // 2s → 0s : de 5px → 0px
+                        blurValue = (secsLeft / 2) * 5;
+                    }
                     document.getElementById('cover-img').style.filter = `blur(${blurValue}px)`;
                 }
 
