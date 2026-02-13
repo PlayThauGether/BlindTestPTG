@@ -3405,6 +3405,7 @@
         // ===========================================
         let hangmanState = {
             interval: null,
+            startTimeout: null,
             answer: '',
             revealed: [],      // indices des lettres révélées
             letterPositions: [], // indices des lettres (pas espaces/ponctuation)
@@ -3438,26 +3439,34 @@
                 }
             }
             
-            // Mélanger aléatoirement l'ordre de révélation
+            // Seed déterministe basé sur la question pour que tous aient le même ordre
+            const questionIndex = gameState.room.currentQ || 0;
+            let seed = questionIndex * 9973 + answer.length * 7919;
+            for (let i = 0; i < answer.length; i++) seed += answer.charCodeAt(i) * (i + 1);
+            function seededRandom() {
+                seed = (seed * 16807 + 0) % 2147483647;
+                return (seed - 1) / 2147483646;
+            }
+            
+            // Mélanger avec le seed (même résultat partout)
             hangmanState.revealOrder = [...hangmanState.letterPositions];
             for (let i = hangmanState.revealOrder.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+                const j = Math.floor(seededRandom() * (i + 1));
                 [hangmanState.revealOrder[i], hangmanState.revealOrder[j]] = [hangmanState.revealOrder[j], hangmanState.revealOrder[i]];
             }
             
-            // 60% des lettres à révéler sur 30 secondes
+            // 60% des lettres à révéler sur 25 secondes
             hangmanState.totalToReveal = Math.floor(hangmanState.letterPositions.length * 0.6);
             
             // Afficher l'état initial (tout masqué)
             renderHangman();
             
-            // Calculer l'intervalle : révéler une lettre toutes les X ms
-            // On commence à révéler après 3s pour laisser écouter, et on étale sur 25s
+            // Révéler progressivement : attendre 3s puis étaler sur 25s
             if (hangmanState.totalToReveal > 0) {
-                const revealDuration = 25000; // 25 secondes (de t=3s à t=28s)
+                const revealDuration = 25000;
                 const intervalMs = revealDuration / hangmanState.totalToReveal;
                 
-                setTimeout(() => {
+                hangmanState.startTimeout = setTimeout(() => {
                     hangmanState.interval = setInterval(() => {
                         if (hangmanState.revealIndex >= hangmanState.totalToReveal) {
                             clearInterval(hangmanState.interval);
@@ -3465,14 +3474,13 @@
                             return;
                         }
                         
-                        // Révéler la prochaine lettre
                         const posToReveal = hangmanState.revealOrder[hangmanState.revealIndex];
                         hangmanState.revealed.push(posToReveal);
                         hangmanState.revealIndex++;
                         
                         renderHangman();
                     }, intervalMs);
-                }, 3000); // Attendre 3s avant de commencer
+                }, 3000);
             }
         }
 
@@ -3536,6 +3544,10 @@
             if (hangmanState.interval) {
                 clearInterval(hangmanState.interval);
                 hangmanState.interval = null;
+            }
+            if (hangmanState.startTimeout) {
+                clearTimeout(hangmanState.startTimeout);
+                hangmanState.startTimeout = null;
             }
             document.getElementById('hangman-hint').style.display = 'none';
             document.getElementById('host-hangman-hint').style.display = 'none';
