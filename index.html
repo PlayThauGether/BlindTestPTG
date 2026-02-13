@@ -2260,7 +2260,9 @@
             if (!name) { alert('⚠️ Donne un nom à la playlist !'); return; }
 
             try {
-                const data = JSON.parse(jsonText);
+                // Nettoyer les trailing commas (erreur fréquente)
+                const cleanJson = jsonText.replace(/,\s*([}\]])/g, '$1');
+                const data = JSON.parse(cleanJson);
                 if (!data.playlist || !Array.isArray(data.playlist)) {
                     alert('⚠️ JSON invalide ! Il doit contenir une clé "playlist" avec un tableau.');
                     return;
@@ -2319,7 +2321,9 @@
                     // Parser le JSON
                     let data;
                     try {
-                        data = JSON.parse(jsonInput);
+                        // Nettoyer les trailing commas
+                        const cleanJson = jsonInput.replace(/,\s*([}\]])/g, '$1');
+                        data = JSON.parse(cleanJson);
                     } catch (e) {
                         throw new Error('JSON invalide ! Vérifie qu\'il n\'y a pas d\'erreur de syntaxe.');
                     }
@@ -3582,6 +3586,7 @@
                     badgeArtist.querySelector('.badge-icon').textContent = '🎬';
                     badgeArtist.querySelector('.badge-label').textContent = 'FILM';
                     answerInput.placeholder = "Écris le nom du film...";
+                    initHangman(q.artist, false); // pendu joueur
                 } else if (q.mode === 'qcm-serie') {
                     // Mode Série : "artist" = nom de la série
                     document.getElementById('question-text').textContent = "📺 Écris le nom de la série";
@@ -3590,6 +3595,7 @@
                     badgeArtist.querySelector('.badge-icon').textContent = '📺';
                     badgeArtist.querySelector('.badge-label').textContent = 'SÉRIE';
                     answerInput.placeholder = "Écris le nom de la série...";
+                    initHangman(q.artist, false); // pendu joueur
                 } else {
                     // LVL 1: Artiste seulement
                     document.getElementById('question-text').textContent = "Écris l'artiste (Facile)";
