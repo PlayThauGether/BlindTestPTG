@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTG- Blind Test 🎵</title>
+    <title>PTG - Blind Test 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -706,15 +706,16 @@
         /* BOUTON SECOURS */
         .emergency-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             background: rgba(255, 0, 0, 0.8);
             color: white;
             border: none;
-            padding: 1rem 1.5rem;
+            padding: 0.7rem 1.2rem;
             border-radius: 50px;
             cursor: pointer;
             font-weight: 800;
+            font-size: 0.85rem;
             z-index: 9999;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             font-family: 'Montserrat', sans-serif;
@@ -965,6 +966,7 @@
                 <button id="admin-menu-btn" class="btn" onclick="goToAdmin()" style="display: none;">👥 Gérer les comptes</button>
                 <button id="logout-btn" class="btn danger" onclick="doLogout()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
                 <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion Organisateur</button>
+                <a id="nos-reseaux-menu" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
             </div>
         </div>
 
@@ -1021,11 +1023,11 @@
             <div class="section">
                 <h3>🎯 Mode de jeu</h3>
                 <select id="create-mode" class="select">
-                    <option value="qcm">QCM (Choix multiples)</option>
-                    <option value="writing">Écriture (Titre + Artiste)</option>
-                    <option value="title-only">Titres uniquement</option>
-                    <option value="soiree">Soirée (Mix QCM + Écriture)</option>
-                    <option value="mix">🎧 Mix (Normal → Reverse → Extrait)</option>
+                    <option value="qcm">🎯 QCM (Choix multiples)</option>
+                    <option value="writing">✍️ Écriture (Titre + Artiste)</option>
+                    <option value="title-only">💿 Titres uniquement</option>
+                    <option value="soiree">🎉 Soirée (Mix QCM + Écriture)</option>
+                    <option value="mix">🎧 Disney Mix (Normal → Reverse → Extrait)</option>
                     <option value="qcm-film">🎬 Film (QCM + Écriture)</option>
                     <option value="qcm-serie">📺 Série (QCM + Écriture)</option>
                 </select>
@@ -1035,11 +1037,11 @@
                 <h3>⚙️ Options</h3>
                 <label class="checkbox-label">
                     <input type="checkbox" id="host-mode" onchange="if(this.checked) document.getElementById('distance-mode').checked=false;">
-                    <span>Mode Hôte (Affichage seulement sur l'appareil du créateur de la partie)</span>
+                    <span>Mode Hôte (Affichage Questions Seulement)</span>
                 </label>
                 <label class="checkbox-label">
                     <input type="checkbox" id="distance-mode" onchange="if(this.checked) document.getElementById('host-mode').checked=false;">
-                    <span>Mode Distance (Son sur tous les appareils)</span>
+                    <span>Mode Distance (Son sur tous les Appareils)</span>
                 </label>
             </div>
 
@@ -1099,7 +1101,8 @@
                 <button class="btn large" onclick="loadAndCreate()">🚀 Créer la partie</button>
             </div>
 
-            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
+            <a id="nos-reseaux-create" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1.5rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
+            <button class="btn" onclick="goToMenu()" style="margin-top: 1rem;">🏠 Retour</button>
         </div>
 
         <!-- JOIN -->
@@ -1115,9 +1118,15 @@
         <div id="lobby-screen" class="screen hidden">
             <h2 style="font-size: 1.8rem; color: #ffbe0b; margin-bottom: 1rem;">Salle d'attente</h2>
             
-            <div class="code-display">
-                <div class="code-label">Code de la partie</div>
-                <div class="code-value" id="lobby-code">000000</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <div class="code-display" style="margin-bottom: 0;">
+                    <div class="code-label">Code de la partie</div>
+                    <div class="code-value" id="lobby-code">000000</div>
+                </div>
+                <div style="text-align: center;">
+                    <img src="qr-reseaux.png" alt="QR Code" style="width: 120px; height: 120px; border-radius: 10px; border: 2px solid #ffbe0b;">
+                    <p style="color: #ffbe0b; font-weight: 800; font-size: 0.85rem; margin-top: 0.4rem; max-width: 140px; line-height: 1.2;">📱 Scannez pour voir nos réseaux sociaux</p>
+                </div>
             </div>
             
             <button id="change-code-btn" class="btn secondary hidden" onclick="changeRoomCode()" style="margin-top: 1rem;">
@@ -1151,7 +1160,7 @@
         <div id="mode-start-screen" class="screen hidden">
             <div style="text-align: center;">
                 <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 1rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);" id="mode-start-title">
-                    🎮 MODE QCM
+                    🎯 MODE QCM
                 </h1>
                 <p id="mode-start-playlist" style="font-size: 2rem; color: #a855f7; font-weight: 800; margin-bottom: 2rem; text-shadow: 0 0 20px rgba(168,85,247,0.5);"></p>
                 <div style="font-size: 8rem; color: #ffbe0b; font-weight: 800; text-shadow: 0 0 50px rgba(255,190,11,0.8);" id="countdown-number">
@@ -1187,7 +1196,6 @@
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
@@ -1208,7 +1216,6 @@
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
@@ -1225,12 +1232,11 @@
                 <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
                     <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1.5rem;">NIVEAU 1</h2>
                     <p style="font-size: 1.5rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        TAPER LE NOM DE L'ARTISTE
+                        ✍️ TAPER LE NOM DE L'ARTISTE
                     </p>
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
@@ -1247,12 +1253,12 @@
                 <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
                     <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1.5rem;">NIVEAU 2</h2>
                     <p style="font-size: 1.5rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        TAPER LE TITRE ET LE NOM DE L'ARTISTE
+                        ✍️ TAPER LE TITRE ET LE NOM DE L'ARTISTE
                     </p>
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
+                        <p style="font-size: 1rem; color: white;">Un champ = une réponse (titre OU artiste)</p>
                         <p style="font-size: 1rem; color: white;">Trouvez les 2 pour le bonus !</p>
                     </div>
                 </div>
@@ -1267,7 +1273,7 @@
                     ✍️ MODE ÉCRITURE
                 </h1>
                 <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin: 2rem 0;">
-                    <h2 style="color: #ffbe0b; font-size: 2rem; margin-bottom: 1.5rem;">💡 ASTUCE</h2>
+                    <h2 style="color: #ffbe0b; font-size: 2rem; margin-bottom: 1.5rem;">⚠️ ATTENTION</h2>
                     <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
                         📝 <strong>Orthographe tolérante !</strong>
                     </p>
@@ -4979,6 +4985,24 @@
             initCustomDropdown('create-mode');
             initCustomDropdown('playlist-select');
             initCustomDropdown('saved-playlist-select');
+        });
+
+        // Bloquer le refresh et le retour arrière pendant une partie
+        window.addEventListener('beforeunload', function(e) {
+            if (gameState.room && gameState.room.started) {
+                e.preventDefault();
+                e.returnValue = '⚠️ Tu vas quitter la partie en cours !';
+                return e.returnValue;
+            }
+        });
+        
+        // Bloquer le bouton retour du navigateur
+        history.pushState(null, '', location.href);
+        window.addEventListener('popstate', function(e) {
+            history.pushState(null, '', location.href);
+            if (gameState.room && gameState.room.started) {
+                // Ne rien faire, rester sur la page
+            }
         });
 
         // Enter key sur login/setup
