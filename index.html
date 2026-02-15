@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTG - Blind Test 🎵</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0e27">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Blind Test PTG">
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -964,6 +971,7 @@
                 <button class="btn large secondary" onclick="goToJoin()">👥 Rejoindre une partie</button>
                 <button id="playlists-menu-btn" class="btn" onclick="goToPlaylists()" style="display: none;">📋 Gérer Playlists</button>
                 <button id="admin-menu-btn" class="btn" onclick="goToAdmin()" style="display: none;">👥 Gérer les comptes</button>
+                <button id="account-menu-btn" class="btn" onclick="goToAccount()" style="display: none;">⚙️ Mon Compte</button>
                 <button id="logout-btn" class="btn danger" onclick="doLogout()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
                 <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion Organisateur</button>
                 <a id="nos-reseaux-menu" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
@@ -1103,6 +1111,26 @@
 
             <a id="nos-reseaux-create" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1.5rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
             <button class="btn" onclick="goToMenu()" style="margin-top: 1rem;">🏠 Retour</button>
+        </div>
+
+        <!-- MON COMPTE -->
+        <div id="account-screen" class="screen hidden">
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">⚙️ Mon Compte</h2>
+            
+            <div class="playlists-box" style="max-width: 400px; margin: 0 auto;">
+                <h3 style="color: #00f5ff; margin-bottom: 1.5rem;">🔒 Changer mon mot de passe</h3>
+                
+                <input id="account-old-pass" class="input" type="password" placeholder="Mot de passe actuel" style="max-width: 100%;">
+                <input id="account-new-pass" class="input" type="password" placeholder="Nouveau mot de passe" style="max-width: 100%;">
+                <input id="account-new-pass2" class="input" type="password" placeholder="Confirmer le nouveau mot de passe" style="max-width: 100%;">
+                
+                <p id="account-error" style="color: #f56565; display: none; margin-top: 0.5rem; font-size: 0.9rem;"></p>
+                <p id="account-success" style="color: #00c864; display: none; margin-top: 0.5rem; font-size: 0.9rem;"></p>
+                
+                <button class="btn large" onclick="changeMyPassword()" style="margin-top: 1rem;">✅ Changer le mot de passe</button>
+            </div>
+            
+            <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
         </div>
 
         <!-- JOIN -->
@@ -1518,12 +1546,14 @@
                 document.getElementById('login-menu-btn').style.display = 'none';
                 document.getElementById('playlists-menu-btn').style.display = currentUser.isAdmin ? '' : 'none';
                 document.getElementById('admin-menu-btn').style.display = currentUser.isAdmin ? '' : 'none';
+                document.getElementById('account-menu-btn').style.display = '';
             } else {
                 // Pas connecté → montrer bouton connexion
                 document.getElementById('logout-btn').style.display = 'none';
                 document.getElementById('login-menu-btn').style.display = '';
                 document.getElementById('playlists-menu-btn').style.display = 'none';
                 document.getElementById('admin-menu-btn').style.display = 'none';
+                document.getElementById('account-menu-btn').style.display = 'none';
             }
         }
 
@@ -1621,6 +1651,70 @@
             document.getElementById('login-error').style.display = 'none';
             updateMenuButtons();
             showScreen('menu-screen');
+        }
+
+        // --- Gestion du compte ---
+        function goToAccount() {
+            if (!currentUser) return;
+            document.getElementById('account-old-pass').value = '';
+            document.getElementById('account-new-pass').value = '';
+            document.getElementById('account-new-pass2').value = '';
+            document.getElementById('account-error').style.display = 'none';
+            document.getElementById('account-success').style.display = 'none';
+            showScreen('account-screen');
+        }
+
+        async function changeMyPassword() {
+            if (!currentUser) return;
+            
+            const oldPass = document.getElementById('account-old-pass').value;
+            const newPass = document.getElementById('account-new-pass').value;
+            const newPass2 = document.getElementById('account-new-pass2').value;
+            const errorEl = document.getElementById('account-error');
+            const successEl = document.getElementById('account-success');
+            
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            if (!oldPass || !newPass || !newPass2) {
+                errorEl.textContent = '⚠️ Remplis tous les champs';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (newPass.length < 4) {
+                errorEl.textContent = '⚠️ Le nouveau mot de passe doit faire au moins 4 caractères';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (newPass !== newPass2) {
+                errorEl.textContent = '⚠️ Les nouveaux mots de passe ne correspondent pas';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            // Vérifier l'ancien mot de passe
+            const oldHash = await hashPassword(oldPass);
+            const userSnap = await db.ref(`appUsers/${currentUser.username}`).once('value');
+            const userData = userSnap.val();
+            
+            if (!userData || userData.passwordHash !== oldHash) {
+                errorEl.textContent = '❌ Mot de passe actuel incorrect';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            // Mettre à jour
+            const newHash = await hashPassword(newPass);
+            await db.ref(`appUsers/${currentUser.username}/passwordHash`).set(newHash);
+            
+            document.getElementById('account-old-pass').value = '';
+            document.getElementById('account-new-pass').value = '';
+            document.getElementById('account-new-pass2').value = '';
+            
+            successEl.textContent = '✅ Mot de passe changé avec succès !';
+            successEl.style.display = 'block';
         }
 
         // --- Admin : gestion des comptes ---
