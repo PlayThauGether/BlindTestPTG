@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Party 🎵</title>
+    <title>PTG- Blind Test 🎵</title>
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -107,6 +107,74 @@
             font-family: 'Montserrat', sans-serif;
             display: block;
         }
+        .select { display: none; } /* Cacher les selects natifs */
+
+        /* Custom Dropdown */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0.5rem auto;
+            user-select: none;
+        }
+        .custom-dropdown-trigger {
+            width: 100%;
+            padding: 1rem 2.5rem 1rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8338ec;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .custom-dropdown-trigger:hover { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+        .custom-dropdown-trigger.open { border-color: #ff006e; border-radius: 12px 12px 0 0; }
+        .custom-dropdown-trigger::after {
+            content: '▾';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #8338ec;
+            transition: transform 0.2s;
+        }
+        .custom-dropdown-trigger.open::after { transform: translateY(-50%) rotate(180deg); color: #ff006e; }
+        .custom-dropdown-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(20, 10, 40, 0.98);
+            border: 2px solid #ff006e;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            scrollbar-width: thin;
+            scrollbar-color: #8338ec transparent;
+        }
+        .custom-dropdown-list.show { display: block; }
+        .custom-dropdown-item {
+            padding: 0.8rem 1rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .custom-dropdown-item:last-child { border-bottom: none; }
+        .custom-dropdown-item:hover { background: rgba(168, 85, 247, 0.2); color: white; padding-left: 1.3rem; }
+        .custom-dropdown-item.selected { background: rgba(255, 0, 110, 0.15); color: #ff006e; font-weight: 700; }
+        .custom-dropdown-item.placeholder { color: rgba(255,255,255,0.4); font-style: italic; }
 
         .input::placeholder { color: rgba(255, 255, 255, 0.5); }
         .input:focus, .select:focus { outline: none; border-color: #ff006e; }
@@ -966,11 +1034,11 @@
             <div class="section">
                 <h3>⚙️ Options</h3>
                 <label class="checkbox-label">
-                    <input type="checkbox" id="host-mode">
-                    <span>Mode Hôte (Affichage seulement)</span>
+                    <input type="checkbox" id="host-mode" onchange="if(this.checked) document.getElementById('distance-mode').checked=false;">
+                    <span>Mode Hôte (Affichage seulement sur l'appareil du créateur de la partie)</span>
                 </label>
                 <label class="checkbox-label">
-                    <input type="checkbox" id="distance-mode">
+                    <input type="checkbox" id="distance-mode" onchange="if(this.checked) document.getElementById('host-mode').checked=false;">
                     <span>Mode Distance (Son sur tous les appareils)</span>
                 </label>
             </div>
@@ -1082,9 +1150,10 @@
         <!-- MODE START COUNTDOWN (10s) -->
         <div id="mode-start-screen" class="screen hidden">
             <div style="text-align: center;">
-                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);" id="mode-start-title">
+                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 1rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);" id="mode-start-title">
                     🎮 MODE QCM
                 </h1>
+                <p id="mode-start-playlist" style="font-size: 2rem; color: #a855f7; font-weight: 800; margin-bottom: 2rem; text-shadow: 0 0 20px rgba(168,85,247,0.5);"></p>
                 <div style="font-size: 8rem; color: #ffbe0b; font-weight: 800; text-shadow: 0 0 50px rgba(255,190,11,0.8);" id="countdown-number">
                     10
                 </div>
@@ -1118,6 +1187,7 @@
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
@@ -1138,6 +1208,7 @@
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
@@ -1159,6 +1230,7 @@
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
+                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
                     </div>
                 </div>
@@ -1180,7 +1252,7 @@
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
                         <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
                         <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">Un champ = une réponse (titre OU artiste)</p>
+                        <p style="font-size: 1rem; color: white;">Tu peux réessayer si tu te trompes !</p>
                         <p style="font-size: 1rem; color: white;">Trouvez les 2 pour le bonus !</p>
                     </div>
                 </div>
@@ -1195,9 +1267,9 @@
                     ✍️ MODE ÉCRITURE
                 </h1>
                 <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin: 2rem 0;">
-                    <h2 style="color: #ffbe0b; font-size: 2rem; margin-bottom: 1.5rem;">⚠️ ATTENTION</h2>
+                    <h2 style="color: #ffbe0b; font-size: 2rem; margin-bottom: 1.5rem;">💡 ASTUCE</h2>
                     <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
-                        📝 <strong>Orthographe PARFAITE requise !</strong>
+                        📝 <strong>Orthographe tolérante !</strong>
                     </p>
                     <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
                         ✅ <strong>N'oubliez pas de VALIDER votre réponse !</strong>
@@ -2063,6 +2135,7 @@
                 option.textContent = playlist.name;
                 select.appendChild(option);
             });
+            refreshCustomDropdown('playlist-select');
         }
 
         function showAddPlaylist() {
@@ -2167,6 +2240,7 @@
                     select.appendChild(option);
                 });
             }
+            refreshCustomDropdown('saved-playlist-select');
         }
 
         async function loadSavedPlaylist() {
@@ -2396,7 +2470,19 @@
                     return;
                 }
                 
-                createRoom(name, mode, tracks, hostMode, distanceMode);
+                // Déterminer le nom de la playlist
+                let playlistName = '';
+                const savedSelect = document.getElementById('saved-playlist-select');
+                const deezerSelect = document.getElementById('playlist-select');
+                if (savedTab.style.display !== 'none' && savedSelect.value) {
+                    playlistName = savedSelect.options[savedSelect.selectedIndex].textContent;
+                } else if (deezerSelect.value) {
+                    playlistName = deezerSelect.options[deezerSelect.selectedIndex].textContent;
+                } else if (document.getElementById('custom-playlist-url').value.trim()) {
+                    playlistName = 'Playlist Deezer';
+                }
+                
+                createRoom(name, mode, tracks, hostMode, distanceMode, playlistName);
                 
             } catch (e) {
                 hideLoading();
@@ -2657,12 +2743,13 @@
             return questions;
         }
 
-        function createRoom(name, mode, tracks, hostMode, distanceMode) {
+        function createRoom(name, mode, tracks, hostMode, distanceMode, playlistName) {
             const code = genCode();
             
             console.log(`🎮 Création de la room avec le code: ${code}`);
             
             gameState.musicDB = tracks;
+            gameState.playlistName = playlistName || '';
             // hostDisplayOnly UNIQUEMENT pour l'hôte (pas les autres joueurs)
             gameState.hostDisplayOnly = hostMode && true; // true car on EST l'hôte ici
             gameState.distanceMode = distanceMode;
@@ -2676,6 +2763,8 @@
                 host: name,
                 hostMode: hostMode,
                 distanceMode: distanceMode,
+                playlistName: playlistName || '',
+                gameMode: mode,
                 players: [{ name, score: 0, isHost: true }],
                 questions,
                 currentQ: 0,
@@ -4572,18 +4661,28 @@
             }
             
             const q = gameState.room.questions[0];
+            const gm = gameState.room.gameMode || q.mode || 'qcm';
             let modeTitle = '🎮 MODE QCM';
-            if (q.mode === 'mix') {
+            if (gm === 'mix') {
                 modeTitle = '🎧 MODE MIX';
-            } else if (q.mode === 'writing' || q.type === 'writing') {
+            } else if (gm === 'soiree') {
+                modeTitle = '🎉 MODE SOIRÉE';
+            } else if (gm === 'writing') {
                 modeTitle = '✍️ MODE ÉCRITURE';
-            } else if (q.mode === 'qcm-film') {
+            } else if (gm === 'qcm-film') {
                 modeTitle = '🎬 MODE FILM';
-            } else if (q.mode === 'qcm-serie') {
+            } else if (gm === 'qcm-serie') {
                 modeTitle = '📺 MODE SÉRIE';
+            } else if (gm === 'title-only') {
+                modeTitle = '🎵 MODE TITRES';
             }
             
             document.getElementById('mode-start-title').textContent = modeTitle;
+            
+            // Afficher le nom de la playlist
+            const plName = gameState.playlistName || gameState.room.playlistName || '';
+            document.getElementById('mode-start-playlist').textContent = plName ? `🎵 ${plName}` : '';
+            
             showScreen('mode-start-screen');
             
             let countdown = 10;
@@ -4774,6 +4873,101 @@
         // ===========================================
         // INIT
         // ===========================================
+        // ===========================================
+        // CUSTOM DROPDOWN SYSTEM
+        // ===========================================
+        function initCustomDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            
+            // Supprimer l'ancien custom dropdown s'il existe
+            const existing = document.getElementById('cd-' + selectId);
+            if (existing) existing.remove();
+            
+            // Créer le wrapper
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-dropdown';
+            wrapper.id = 'cd-' + selectId;
+            
+            // Trigger (bouton visible)
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-dropdown-trigger';
+            
+            // Liste déroulante
+            const list = document.createElement('div');
+            list.className = 'custom-dropdown-list';
+            
+            // Remplir les options
+            function buildOptions() {
+                list.innerHTML = '';
+                Array.from(select.options).forEach((opt, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'custom-dropdown-item';
+                    if (!opt.value) item.classList.add('placeholder');
+                    if (select.selectedIndex === idx) item.classList.add('selected');
+                    item.textContent = opt.textContent;
+                    item.dataset.value = opt.value;
+                    item.dataset.index = idx;
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        select.selectedIndex = idx;
+                        select.dispatchEvent(new Event('change'));
+                        trigger.textContent = opt.textContent;
+                        trigger.classList.remove('open');
+                        list.classList.remove('show');
+                        list.querySelectorAll('.custom-dropdown-item').forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                    });
+                    list.appendChild(item);
+                });
+                
+                // Texte initial
+                trigger.textContent = select.options[select.selectedIndex]?.textContent || '-- Sélectionner --';
+            }
+            
+            buildOptions();
+            
+            // Toggle ouverture/fermeture
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Fermer tous les autres dropdowns
+                document.querySelectorAll('.custom-dropdown-trigger.open').forEach(t => {
+                    if (t !== trigger) {
+                        t.classList.remove('open');
+                        t.nextElementSibling.classList.remove('show');
+                    }
+                });
+                trigger.classList.toggle('open');
+                list.classList.toggle('show');
+            });
+            
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(list);
+            
+            // Insérer après le select
+            select.parentNode.insertBefore(wrapper, select.nextSibling);
+            
+            // Stocker la fonction rebuild pour refresh
+            wrapper._rebuild = buildOptions;
+        }
+        
+        function refreshCustomDropdown(selectId) {
+            const wrapper = document.getElementById('cd-' + selectId);
+            if (wrapper && wrapper._rebuild) {
+                wrapper._rebuild();
+            } else {
+                initCustomDropdown(selectId);
+            }
+        }
+        
+        // Fermer les dropdowns quand on clique ailleurs
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-dropdown-trigger.open').forEach(t => {
+                t.classList.remove('open');
+                t.nextElementSibling.classList.remove('show');
+            });
+        });
+
         console.log('✅ Quiz Party V2 chargé !');
         
         // Lancer l'auth d'abord, puis tryReconnect si connecté
@@ -4781,6 +4975,10 @@
             if (currentUser) {
                 tryReconnect();
             }
+            // Initialiser les custom dropdowns
+            initCustomDropdown('create-mode');
+            initCustomDropdown('playlist-select');
+            initCustomDropdown('saved-playlist-select');
         });
 
         // Enter key sur login/setup
