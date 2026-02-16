@@ -729,6 +729,43 @@
             font-family: 'Montserrat', sans-serif;
         }
 
+        /* EMOJI PICKER */
+        .emoji-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; max-width: 320px; margin: 0.5rem auto; }
+        .emoji-pick { font-size: 1.6rem; width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .emoji-pick:hover { background: rgba(255,255,255,0.15); transform: scale(1.15); }
+        .emoji-pick.selected { border-color: #ffbe0b; background: rgba(255,190,11,0.2); transform: scale(1.15); box-shadow: 0 0 12px rgba(255,190,11,0.4); }
+
+        /* SCORE ANIMATIONS */
+        @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        @keyframes scoreFloat { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
+        @keyframes streakPulse { 0%, 100% { text-shadow: 0 0 10px rgba(255,100,0,0.5); } 50% { text-shadow: 0 0 25px rgba(255,100,0,0.9); } }
+        .score-pop { animation: scorePop 0.4s ease-out; }
+        .score-float { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); font-size: 2.5rem; font-weight: 800; color: #00c864; z-index: 9999; pointer-events: none; animation: scoreFloat 1.2s ease-out forwards; }
+        .score-float.wrong { color: #f56565; }
+        .streak-badge { display: inline-block; margin-left: 0.5rem; font-size: 0.85rem; animation: streakPulse 1s infinite; color: #ff6b35; font-weight: 800; }
+
+        /* STATS FIN DE PARTIE */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 700px; margin: 1.5rem auto; }
+        .stat-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(131,56,236,0.3); border-radius: 15px; padding: 1rem; text-align: center; }
+        .stat-card .stat-emoji { font-size: 2rem; margin-bottom: 0.3rem; }
+        .stat-card .stat-title { color: #00f5ff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .stat-card .stat-player { color: #ffbe0b; font-size: 1.1rem; font-weight: 800; }
+        .stat-card .stat-value { color: rgba(255,255,255,0.7); font-size: 0.8rem; }
+
+        /* TEAMS */
+        .team-banner { display: flex; justify-content: center; gap: 2rem; margin: 1rem 0; flex-wrap: wrap; }
+        .team-card { padding: 1rem 1.5rem; border-radius: 15px; text-align: center; min-width: 150px; }
+        .team-card.red { background: rgba(239,68,68,0.15); border: 2px solid #ef4444; }
+        .team-card.blue { background: rgba(59,130,246,0.15); border: 2px solid #3b82f6; }
+        .team-card .team-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.3rem; }
+        .team-card.red .team-name { color: #ef4444; }
+        .team-card.blue .team-name { color: #3b82f6; }
+        .team-card .team-score { font-size: 1.5rem; font-weight: 800; color: #ffbe0b; }
+        .team-card .team-members { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.3rem; }
+        .team-tag { font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; margin-left: 0.3rem; }
+        .team-tag.red { background: rgba(239,68,68,0.3); color: #ef4444; }
+        .team-tag.blue { background: rgba(59,130,246,0.3); color: #3b82f6; }
+
         /* BADGES MODE ÉCRITURE */
         .writing-badge {
             display: inline-flex;
@@ -974,7 +1011,7 @@
                 <button id="admin-menu-btn" class="btn" onclick="goToAdmin()" style="display: none;">👥 Gérer les comptes</button>
                 <button id="account-menu-btn" class="btn" onclick="goToAccount()" style="display: none;">⚙️ Mon Compte</button>
                 <button id="logout-btn" class="btn danger" onclick="doLogout()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
-                <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion</button>
+                <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion Organisateur</button>
                 <a id="nos-reseaux-menu" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
             </div>
         </div>
@@ -1028,6 +1065,8 @@
             <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">🎮 Créer une partie</h2>
             
             <input id="create-name" class="input" placeholder="Ton pseudo" maxlength="20">
+            <p style="color: #aaa; font-size: 0.85rem; margin: 0.3rem 0;">Choisis ton avatar :</p>
+            <div class="emoji-picker" id="create-emoji-picker"></div>
             
             <div class="section">
                 <h3>🎯 Mode de jeu</h3>
@@ -1051,6 +1090,14 @@
                 <label class="checkbox-label">
                     <input type="checkbox" id="distance-mode" onchange="if(this.checked) document.getElementById('host-mode').checked=false;">
                     <span>Mode Distance (Son sur tous les Appareils)</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="duel-mode">
+                    <span>⚔️ Duels aléatoires (1v1 entre questions)</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="team-mode">
+                    <span>👥 Mode Équipes (2 équipes auto)</span>
                 </label>
             </div>
 
@@ -1138,6 +1185,8 @@
         <div id="join-screen" class="screen hidden">
             <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Rejoindre</h2>
             <input id="join-name" class="input" placeholder="Ton pseudo" maxlength="20">
+            <p style="color: #aaa; font-size: 0.85rem; margin: 0.3rem 0;">Choisis ton avatar :</p>
+            <div class="emoji-picker" id="join-emoji-picker"></div>
             <input id="join-code" class="input code-input" placeholder="123456" type="tel" maxlength="6">
             <button class="btn large" onclick="joinRoom()">▶️ Rejoindre</button>
             <button class="btn" onclick="goToMenu()" style="margin-top: 2rem;">🏠 Retour</button>
@@ -1442,6 +1491,9 @@
             <div id="podium-container" class="podium"></div>
             <div id="leaderboard-container" class="leaderboard"></div>
             
+            <!-- STATS FUN -->
+            <div id="fun-stats-container" style="margin-top: 1.5rem;"></div>
+            
             <!-- Boutons de fin de partie -->
             <div id="leaderboard-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
                 <!-- Bouton pour l'HÔTE -->
@@ -1480,6 +1532,38 @@
                 </div>
                 
                 <button class="btn large secondary" onclick="cancelRejoin()">❌ Annuler et retourner au menu</button>
+            </div>
+        </div>
+
+        <!-- DUEL SCREEN -->
+        <div id="duel-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+                <h1 style="font-size: 3rem; color: #ff006e; margin-bottom: 1.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">⚔️ DUEL !</h1>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div style="text-align: center;">
+                        <div id="duel-player1-emoji" style="font-size: 3rem;"></div>
+                        <div id="duel-player1-name" style="color: #00f5ff; font-size: 1.3rem; font-weight: 800;"></div>
+                        <div id="duel-player1-score" style="color: #ffbe0b; font-size: 1rem;"></div>
+                    </div>
+                    <div style="font-size: 2.5rem; color: #ff006e; font-weight: 800;">VS</div>
+                    <div style="text-align: center;">
+                        <div id="duel-player2-emoji" style="font-size: 3rem;"></div>
+                        <div id="duel-player2-name" style="color: #00f5ff; font-size: 1.3rem; font-weight: 800;"></div>
+                        <div id="duel-player2-score" style="color: #ffbe0b; font-size: 1rem;"></div>
+                    </div>
+                </div>
+                <p style="font-size: 1.2rem; color: white;">Le plus rapide gagne <span style="color: #ffbe0b; font-weight: 800;">500 pts bonus</span> !</p>
+                <div class="spinner" style="margin: 2rem auto;"></div>
+            </div>
+        </div>
+
+        <!-- DUEL RESULT SCREEN -->
+        <div id="duel-result-screen" class="screen hidden">
+            <div style="text-align: center;">
+                <h1 style="font-size: 3rem; color: #ffbe0b; margin-bottom: 1rem;">⚔️ RÉSULTAT DU DUEL</h1>
+                <div id="duel-winner" style="font-size: 2rem; color: #00c864; font-weight: 800; margin-bottom: 1rem;"></div>
+                <div id="duel-details" style="color: white; font-size: 1.1rem;"></div>
+                <div class="spinner" style="margin: 2rem auto;"></div>
             </div>
         </div>
 
@@ -2846,6 +2930,9 @@
 
         function createRoom(name, mode, tracks, hostMode, distanceMode, playlistName) {
             const code = genCode();
+            const emoji = selectedEmoji.create;
+            const duelMode = document.getElementById('duel-mode')?.checked || false;
+            const teamMode = document.getElementById('team-mode')?.checked || false;
             
             console.log(`🎮 Création de la room avec le code: ${code}`);
             
@@ -2864,9 +2951,11 @@
                 host: name,
                 hostMode: hostMode,
                 distanceMode: distanceMode,
+                duelMode: duelMode,
+                teamMode: teamMode,
                 playlistName: playlistName || '',
                 gameMode: mode,
-                players: [{ name, score: 0, isHost: true }],
+                players: [{ name, score: 0, isHost: true, emoji: emoji, team: teamMode ? 'red' : null }],
                 questions,
                 currentQ: 0,
                 started: false
@@ -2911,7 +3000,14 @@
                     return;
                 }
 
-                room.players.push({ name, score: 0 });
+                // Auto-assign team
+                let team = null;
+                if (room.teamMode) {
+                    const redCount = room.players.filter(p => p.team === 'red').length;
+                    const blueCount = room.players.filter(p => p.team === 'blue').length;
+                    team = redCount <= blueCount ? 'red' : 'blue';
+                }
+                room.players.push({ name, score: 0, emoji: selectedEmoji.join, team: team });
                 db.ref(`rooms/${code}`).update({ players: room.players });
 
                 gameState.room = room;
@@ -2961,9 +3057,10 @@
             gameState.room.players.forEach((p, i) => {
                 const div = document.createElement('div');
                 div.className = 'player';
+                const teamTag = p.team ? `<span class="team-tag ${p.team}">${p.team === 'red' ? '🔴' : '🔵'}</span>` : '';
                 div.innerHTML = `
-                    <span class="player-num">${i + 1}</span>
-                    <span class="player-name">${p.name}</span>
+                    <span class="player-num">${p.emoji || '😎'}</span>
+                    <span class="player-name">${p.name}${teamTag}</span>
                     ${p.name === gameState.room.host ? '<span>👑</span>' : ''}
                 `;
                 list.appendChild(div);
@@ -3080,8 +3177,17 @@
                     // Rafraîchir les scores avant d'afficher la nouvelle question
                     db.ref(`${roomBase}/players`).once('value', s => {
                         gameState.room.players = s.val() || gameState.room.players;
-                        loadQuestion();
-                        updateScoreboard();
+                        
+                        // Vérifier si un duel doit se déclencher
+                        if (shouldTriggerDuel() && newCurrentQ > 0) {
+                            triggerDuel(() => {
+                                loadQuestion();
+                                updateScoreboard();
+                            });
+                        } else {
+                            loadQuestion();
+                            updateScoreboard();
+                        }
                     });
                 }
 
@@ -3416,11 +3522,26 @@
                     div.classList.add('me');
                 }
                 div.innerHTML = `
-                    <span class="score-name">${p.name}</span>
+                    <span class="score-name">${p.emoji || '😎'} ${p.name}</span>
                     <span class="score-points">${p.score || 0}</span>
                 `;
                 container.appendChild(div);
             });
+            
+            // Afficher scores d'équipes si mode team
+            if (gameState.room.teamMode) {
+                const teamScores = getTeamScores();
+                const teamDiv = document.createElement('div');
+                teamDiv.style.cssText = 'margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1);';
+                teamDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#ef4444; font-weight:800;">🔴 ${teamScores.red}</span>
+                        <span style="color:rgba(255,255,255,0.5); font-size:0.8rem;">ÉQUIPES</span>
+                        <span style="color:#3b82f6; font-weight:800;">${teamScores.blue} 🔵</span>
+                    </div>
+                `;
+                container.appendChild(teamDiv);
+            }
         }
 
         // Affiche les joueurs qui ont bien répondu dans le bloc à droite — appelée une seule fois à timer=0, uniquement hôte
@@ -3442,7 +3563,7 @@
                     const answer = lastAnswers[safeName];
                     if (answer && answer.questionIndex === currentQ && answer.correct) {
                         const responseTime = answer.responseTime || 0;
-                        results.push({ name: p.name, time: responseTime });
+                        results.push({ name: p.name, time: responseTime, emoji: p.emoji || '😎' });
                     }
                 });
 
@@ -3465,7 +3586,7 @@
                         const bgOpacity = idx === 0 ? '0.3' : '0.15';
                         div.style.cssText = `background:rgba(0,200,100,${bgOpacity}); border:2px solid ${borderColor}; border-radius:10px; padding:0.6rem 0.8rem; margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;`;
                         div.innerHTML = `
-                            <span style="color:#fff; font-weight:700; font-size:0.95rem;">${medal} ${r.name}</span>
+                            <span style="color:#fff; font-weight:700; font-size:0.95rem;">${medal} ${r.emoji || '😎'} ${r.name}</span>
                             <span style="color:#00f5ff; font-weight:800; font-size:0.9rem;">${r.time.toFixed(0)}s</span>
                         `;
                         list.appendChild(div);
@@ -4555,7 +4676,6 @@
             
             if (isCorrect) {
                 if (feedback) {
-                    // Feedback personnalisé (ex: "✅ Parfait ! Total: 450pts")
                     container.textContent = `🎉 ${feedback}`;
                 } else if (pts > 0) {
                     container.textContent = `🎉 +${pts} pts`;
@@ -4564,6 +4684,11 @@
                 }
             } else {
                 container.textContent = `❌ ${answer}`;
+            }
+            
+            // Score animation + sound (seulement pour les joueurs, pas l'hôte display)
+            if (!gameState.hostDisplayOnly) {
+                showScoreAnimation(pts, isCorrect);
             }
         }
 
@@ -4653,7 +4778,7 @@
                 div.className = `podium-item ${podiumClasses[i]}`;
                 div.innerHTML = `
                     <div class="medal">${medals[i]}</div>
-                    <div class="p-name">${p.name}</div>
+                    <div class="p-name">${p.emoji || '😎'} ${p.name}</div>
                     <div class="p-score">${p.score || 0} pts</div>
                 `;
                 podium.appendChild(div);
@@ -4666,9 +4791,10 @@
             sorted.forEach((p, i) => {
                 const div = document.createElement('div');
                 div.className = 'lb-row';
+                const teamTag = p.team ? `<span class="team-tag ${p.team}">${p.team === 'red' ? '🔴' : '🔵'}</span>` : '';
                 div.innerHTML = `
                     <span class="rank">#${i + 1}</span>
-                    <span class="name">${p.name}</span>
+                    <span class="name">${p.emoji || '😎'} ${p.name}${teamTag}</span>
                     <span class="pts">${p.score || 0} pts</span>
                 `;
                 grid.appendChild(div);
@@ -4676,6 +4802,12 @@
 
             // Afficher all-time leaderboard
             displayAllTimeLeaderboard();
+            
+            // Afficher les stats fun
+            generateFunStats();
+            
+            // Afficher les résultats d'équipes
+            displayTeamResults();
             
             // Afficher les bons boutons selon le rôle
             const hostBtn = document.getElementById('host-new-game-btn');
@@ -5069,6 +5201,333 @@
             });
         });
 
+        // ===========================================
+        // FEATURE: TEAMS
+        // ===========================================
+        function getTeamScores() {
+            const players = gameState.room?.players || [];
+            const red = players.filter(p => p.team === 'red').reduce((sum, p) => sum + (p.score || 0), 0);
+            const blue = players.filter(p => p.team === 'blue').reduce((sum, p) => sum + (p.score || 0), 0);
+            return { red, blue };
+        }
+        
+        function displayTeamResults() {
+            if (!gameState.room?.teamMode) return;
+            
+            const container = document.getElementById('fun-stats-container');
+            const teamScores = getTeamScores();
+            const winner = teamScores.red > teamScores.blue ? 'red' : teamScores.blue > teamScores.red ? 'blue' : 'draw';
+            
+            const redPlayers = (gameState.room.players || []).filter(p => p.team === 'red');
+            const bluePlayers = (gameState.room.players || []).filter(p => p.team === 'blue');
+            
+            let html = `<h3 style="color: #ff006e; text-align: center; margin: 1.5rem 0 1rem;">⚔️ Résultat Équipes</h3>`;
+            html += '<div class="team-banner">';
+            
+            html += `<div class="team-card ${winner === 'red' ? 'red' : 'red'}" style="${winner === 'red' ? 'box-shadow: 0 0 20px rgba(239,68,68,0.5);' : ''}">
+                <div class="team-name">${winner === 'red' ? '👑 ' : ''}🔴 Équipe Rouge</div>
+                <div class="team-score">${teamScores.red} pts</div>
+                <div class="team-members">${redPlayers.map(p => (p.emoji || '😎') + ' ' + p.name).join(', ')}</div>
+            </div>`;
+            
+            html += `<div class="team-card ${winner === 'blue' ? 'blue' : 'blue'}" style="${winner === 'blue' ? 'box-shadow: 0 0 20px rgba(59,130,246,0.5);' : ''}">
+                <div class="team-name">${winner === 'blue' ? '👑 ' : ''}🔵 Équipe Bleue</div>
+                <div class="team-score">${teamScores.blue} pts</div>
+                <div class="team-members">${bluePlayers.map(p => (p.emoji || '😎') + ' ' + p.name).join(', ')}</div>
+            </div>`;
+            
+            html += '</div>';
+            
+            if (winner !== 'draw') {
+                html += `<p style="text-align: center; color: ${winner === 'red' ? '#ef4444' : '#3b82f6'}; font-size: 1.3rem; font-weight: 800; margin-top: 0.5rem;">
+                    🏆 ${winner === 'red' ? 'Équipe Rouge' : 'Équipe Bleue'} GAGNE !
+                </p>`;
+            } else {
+                html += `<p style="text-align: center; color: #ffbe0b; font-size: 1.3rem; font-weight: 800; margin-top: 0.5rem;">🤝 ÉGALITÉ !</p>`;
+            }
+            
+            // Insérer AVANT les stats fun
+            container.insertAdjacentHTML('afterbegin', html);
+        }
+
+        // ===========================================
+        // FEATURE: EMOJI AVATARS
+        // ===========================================
+        const AVATAR_EMOJIS = ['😎','🤩','🥳','😈','👻','🦊','🐱','🐶','🦁','🐸','🎸','🎤','🎧','🔥','⭐','💎','🚀','🎯','🧠','👑','🦄','🐉','🎪','🌟','🍕','🎮','💀','🤖'];
+        let selectedEmoji = { create: '😎', join: '😎' };
+        
+        function initEmojiPicker(containerId, key) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            AVATAR_EMOJIS.forEach((emoji, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'emoji-pick' + (i === 0 ? ' selected' : '');
+                btn.textContent = emoji;
+                btn.onclick = () => {
+                    container.querySelectorAll('.emoji-pick').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedEmoji[key] = emoji;
+                };
+                container.appendChild(btn);
+            });
+        }
+        
+        function getPlayerEmoji(playerName) {
+            const p = gameState.room?.players?.find(pl => pl.name === playerName);
+            return p?.emoji || '😎';
+        }
+
+        // ===========================================
+        // FEATURE: SOUND EFFECTS
+        // ===========================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2); // G5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'duel') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'streak') {
+                    osc.type = 'sine';
+                    [523, 659, 784, 1047].forEach((freq, i) => {
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.08);
+                    });
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+                }
+            } catch(e) {}
+        }
+
+        // ===========================================
+        // FEATURE: SCORE ANIMATIONS
+        // ===========================================
+        let playerStreak = 0;
+        
+        function showScoreAnimation(points, isCorrect) {
+            const el = document.createElement('div');
+            el.className = 'score-float' + (isCorrect ? '' : ' wrong');
+            
+            if (isCorrect) {
+                playerStreak++;
+                if (playerStreak >= 5) {
+                    el.textContent = `+${points} 🔥x${playerStreak}`;
+                    playSound('streak');
+                } else if (playerStreak >= 3) {
+                    el.textContent = `+${points} 🔥`;
+                    playSound('streak');
+                } else {
+                    el.textContent = `+${points} ✓`;
+                    playSound('correct');
+                }
+            } else {
+                playerStreak = 0;
+                el.textContent = '✗ Raté';
+                playSound('wrong');
+            }
+            
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1300);
+            
+            // Bounce le score
+            const scoreEl = document.querySelector('.score-value, .trophy');
+            if (scoreEl) {
+                scoreEl.classList.remove('score-pop');
+                void scoreEl.offsetWidth; // force reflow
+                scoreEl.classList.add('score-pop');
+            }
+        }
+
+        // ===========================================
+        // FEATURE: FUN STATS
+        // ===========================================
+        function generateFunStats() {
+            const container = document.getElementById('fun-stats-container');
+            if (!container) return;
+            
+            const players = gameState.room?.players || [];
+            if (players.length < 2) return;
+            
+            // Collecter les données de réponses
+            const lastAnswers = gameState.room.lastAnswers || {};
+            const stats = [];
+            
+            // Stat 1 : Le plus rapide (temps moyen le plus bas)
+            const playerTimes = {};
+            const playerCorrects = {};
+            const playerStreaks = {};
+            
+            players.forEach(p => {
+                const safeName = p.name.replace(/[.#$[\]]/g, '_');
+                playerCorrects[p.name] = 0;
+                playerTimes[p.name] = [];
+                playerStreaks[p.name] = 0;
+            });
+            
+            // Calculer les stats à partir du score
+            const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+            
+            // Top scorer
+            if (sorted[0]?.score > 0) {
+                stats.push({
+                    emoji: '👑',
+                    title: 'MVP DE LA SOIRÉE',
+                    player: `${getPlayerEmoji(sorted[0].name)} ${sorted[0].name}`,
+                    value: `${sorted[0].score} pts`
+                });
+            }
+            
+            // Le dernier (pas 0 points)
+            const lastWithPoints = [...sorted].reverse().find(p => p.score > 0);
+            if (lastWithPoints && lastWithPoints.name !== sorted[0]?.name) {
+                stats.push({
+                    emoji: '🐢',
+                    title: 'LE COMEBACK KID',
+                    player: `${getPlayerEmoji(lastWithPoints.name)} ${lastWithPoints.name}`,
+                    value: `${lastWithPoints.score} pts — La prochaine sera la bonne !`
+                });
+            }
+            
+            // Le plus gros écart entre 1er et 2ème
+            if (sorted.length >= 2 && sorted[0].score > 0 && sorted[1].score > 0) {
+                const gap = sorted[0].score - sorted[1].score;
+                if (gap > 500) {
+                    stats.push({
+                        emoji: '🏎️',
+                        title: 'ÉCART RECORD',
+                        player: `${getPlayerEmoji(sorted[0].name)} ${sorted[0].name}`,
+                        value: `+${gap} pts d'avance !`
+                    });
+                }
+            }
+            
+            // Le joueur le plus régulier (score moyen par question le plus stable)
+            if (sorted.length >= 3) {
+                const mid = sorted[Math.floor(sorted.length / 2)];
+                stats.push({
+                    emoji: '🎯',
+                    title: 'MONSIEUR RÉGULIER',
+                    player: `${getPlayerEmoji(mid.name)} ${mid.name}`,
+                    value: `Pile au milieu du classement`
+                });
+            }
+            
+            // Afficher
+            if (stats.length > 0) {
+                let html = '<h3 style="color: #ff006e; text-align: center; margin-bottom: 1rem;">🏅 Stats de la partie</h3>';
+                html += '<div class="stats-grid">';
+                stats.forEach(s => {
+                    html += `<div class="stat-card">
+                        <div class="stat-emoji">${s.emoji}</div>
+                        <div class="stat-title">${s.title}</div>
+                        <div class="stat-player">${s.player}</div>
+                        <div class="stat-value">${s.value}</div>
+                    </div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            }
+        }
+
+        // ===========================================
+        // FEATURE: DUELS
+        // ===========================================
+        function shouldTriggerDuel() {
+            if (!gameState.room?.duelMode) return false;
+            const players = gameState.room.players.filter(p => !p.isHost || !gameState.room.hostMode);
+            if (players.length < 2) return false;
+            // Duel toutes les 3 questions (sauf première et dernière)
+            const q = gameState.room.currentQ;
+            return q > 0 && q < (gameState.room.questions?.length || 0) - 1 && q % 3 === 0;
+        }
+        
+        function triggerDuel(callback) {
+            const players = gameState.room.players.filter(p => !p.isHost || !gameState.room.hostMode);
+            if (players.length < 2) { if (callback) callback(); return; }
+            
+            const shuffled = [...players].sort(() => Math.random() - 0.5);
+            const p1 = shuffled[0];
+            const p2 = shuffled[1];
+            
+            playSound('duel');
+            
+            document.getElementById('duel-player1-emoji').textContent = p1.emoji || '😎';
+            document.getElementById('duel-player1-name').textContent = p1.name;
+            document.getElementById('duel-player1-score').textContent = `${p1.score || 0} pts`;
+            document.getElementById('duel-player2-emoji').textContent = p2.emoji || '😎';
+            document.getElementById('duel-player2-name').textContent = p2.name;
+            document.getElementById('duel-player2-score').textContent = `${p2.score || 0} pts`;
+            
+            gameState.duelPlayers = { p1: p1.name, p2: p2.name };
+            
+            showScreen('duel-screen');
+            
+            setTimeout(() => {
+                showScreen('game-screen');
+                if (callback) callback();
+            }, 4000);
+        }
+        
+        async function checkDuelResult() {
+            if (!gameState.room?.duel || !gameState.room.duel.player1) return;
+            const duel = gameState.room.duel;
+            const lastAnswers = gameState.room.lastAnswers || {};
+            
+            const safe1 = duel.player1.replace(/[.#$[\]]/g, '_');
+            const safe2 = duel.player2.replace(/[.#$[\]]/g, '_');
+            const a1 = lastAnswers[safe1];
+            const a2 = lastAnswers[safe2];
+            
+            let winner = null;
+            if (a1?.correct && a2?.correct) {
+                winner = (a1.responseTime || 99) <= (a2.responseTime || 99) ? duel.player1 : duel.player2;
+            } else if (a1?.correct) {
+                winner = duel.player1;
+            } else if (a2?.correct) {
+                winner = duel.player2;
+            }
+            
+            if (winner && gameState.isHost) {
+                // Bonus 500 pts pour le gagnant du duel
+                const playerIdx = gameState.room.players.findIndex(p => p.name === winner);
+                if (playerIdx >= 0) {
+                    const newScore = (gameState.room.players[playerIdx].score || 0) + 500;
+                    await db.ref(`rooms/${gameState.room.code}/players/${playerIdx}/score`).set(newScore);
+                }
+                
+                document.getElementById('duel-winner').textContent = `${getPlayerEmoji(winner)} ${winner} remporte le duel !`;
+                document.getElementById('duel-details').textContent = '+500 pts bonus !';
+            } else {
+                document.getElementById('duel-winner').textContent = '💤 Aucun gagnant !';
+                document.getElementById('duel-details').textContent = 'Personne n\'a trouvé...';
+            }
+        }
+
         console.log('✅ Quiz Party V2 chargé !');
         
         // Lancer l'auth d'abord, puis tryReconnect si connecté
@@ -5080,6 +5539,9 @@
             initCustomDropdown('create-mode');
             initCustomDropdown('playlist-select');
             initCustomDropdown('saved-playlist-select');
+            // Initialiser les emoji pickers
+            initEmojiPicker('create-emoji-picker', 'create');
+            initEmojiPicker('join-emoji-picker', 'join');
         });
 
         // Bloquer le refresh et le retour arrière pendant une partie
