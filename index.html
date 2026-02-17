@@ -730,6 +730,25 @@
         }
 
         /* EMOJI PICKER */
+
+        /* FULLSCREEN BUTTON */
+        .fullscreen-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(131,56,236,0.5);
+            color: white;
+            border: 1px solid rgba(131,56,236,0.8);
+            padding: 0.5rem 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+            z-index: 9999;
+            transition: background 0.2s;
+        }
+        .fullscreen-btn:hover { background: rgba(131,56,236,0.8); }
         .emoji-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; max-width: 320px; margin: 0.5rem auto; }
         .emoji-pick { font-size: 1.6rem; width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .emoji-pick:hover { background: rgba(255,255,255,0.15); transform: scale(1.15); }
@@ -738,7 +757,7 @@
         /* SCORE ANIMATIONS */
         @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
         @keyframes scoreFloat { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
-        @keyframes streakPulse { 0%, 100% { text-shadow: 0 0 10px rgba(255,100,0,0.5); } 50% { text-shadow: 0 0 25px rgba(255,100,0,0.9); } }
+        @keyframes streakPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         .score-pop { animation: scorePop 0.4s ease-out; }
         .score-float { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); font-size: 2.5rem; font-weight: 800; color: #00c864; z-index: 9999; pointer-events: none; animation: scoreFloat 1.2s ease-out forwards; }
         .score-float.wrong { color: #f56565; }
@@ -1570,6 +1589,9 @@
         <!-- BOUTON SECOURS -->
         <button id="emergency-btn" class="emergency-btn hidden" onclick="emergencyReset()">🏠 MENU</button>
     </div>
+
+    <!-- BOUTON PLEIN ÉCRAN (hors .app pour toujours visible) -->
+    <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Plein écran">📺 Plein écran</button>
 
     <!-- FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -5312,14 +5334,6 @@
                     gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
                     osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-                } else if (type === 'streak') {
-                    osc.type = 'sine';
-                    [523, 659, 784, 1047].forEach((freq, i) => {
-                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.08);
-                    });
-                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
                 }
             } catch(e) {}
         }
@@ -5327,26 +5341,14 @@
         // ===========================================
         // FEATURE: SCORE ANIMATIONS
         // ===========================================
-        let playerStreak = 0;
-        
         function showScoreAnimation(points, isCorrect) {
             const el = document.createElement('div');
             el.className = 'score-float' + (isCorrect ? '' : ' wrong');
             
             if (isCorrect) {
-                playerStreak++;
-                if (playerStreak >= 5) {
-                    el.textContent = `+${points} 🔥x${playerStreak}`;
-                    playSound('streak');
-                } else if (playerStreak >= 3) {
-                    el.textContent = `+${points} 🔥`;
-                    playSound('streak');
-                } else {
-                    el.textContent = `+${points} ✓`;
-                    playSound('correct');
-                }
+                el.textContent = `+${points} ✓`;
+                playSound('correct');
             } else {
-                playerStreak = 0;
                 el.textContent = '✗ Raté';
                 playSound('wrong');
             }
@@ -5358,7 +5360,7 @@
             const scoreEl = document.querySelector('.score-value, .trophy');
             if (scoreEl) {
                 scoreEl.classList.remove('score-pop');
-                void scoreEl.offsetWidth; // force reflow
+                void scoreEl.offsetWidth;
                 scoreEl.classList.add('score-pop');
             }
         }
@@ -5380,13 +5382,11 @@
             // Stat 1 : Le plus rapide (temps moyen le plus bas)
             const playerTimes = {};
             const playerCorrects = {};
-            const playerStreaks = {};
             
             players.forEach(p => {
                 const safeName = p.name.replace(/[.#$[\]]/g, '_');
                 playerCorrects[p.name] = 0;
                 playerTimes[p.name] = [];
-                playerStreaks[p.name] = 0;
             });
             
             // Calculer les stats à partir du score
@@ -5529,6 +5529,24 @@
         }
 
         console.log('✅ Quiz Party V2 chargé !');
+
+        // Plein écran
+        function toggleFullscreen() {
+            const btn = document.querySelector('.fullscreen-btn');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    btn.textContent = '✕ Quitter';
+                }).catch(() => {});
+            } else {
+                document.exitFullscreen().then(() => {
+                    btn.textContent = '📺 Plein écran';
+                }).catch(() => {});
+            }
+        }
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.querySelector('.fullscreen-btn');
+            btn.textContent = document.fullscreenElement ? '✕ Quitter' : '📺 Plein écran';
+        });
         
         // Lancer l'auth d'abord, puis tryReconnect si connecté
         initAuth().then(() => {
