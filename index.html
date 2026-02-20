@@ -3013,13 +3013,26 @@
             // DUELS : Ajouter des questions supplémentaires pour les duels
             const duelMode = document.getElementById('duel-mode')?.checked || false;
             if (duelMode && questions.length >= 5) {
-                // Nombre de duels : 1 par 5 questions normales
-                const numDuels = Math.max(1, Math.floor(questions.length / 5));
-                const interval = Math.floor(questions.length / (numDuels + 1));
+                // Nombre de duels aléatoire : min 1, max dépend du nombre de questions
+                const maxDuels = Math.max(1, Math.floor(questions.length / 4));
+                const numDuels = Math.max(1, Math.floor(Math.random() * (maxDuels + 1)));
                 
-                console.log(`⚔️ Ajout de ${numDuels} questions duel`);
+                console.log(`⚔️ Ajout de ${numDuels} questions duel (aléatoire, max possible: ${maxDuels})`);
                 
-                for (let d = 0; d < numDuels && trackIndex < shuffled.length; d++) {
+                // Positions aléatoires (pas en premier ni en dernier)
+                const possiblePositions = [];
+                for (let p = 2; p < questions.length - 1; p++) {
+                    possiblePositions.push(p);
+                }
+                // Mélanger les positions
+                for (let i = possiblePositions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [possiblePositions[i], possiblePositions[j]] = [possiblePositions[j], possiblePositions[i]];
+                }
+                // Prendre les N premières, trier pour insérer de la fin au début
+                const insertPositions = possiblePositions.slice(0, numDuels).sort((a, b) => b - a);
+                
+                for (let d = 0; d < insertPositions.length && trackIndex < shuffled.length; d++) {
                     const duelQ = {
                         ...shuffled[trackIndex++],
                         type: 'qcm',
@@ -3028,9 +3041,7 @@
                         optionsCount: 4,
                         isDuel: true
                     };
-                    // Insert at interval position
-                    const insertAt = Math.min((d + 1) * interval + d, questions.length);
-                    questions.splice(insertAt, 0, duelQ);
+                    questions.splice(insertPositions[d], 0, duelQ);
                 }
                 
                 console.log(`📊 Total questions: ${questions.length} (dont ${numDuels} duels)`);
@@ -3462,8 +3473,18 @@
             // Cacher le bloc "bien répondu" à droite
             document.getElementById('correct-players-side').classList.add('hidden');
 
-            document.getElementById('current-q').textContent = gameState.room.currentQ + 1;
-            document.getElementById('total-q').textContent = gameState.room.questions.length;
+            // Compteur de questions : ne pas compter les duels
+            const allQs = gameState.room.questions;
+            const normalQsBefore = allQs.slice(0, gameState.room.currentQ + 1).filter(q2 => !q2.isDuel).length;
+            const totalNormalQs = allQs.filter(q2 => !q2.isDuel).length;
+            
+            if (q.isDuel) {
+                document.getElementById('current-q').textContent = '⚔️';
+                document.getElementById('total-q').textContent = totalNormalQs;
+            } else {
+                document.getElementById('current-q').textContent = normalQsBefore;
+                document.getElementById('total-q').textContent = totalNormalQs;
+            }
             document.getElementById('player-score').textContent = player.score || 0;
             document.getElementById('timer').textContent = timerDuration;
 
@@ -3752,7 +3773,7 @@
             } else {
                 questionText = (type === 'artist' ? "Qui est l'artiste ?" : "Quel est le titre ?");
             }
-            document.getElementById('question-text').textContent = questionText;
+            document.getElementById('question-text').textContent = (q.isDuel ? '⚔️ DUEL : ' : '') + questionText;
 
             // Si on a déjà les options dans la room Firebase → on les utilise directement
             const storedOptions = gameState.room.currentOptions;
@@ -4141,7 +4162,8 @@
                     document.getElementById('answer-reveal').classList.remove('hidden');
                     
                     // AFFICHER LE FEEDBACK (QCM) - Sauf pour l'hôte en mode display-only
-                    if (q.type === 'qcm' && gameState.answered && !gameState.hostDisplayOnly) {
+                    // PAS de points normaux sur les questions duel !
+                    if (q.type === 'qcm' && gameState.answered && !gameState.hostDisplayOnly && !gameState.isDuelQuestion) {
                         const correct = q[q.qType];
                         document.querySelectorAll('.opt').forEach(btn => {
                             // Enlever le style jaune d'attente
@@ -4187,7 +4209,8 @@
                     
                     // DONNER LES POINTS MAINTENANT (seulement QCM et niveau 1 écriture)
                     // Pour niveau 2 écriture, les points sont déjà donnés immédiatement
-                    if (gameState.answered && gameState.pendingScore > 0) {
+                    // PAS de points normaux sur les questions duel !
+                    if (gameState.answered && gameState.pendingScore > 0 && !gameState.isDuelQuestion) {
                         updateScore(gameState.pendingScore);
                         gameState.pendingScore = 0; // Éviter de redonner
                     }
@@ -4206,6 +4229,7 @@
                     
                     // DUEL : Résolution spéciale
                     if (gameState.isDuelQuestion && gameState.currentDuel) {
+                        clearInterval(gameState.timerInterval); // Stop le timer
                         setTimeout(async () => {
                             if (gameState.isHost) {
                                 await resolveDuel();
@@ -5787,6 +5811,9 @@
                 }
                 
                 showScreen('duel-spectator-screen');
+                
+                // Spectateurs écoutent aussi le résultat du duel
+                showDuelResults();
             }
         }
         
@@ -5812,13 +5839,16 @@
             let winner = null;
             let loser = null;
             
-            if (a1Valid?.correct && a2Valid?.correct) {
+            const p1Correct = a1Valid && a1.correct;
+            const p2Correct = a2Valid && a2.correct;
+            
+            if (p1Correct && p2Correct) {
                 // Both correct → fastest wins
                 winner = (a1.responseTime || 999) <= (a2.responseTime || 999) ? duel.p1Name : duel.p2Name;
                 loser = winner === duel.p1Name ? duel.p2Name : duel.p1Name;
-            } else if (a1Valid && a1.correct) {
+            } else if (p1Correct) {
                 winner = duel.p1Name; loser = duel.p2Name;
-            } else if (a2Valid && a2.correct) {
+            } else if (p2Correct) {
                 winner = duel.p2Name; loser = duel.p1Name;
             }
             // If neither correct, no winner
@@ -5876,10 +5906,14 @@
         }
         
         function showDuelResults() {
-            // Listen for duel results
-            db.ref(`rooms/${gameState.room.code}/duelResult`).once('value', snapshot => {
+            // Écouter le résultat du duel (attendre que le host l'écrive)
+            const resultRef = db.ref(`rooms/${gameState.room.code}/duelResult`);
+            
+            const onResult = (snapshot) => {
                 const result = snapshot.val();
-                if (!result) return;
+                if (!result || !result.p1Name) return; // Pas encore prêt
+                
+                resultRef.off('value', onResult); // Stop listening
                 
                 const container = document.getElementById('duel-result-content');
                 let html = '';
@@ -5934,7 +5968,26 @@
                         }
                     }
                 }, 1000);
-            });
+            };
+            
+            resultRef.on('value', onResult);
+            
+            // Safety timeout : si après 15s toujours rien, forcer l'avancement
+            setTimeout(() => {
+                resultRef.off('value', onResult);
+                if (gameState.isDuelQuestion) {
+                    gameState.currentDuel = null;
+                    gameState.isDuelQuestion = false;
+                    gameState.myBet = null;
+                    if (gameState.isHost) {
+                        db.ref(`rooms/${gameState.room.code}/duelResult`).remove();
+                        db.ref(`rooms/${gameState.room.code}/duel`).remove();
+                        db.ref(`rooms/${gameState.room.code}/currentQ`).once('value', snap => {
+                            db.ref(`rooms/${gameState.room.code}/currentQ`).set(snap.val() + 1);
+                        });
+                    }
+                }
+            }, 15000);
         }
 
         console.log('✅ Quiz Party V2 chargé !');
