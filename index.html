@@ -1563,13 +1563,13 @@
                 </div>
 
                 <div style="background: rgba(255,255,255,0.05); border: 2px solid rgba(255,0,110,0.4); border-radius: 15px; padding: 1.2rem; margin: 1rem 0; text-align: left;">
-                    <h3 style="color: #ffbe0b; text-align: center; margin-bottom: 0.8rem;">📋 RÈGLES DU DUEL</h3>
-                    <p style="color: white; margin: 0.5rem 0; font-size: 1rem;">⚔️ <strong style="color: #ff006e;">Les duellistes</strong> : Une question spéciale va être jouée. Seuls les 2 duellistes jouent !</p>
-                    <p style="color: white; margin: 0.5rem 0; font-size: 1rem;">🏆 <strong style="color: #00c864;">Le gagnant</strong> VOLE <strong style="color: #ffbe0b;">200 points</strong> au perdant !</p>
-                    <p style="color: white; margin: 0.5rem 0; font-size: 1rem;">💰 <strong style="color: #3b82f6;">Les spectateurs</strong> peuvent PARIER <strong style="color: #ffbe0b;">100 points</strong> sur un duelliste :</p>
-                    <p style="color: #00c864; margin: 0.3rem 0 0.3rem 1.5rem; font-size: 0.95rem;">✅ Pari réussi = <strong>+200 points</strong></p>
-                    <p style="color: #ef4444; margin: 0.3rem 0 0.3rem 1.5rem; font-size: 0.95rem;">❌ Pari perdu = <strong>-100 points</strong></p>
-                    <p style="color: rgba(255,255,255,0.5); margin: 0.3rem 0 0 1.5rem; font-size: 0.85rem;">🚫 Pas obligé de parier !</p>
+                    <h3 style="color: #ffbe0b; text-align: center; margin-bottom: 0.8rem; font-size: 1.5rem;">📋 RÈGLES DU DUEL</h3>
+                    <p style="color: white; margin: 0.6rem 0; font-size: 1.2rem;">⚔️ <strong style="color: #ff006e;">Les duellistes</strong> : Une question spéciale va être jouée. Seuls les 2 duellistes jouent !</p>
+                    <p style="color: white; margin: 0.6rem 0; font-size: 1.2rem;">🏆 <strong style="color: #00c864;">Le gagnant</strong> VOLE <strong style="color: #ffbe0b;">200 points</strong> au perdant !</p>
+                    <p style="color: white; margin: 0.6rem 0; font-size: 1.2rem;">💰 <strong style="color: #3b82f6;">Les spectateurs</strong> peuvent PARIER <strong style="color: #ffbe0b;">100 points</strong> sur un duelliste :</p>
+                    <p style="color: #00c864; margin: 0.4rem 0 0.4rem 1.5rem; font-size: 1.1rem;">✅ Pari réussi = <strong>+200 points</strong></p>
+                    <p style="color: #ef4444; margin: 0.4rem 0 0.4rem 1.5rem; font-size: 1.1rem;">❌ Pari perdu = <strong>-100 points</strong></p>
+                    <p style="color: rgba(255,255,255,0.6); margin: 0.4rem 0 0 1.5rem; font-size: 1rem;">🚫 Pas obligé de parier !</p>
                 </div>
 
                 <div style="margin-top: 1rem;">
@@ -3271,7 +3271,7 @@
                 const oldCurrentQ = gameState.room.currentQ;
                 gameState.room.currentQ = newCurrentQ;
 
-                if (currentScreen !== 'game') return;
+                if (currentScreen !== 'game' && currentScreen !== 'duel-result' && currentScreen !== 'duel-spectator' && currentScreen !== 'duel-rules' && currentScreen !== 'duel-bet') return;
                 if (!gameState.room.questions) return;
 
                 // CAS 1 : Attente après rafraîchissement
@@ -5698,8 +5698,8 @@
                 
                 showScreen('duel-rules-screen');
                 
-                // Countdown 10s
-                let countdown = 10;
+                // Countdown 15s
+                let countdown = 15;
                 document.getElementById('duel-rules-countdown').textContent = countdown;
                 const cdInterval = setInterval(() => {
                     countdown--;
@@ -5958,6 +5958,9 @@
                         gameState.isDuelQuestion = false;
                         gameState.myBet = null;
                         
+                        // Remettre en écran game AVANT d'avancer
+                        showScreen('game-screen');
+                        
                         // Advance to next question
                         if (gameState.isHost) {
                             db.ref(`rooms/${gameState.room.code}/duelResult`).remove();
@@ -5979,6 +5982,7 @@
                     gameState.currentDuel = null;
                     gameState.isDuelQuestion = false;
                     gameState.myBet = null;
+                    showScreen('game-screen');
                     if (gameState.isHost) {
                         db.ref(`rooms/${gameState.room.code}/duelResult`).remove();
                         db.ref(`rooms/${gameState.room.code}/duel`).remove();
