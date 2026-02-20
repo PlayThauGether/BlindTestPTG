@@ -754,15 +754,6 @@
         .emoji-pick:hover { background: rgba(255,255,255,0.15); transform: scale(1.15); }
         .emoji-pick.selected { border-color: #ffbe0b; background: rgba(255,190,11,0.2); transform: scale(1.15); box-shadow: 0 0 12px rgba(255,190,11,0.4); }
 
-        /* SCORE ANIMATIONS */
-        @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
-        @keyframes scoreFloat { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
-        @keyframes streakPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .score-pop { animation: scorePop 0.4s ease-out; }
-        .score-float { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); font-size: 2.5rem; font-weight: 800; color: #00c864; z-index: 9999; pointer-events: none; animation: scoreFloat 1.2s ease-out forwards; }
-        .score-float.wrong { color: #f56565; }
-        .streak-badge { display: inline-block; margin-left: 0.5rem; font-size: 0.85rem; animation: streakPulse 1s infinite; color: #ff6b35; font-weight: 800; }
-
         /* STATS FIN DE PARTIE */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 700px; margin: 1.5rem auto; }
         .stat-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(131,56,236,0.3); border-radius: 15px; padding: 1rem; text-align: center; }
@@ -1554,35 +1545,106 @@
             </div>
         </div>
 
-        <!-- DUEL SCREEN -->
-        <div id="duel-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 600px; margin: 0 auto;">
-                <h1 style="font-size: 3rem; color: #ff006e; margin-bottom: 1.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">⚔️ DUEL !</h1>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- DUEL: ÉCRAN RÈGLES (10 secondes) -->
+        <div id="duel-rules-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 650px; margin: 0 auto;">
+                <h1 style="font-size: 3rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">⚔️ DUEL 1 VS 1 ⚔️</h1>
+                
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin: 1.5rem 0;">
                     <div style="text-align: center;">
-                        <div id="duel-player1-emoji" style="font-size: 3rem;"></div>
-                        <div id="duel-player1-name" style="color: #00f5ff; font-size: 1.3rem; font-weight: 800;"></div>
-                        <div id="duel-player1-score" style="color: #ffbe0b; font-size: 1rem;"></div>
+                        <div id="duel-r-p1-emoji" style="font-size: 3.5rem;"></div>
+                        <div id="duel-r-p1-name" style="color: #00f5ff; font-size: 1.4rem; font-weight: 800;"></div>
                     </div>
-                    <div style="font-size: 2.5rem; color: #ff006e; font-weight: 800;">VS</div>
+                    <div style="font-size: 2.5rem; color: #ff006e; font-weight: 800;">⚡VS⚡</div>
                     <div style="text-align: center;">
-                        <div id="duel-player2-emoji" style="font-size: 3rem;"></div>
-                        <div id="duel-player2-name" style="color: #00f5ff; font-size: 1.3rem; font-weight: 800;"></div>
-                        <div id="duel-player2-score" style="color: #ffbe0b; font-size: 1rem;"></div>
+                        <div id="duel-r-p2-emoji" style="font-size: 3.5rem;"></div>
+                        <div id="duel-r-p2-name" style="color: #00f5ff; font-size: 1.4rem; font-weight: 800;"></div>
                     </div>
                 </div>
-                <p style="font-size: 1.2rem; color: white;">Le plus rapide gagne <span style="color: #ffbe0b; font-weight: 800;">500 pts bonus</span> !</p>
-                <div class="spinner" style="margin: 2rem auto;"></div>
+
+                <div style="background: rgba(255,255,255,0.05); border: 2px solid rgba(255,0,110,0.4); border-radius: 15px; padding: 1.2rem; margin: 1rem 0; text-align: left;">
+                    <h3 style="color: #ffbe0b; text-align: center; margin-bottom: 0.8rem;">📋 RÈGLES DU DUEL</h3>
+                    <p style="color: white; margin: 0.5rem 0; font-size: 1rem;">⚔️ <strong style="color: #ff006e;">Les duellistes</strong> : Une question spéciale va être jouée. Seuls les 2 duellistes jouent !</p>
+                    <p style="color: white; margin: 0.5rem 0; font-size: 1rem;">🏆 <strong style="color: #00c864;">Le gagnant</strong> VOLE <strong style="color: #ffbe0b;">200 points</strong> au perdant !</p>
+                    <p style="color: white; margin: 0.5rem 0; font-size: 1rem;">💰 <strong style="color: #3b82f6;">Les spectateurs</strong> peuvent PARIER <strong style="color: #ffbe0b;">100 points</strong> sur un duelliste :</p>
+                    <p style="color: #00c864; margin: 0.3rem 0 0.3rem 1.5rem; font-size: 0.95rem;">✅ Pari réussi = <strong>+200 points</strong></p>
+                    <p style="color: #ef4444; margin: 0.3rem 0 0.3rem 1.5rem; font-size: 0.95rem;">❌ Pari perdu = <strong>-100 points</strong></p>
+                    <p style="color: rgba(255,255,255,0.5); margin: 0.3rem 0 0 1.5rem; font-size: 0.85rem;">🚫 Pas obligé de parier !</p>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <span style="color: #ffbe0b; font-size: 1.2rem; font-weight: 800;">⏳ Début dans </span>
+                    <span id="duel-rules-countdown" style="color: #ff006e; font-size: 2rem; font-weight: 800;">10</span>
+                </div>
             </div>
         </div>
 
-        <!-- DUEL RESULT SCREEN -->
-        <div id="duel-result-screen" class="screen hidden">
-            <div style="text-align: center;">
-                <h1 style="font-size: 3rem; color: #ffbe0b; margin-bottom: 1rem;">⚔️ RÉSULTAT DU DUEL</h1>
-                <div id="duel-winner" style="font-size: 2rem; color: #00c864; font-weight: 800; margin-bottom: 1rem;"></div>
-                <div id="duel-details" style="color: white; font-size: 1.1rem;"></div>
+        <!-- DUEL: ÉCRAN PARIS (8 secondes) -->
+        <div id="duel-bet-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+                <h2 style="font-size: 2rem; color: #ffbe0b; margin-bottom: 1rem;">💰 PLACEZ VOS PARIS !</h2>
+                
+                <!-- Pour les duellistes -->
+                <div id="duel-bet-duelist" class="hidden" style="margin: 2rem 0;">
+                    <p style="font-size: 1.5rem; color: #ff006e; font-weight: 800;">⚔️ Tu es en duel !</p>
+                    <p style="color: white; font-size: 1.1rem;">Prépare-toi à répondre...</p>
+                    <div class="spinner" style="margin: 1rem auto;"></div>
+                </div>
+                
+                <!-- Pour les spectateurs -->
+                <div id="duel-bet-spectator" class="hidden">
+                    <p style="color: white; margin-bottom: 1rem; font-size: 1rem;">Mise de <strong style="color: #ffbe0b;">100 pts</strong> — Qui va gagner ?</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <button id="bet-p1-btn" class="btn large" onclick="placeBet('p1')" style="min-width: 180px; background: linear-gradient(135deg, #00f5ff33, #00f5ff11); border: 2px solid #00f5ff;">
+                            <span id="bet-p1-emoji" style="font-size: 1.5rem;"></span><br>
+                            <span id="bet-p1-name" style="font-weight: 800;"></span>
+                        </button>
+                        <button id="bet-p2-btn" class="btn large" onclick="placeBet('p2')" style="min-width: 180px; background: linear-gradient(135deg, #ff006e33, #ff006e11); border: 2px solid #ff006e;">
+                            <span id="bet-p2-emoji" style="font-size: 1.5rem;"></span><br>
+                            <span id="bet-p2-name" style="font-weight: 800;"></span>
+                        </button>
+                    </div>
+                    <button class="btn secondary" onclick="placeBet('none')" style="font-size: 0.85rem;">🚫 Ne pas parier</button>
+                    <div id="bet-confirmation" class="hidden" style="margin-top: 1rem; color: #00c864; font-size: 1.2rem; font-weight: 800;"></div>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <span style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">La question arrive dans </span>
+                    <span id="duel-bet-countdown" style="color: #ffbe0b; font-size: 1.5rem; font-weight: 800;">8</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DUEL: ÉCRAN SPECTATEUR (pendant la question) -->
+        <div id="duel-spectator-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 600px; margin: 0 auto; padding-top: 3rem;">
+                <h2 style="font-size: 2rem; color: #ffbe0b;">⚔️ DUEL EN COURS</h2>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin: 2rem 0;">
+                    <div style="text-align: center;">
+                        <div id="duel-s-p1-emoji" style="font-size: 3rem;"></div>
+                        <div id="duel-s-p1-name" style="color: #00f5ff; font-size: 1.2rem; font-weight: 800;"></div>
+                    </div>
+                    <div style="font-size: 2rem; color: #ff006e; font-weight: 800;">⚡VS⚡</div>
+                    <div style="text-align: center;">
+                        <div id="duel-s-p2-emoji" style="font-size: 3rem;"></div>
+                        <div id="duel-s-p2-name" style="color: #00f5ff; font-size: 1.2rem; font-weight: 800;"></div>
+                    </div>
+                </div>
+                <p id="duel-spectator-bet-info" style="color: #ffbe0b; font-size: 1.1rem;"></p>
                 <div class="spinner" style="margin: 2rem auto;"></div>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">Attendez le résultat...</p>
+            </div>
+        </div>
+
+        <!-- DUEL: ÉCRAN RÉSULTAT -->
+        <div id="duel-result-screen" class="screen hidden">
+            <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+                <h1 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 1rem;">⚔️ RÉSULTAT DU DUEL</h1>
+                <div id="duel-result-content"></div>
+                <div style="margin-top: 1.5rem;">
+                    <span style="color: rgba(255,255,255,0.5);">Suite dans </span>
+                    <span id="duel-result-countdown" style="color: #ffbe0b; font-size: 1.5rem; font-weight: 800;">6</span>
+                </div>
             </div>
         </div>
 
@@ -2947,6 +3009,33 @@
             }
             
             // NE PAS MÉLANGER ! Garder l'ordre Lvl1 → Lvl2
+            
+            // DUELS : Ajouter des questions supplémentaires pour les duels
+            const duelMode = document.getElementById('duel-mode')?.checked || false;
+            if (duelMode && questions.length >= 5) {
+                // Nombre de duels : 1 par 5 questions normales
+                const numDuels = Math.max(1, Math.floor(questions.length / 5));
+                const interval = Math.floor(questions.length / (numDuels + 1));
+                
+                console.log(`⚔️ Ajout de ${numDuels} questions duel`);
+                
+                for (let d = 0; d < numDuels && trackIndex < shuffled.length; d++) {
+                    const duelQ = {
+                        ...shuffled[trackIndex++],
+                        type: 'qcm',
+                        level: 2,
+                        qType: Math.random() > 0.5 ? 'artist' : 'title',
+                        optionsCount: 4,
+                        isDuel: true
+                    };
+                    // Insert at interval position
+                    const insertAt = Math.min((d + 1) * interval + d, questions.length);
+                    questions.splice(insertAt, 0, duelQ);
+                }
+                
+                console.log(`📊 Total questions: ${questions.length} (dont ${numDuels} duels)`);
+            }
+            
             return questions;
         }
 
@@ -3196,17 +3285,15 @@
                 // CAS 3 : Nouvelle question
                 if (newCurrentQ !== oldCurrentQ && newCurrentQ < gameState.room.questions.length) {
                     console.log('📢 Nouvelle question:', newCurrentQ);
-                    // Rafraîchir les scores avant d'afficher la nouvelle question
                     db.ref(`${roomBase}/players`).once('value', s => {
                         gameState.room.players = s.val() || gameState.room.players;
                         
-                        // Vérifier si un duel doit se déclencher
-                        if (shouldTriggerDuel() && newCurrentQ > 0) {
-                            triggerDuel(() => {
-                                loadQuestion();
-                                updateScoreboard();
-                            });
+                        const nextQ = gameState.room.questions[newCurrentQ];
+                        if (nextQ && nextQ.isDuel) {
+                            // C'est une question duel !
+                            startDuelFlow();
                         } else {
+                            gameState.isDuelQuestion = false;
                             loadQuestion();
                             updateScoreboard();
                         }
@@ -3380,6 +3467,11 @@
             document.getElementById('player-score').textContent = player.score || 0;
             document.getElementById('timer').textContent = timerDuration;
 
+            // Badge duel
+            if (q.isDuel) {
+                document.getElementById('question-text').textContent = '⚔️ QUESTION DUEL ⚔️';
+            }
+            
             // Badge niveau
             const lvlBadge = document.getElementById('level-badge');
             if (q.mode === 'mix') {
@@ -3577,6 +3669,27 @@
             db.ref(`rooms/${gameState.room.code}/lastAnswers`).once('value', snapshot => {
                 const lastAnswers = snapshot.val() || {};
                 const currentQ = gameState.room.currentQ;
+                const q = gameState.room.questions[currentQ];
+                
+                // ANSWER LOG : Accumuler les données pour les stats de fin
+                if (!gameState.answerLog) gameState.answerLog = [];
+                const logEntry = { questionType: q?.type || 'qcm', answers: {} };
+                gameState.room.players.forEach(p => {
+                    const safeName = p.name.replace(/[.#$[\]]/g, '_');
+                    const a = lastAnswers[safeName];
+                    if (a && a.questionIndex === currentQ) {
+                        logEntry.answers[p.name] = {
+                            correct: a.correct || false,
+                            responseTime: a.responseTime || 999,
+                            bothFound: a.bothFound || false,
+                            questionType: a.questionType || q?.type || 'qcm'
+                        };
+                    }
+                });
+                // Only add if we haven't logged this question yet
+                if (gameState.answerLog.length <= currentQ) {
+                    gameState.answerLog.push(logEntry);
+                }
 
                 // Collecter les joueurs avec leur temps de réponse
                 const results = [];
@@ -4091,6 +4204,18 @@
                         gameState.answered = true;
                     }
                     
+                    // DUEL : Résolution spéciale
+                    if (gameState.isDuelQuestion && gameState.currentDuel) {
+                        setTimeout(async () => {
+                            if (gameState.isHost) {
+                                await resolveDuel();
+                            }
+                            // Tous les clients écoutent le résultat
+                            showDuelResults();
+                        }, 2000);
+                        return; // Le duel gère l'avancement
+                    }
+                    
                     // ATTENDRE 5 SECONDES pour voir la réponse
                     setTimeout(() => {
                         if (gameState.isHost) {
@@ -4121,10 +4246,9 @@
             db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                 correct: isCorrect,
                 questionIndex: gameState.room.currentQ,
-                responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
+                responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000),
+                questionType: 'qcm'
             });
-            
-            // Désactiver les boutons + JAUNE sur celui choisi
             document.querySelectorAll('.opt').forEach(btn => {
                 btn.classList.add('disabled');
                 btn.onclick = null;
@@ -4425,7 +4549,8 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
                         questionIndex: gameState.room.currentQ,
-                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000),
+                        questionType: 'writing'
                     });
                     
                     return;
@@ -4513,7 +4638,9 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
                         questionIndex: gameState.room.currentQ,
-                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000),
+                        questionType: 'writing',
+                        bothFound: true
                     });
                     
                     // Réinitialiser pour la prochaine question
@@ -4670,7 +4797,9 @@
                     db.ref(`rooms/${gameState.room.code}/lastAnswers/${myName.replace(/[.#$[\]]/g, '_')}`).set({
                         correct: true,
                         questionIndex: gameState.room.currentQ,
-                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000),
+                        questionType: 'writing',
+                        bothFound: true
                     });
                     
                     gameState.currentQuestionPoints = 0;
@@ -4682,7 +4811,9 @@
                         correct: false,
                         partial: true,
                         questionIndex: gameState.room.currentQ,
-                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000)
+                        responseTime: Math.round((Date.now() - (gameState.questionStartedAt || Date.now())) / 1000),
+                        questionType: 'writing',
+                        bothFound: true
                     });
                 }
             }
@@ -4708,9 +4839,9 @@
                 container.textContent = `❌ ${answer}`;
             }
             
-            // Score animation + sound (seulement pour les joueurs, pas l'hôte display)
+            // Sons de feedback
             if (!gameState.hostDisplayOnly) {
-                showScoreAnimation(pts, isCorrect);
+                playSound(isCorrect ? 'correct' : 'wrong');
             }
         }
 
@@ -5339,33 +5470,6 @@
         }
 
         // ===========================================
-        // FEATURE: SCORE ANIMATIONS
-        // ===========================================
-        function showScoreAnimation(points, isCorrect) {
-            const el = document.createElement('div');
-            el.className = 'score-float' + (isCorrect ? '' : ' wrong');
-            
-            if (isCorrect) {
-                el.textContent = `+${points} ✓`;
-                playSound('correct');
-            } else {
-                el.textContent = '✗ Raté';
-                playSound('wrong');
-            }
-            
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1300);
-            
-            // Bounce le score
-            const scoreEl = document.querySelector('.score-value, .trophy');
-            if (scoreEl) {
-                scoreEl.classList.remove('score-pop');
-                void scoreEl.offsetWidth;
-                scoreEl.classList.add('score-pop');
-            }
-        }
-
-        // ===========================================
         // FEATURE: FUN STATS
         // ===========================================
         function generateFunStats() {
@@ -5375,65 +5479,127 @@
             const players = gameState.room?.players || [];
             if (players.length < 2) return;
             
-            // Collecter les données de réponses
-            const lastAnswers = gameState.room.lastAnswers || {};
+            const log = gameState.answerLog || [];
+            if (log.length === 0) return;
+            
             const stats = [];
             
-            // Stat 1 : Le plus rapide (temps moyen le plus bas)
-            const playerTimes = {};
-            const playerCorrects = {};
-            
+            // Initialiser les compteurs par joueur
+            const pData = {};
             players.forEach(p => {
-                const safeName = p.name.replace(/[.#$[\]]/g, '_');
-                playerCorrects[p.name] = 0;
-                playerTimes[p.name] = [];
+                pData[p.name] = {
+                    bothFound: 0,
+                    qcmCorrect: 0,
+                    writingCorrect: 0,
+                    rank1Correct: 0,
+                    rank1Wrong: 0,
+                    rank2: 0,
+                    rank3: 0,
+                    totalAnswered: 0
+                };
             });
             
-            // Calculer les stats à partir du score
-            const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+            // Parcourir le log de réponses
+            log.forEach(entry => {
+                if (!entry || !entry.answers) return;
+                
+                // Calculer les rangs pour cette question
+                const answered = [];
+                Object.keys(entry.answers).forEach(name => {
+                    const a = entry.answers[name];
+                    if (a && a.responseTime !== undefined) {
+                        answered.push({ name, ...a });
+                    }
+                });
+                
+                // Trier par temps de réponse
+                answered.sort((a, b) => (a.responseTime || 999) - (b.responseTime || 999));
+                
+                answered.forEach((a, idx) => {
+                    const d = pData[a.name];
+                    if (!d) return;
+                    
+                    d.totalAnswered++;
+                    
+                    // Both found (Fan)
+                    if (a.bothFound) d.bothFound++;
+                    
+                    // QCM vs Writing
+                    if (entry.questionType === 'qcm' && a.correct) d.qcmCorrect++;
+                    if (entry.questionType === 'writing' && a.correct) d.writingCorrect++;
+                    
+                    // Rangs
+                    if (idx === 0 && a.correct) d.rank1Correct++;
+                    if (idx === 0 && !a.correct) d.rank1Wrong++;
+                    if (idx === 1 && a.correct) d.rank2++;
+                    if (idx === 2 && a.correct) d.rank3++;
+                });
+            });
             
-            // Top scorer
-            if (sorted[0]?.score > 0) {
+            const names = Object.keys(pData).filter(n => pData[n].totalAnswered > 0);
+            if (names.length === 0) return;
+            
+            // 🎵 Le Fan : le plus de titre + artiste trouvés ensemble
+            const fanBest = names.reduce((best, n) => pData[n].bothFound > pData[best].bothFound ? n : best, names[0]);
+            if (pData[fanBest].bothFound > 0) {
                 stats.push({
-                    emoji: '👑',
-                    title: 'MVP DE LA SOIRÉE',
-                    player: `${getPlayerEmoji(sorted[0].name)} ${sorted[0].name}`,
-                    value: `${sorted[0].score} pts`
+                    emoji: '🎵', title: 'LE FAN',
+                    player: `${getPlayerEmoji(fanBest)} ${fanBest}`,
+                    value: `${pData[fanBest].bothFound} titre + artiste trouvés !`
                 });
             }
             
-            // Le dernier (pas 0 points)
-            const lastWithPoints = [...sorted].reverse().find(p => p.score > 0);
-            if (lastWithPoints && lastWithPoints.name !== sorted[0]?.name) {
+            // 🎲 Pro du hasard : bon en QCM, nul en écriture
+            const hasardBest = names.reduce((best, n) => {
+                const score = pData[n].qcmCorrect - pData[n].writingCorrect * 2;
+                const bestScore = pData[best].qcmCorrect - pData[best].writingCorrect * 2;
+                return score > bestScore ? n : best;
+            }, names[0]);
+            if (pData[hasardBest].qcmCorrect > 0 && pData[hasardBest].writingCorrect <= 1) {
                 stats.push({
-                    emoji: '🐢',
-                    title: 'LE COMEBACK KID',
-                    player: `${getPlayerEmoji(lastWithPoints.name)} ${lastWithPoints.name}`,
-                    value: `${lastWithPoints.score} pts — La prochaine sera la bonne !`
+                    emoji: '🎲', title: 'PRO DU HASARD',
+                    player: `${getPlayerEmoji(hasardBest)} ${hasardBest}`,
+                    value: `${pData[hasardBest].qcmCorrect} QCM corrects, ${pData[hasardBest].writingCorrect} en écriture`
                 });
             }
             
-            // Le plus gros écart entre 1er et 2ème
-            if (sorted.length >= 2 && sorted[0].score > 0 && sorted[1].score > 0) {
-                const gap = sorted[0].score - sorted[1].score;
-                if (gap > 500) {
-                    stats.push({
-                        emoji: '🏎️',
-                        title: 'ÉCART RECORD',
-                        player: `${getPlayerEmoji(sorted[0].name)} ${sorted[0].name}`,
-                        value: `+${gap} pts d'avance !`
-                    });
-                }
+            // 🥉 Médaille de bronze : le plus de 3ème place
+            const bronzeBest = names.reduce((best, n) => pData[n].rank3 > pData[best].rank3 ? n : best, names[0]);
+            if (pData[bronzeBest].rank3 >= 2) {
+                stats.push({
+                    emoji: '🥉', title: 'MÉDAILLE DE BRONZE',
+                    player: `${getPlayerEmoji(bronzeBest)} ${bronzeBest}`,
+                    value: `${pData[bronzeBest].rank3}x 3ème à répondre !`
+                });
             }
             
-            // Le joueur le plus régulier (score moyen par question le plus stable)
-            if (sorted.length >= 3) {
-                const mid = sorted[Math.floor(sorted.length / 2)];
+            // 🥈 Presque Boss : le plus de 2ème place
+            const silverBest = names.reduce((best, n) => pData[n].rank2 > pData[best].rank2 ? n : best, names[0]);
+            if (pData[silverBest].rank2 >= 2) {
                 stats.push({
-                    emoji: '🎯',
-                    title: 'MONSIEUR RÉGULIER',
-                    player: `${getPlayerEmoji(mid.name)} ${mid.name}`,
-                    value: `Pile au milieu du classement`
+                    emoji: '🥈', title: 'PRESQUE BOSS',
+                    player: `${getPlayerEmoji(silverBest)} ${silverBest}`,
+                    value: `${pData[silverBest].rank2}x 2ème à répondre`
+                });
+            }
+            
+            // 👑 Boss : le plus de 1ère place (et correct)
+            const bossBest = names.reduce((best, n) => pData[n].rank1Correct > pData[best].rank1Correct ? n : best, names[0]);
+            if (pData[bossBest].rank1Correct >= 2) {
+                stats.push({
+                    emoji: '👑', title: 'LE BOSS',
+                    player: `${getPlayerEmoji(bossBest)} ${bossBest}`,
+                    value: `${pData[bossBest].rank1Correct}x le plus rapide ET correct !`
+                });
+            }
+            
+            // 💨 Trop pressé : le plus de 1ère place mais faux
+            const rushBest = names.reduce((best, n) => pData[n].rank1Wrong > pData[best].rank1Wrong ? n : best, names[0]);
+            if (pData[rushBest].rank1Wrong >= 2) {
+                stats.push({
+                    emoji: '💨', title: 'TROP PRESSÉ',
+                    player: `${getPlayerEmoji(rushBest)} ${rushBest}`,
+                    value: `${pData[rushBest].rank1Wrong}x premier à répondre... mais faux !`
                 });
             }
             
@@ -5455,77 +5621,320 @@
         }
 
         // ===========================================
-        // FEATURE: DUELS
+        // FEATURE: DUELS (1v1 avec paris)
         // ===========================================
-        function shouldTriggerDuel() {
-            if (!gameState.room?.duelMode) return false;
-            const players = gameState.room.players.filter(p => !p.isHost || !gameState.room.hostMode);
-            if (players.length < 2) return false;
-            // Duel toutes les 3 questions (sauf première et dernière)
-            const q = gameState.room.currentQ;
-            return q > 0 && q < (gameState.room.questions?.length || 0) - 1 && q % 3 === 0;
+        gameState.answerLog = []; // Accumulate per-question data for stats
+        gameState.currentDuel = null; // Current duel state
+        gameState.myBet = null; // Current player's bet
+        
+        function isDuelQuestion(q) {
+            return q && q.isDuel === true;
         }
         
-        function triggerDuel(callback) {
+        function startDuelFlow() {
+            const q = gameState.room.questions[gameState.room.currentQ];
+            if (!q || !q.isDuel) return;
+            
             const players = gameState.room.players.filter(p => !p.isHost || !gameState.room.hostMode);
-            if (players.length < 2) { if (callback) callback(); return; }
-            
-            const shuffled = [...players].sort(() => Math.random() - 0.5);
-            const p1 = shuffled[0];
-            const p2 = shuffled[1];
-            
-            playSound('duel');
-            
-            document.getElementById('duel-player1-emoji').textContent = p1.emoji || '😎';
-            document.getElementById('duel-player1-name').textContent = p1.name;
-            document.getElementById('duel-player1-score').textContent = `${p1.score || 0} pts`;
-            document.getElementById('duel-player2-emoji').textContent = p2.emoji || '😎';
-            document.getElementById('duel-player2-name').textContent = p2.name;
-            document.getElementById('duel-player2-score').textContent = `${p2.score || 0} pts`;
-            
-            gameState.duelPlayers = { p1: p1.name, p2: p2.name };
-            
-            showScreen('duel-screen');
-            
-            setTimeout(() => {
-                showScreen('game-screen');
-                if (callback) callback();
-            }, 4000);
-        }
-        
-        async function checkDuelResult() {
-            if (!gameState.room?.duel || !gameState.room.duel.player1) return;
-            const duel = gameState.room.duel;
-            const lastAnswers = gameState.room.lastAnswers || {};
-            
-            const safe1 = duel.player1.replace(/[.#$[\]]/g, '_');
-            const safe2 = duel.player2.replace(/[.#$[\]]/g, '_');
-            const a1 = lastAnswers[safe1];
-            const a2 = lastAnswers[safe2];
-            
-            let winner = null;
-            if (a1?.correct && a2?.correct) {
-                winner = (a1.responseTime || 99) <= (a2.responseTime || 99) ? duel.player1 : duel.player2;
-            } else if (a1?.correct) {
-                winner = duel.player1;
-            } else if (a2?.correct) {
-                winner = duel.player2;
+            if (players.length < 3) {
+                // Pas assez de joueurs pour un duel intéressant, skip
+                loadQuestion();
+                return;
             }
             
-            if (winner && gameState.isHost) {
-                // Bonus 500 pts pour le gagnant du duel
-                const playerIdx = gameState.room.players.findIndex(p => p.name === winner);
-                if (playerIdx >= 0) {
-                    const newScore = (gameState.room.players[playerIdx].score || 0) + 500;
-                    await db.ref(`rooms/${gameState.room.code}/players/${playerIdx}/score`).set(newScore);
+            // Host picks 2 random duelists
+            let p1, p2;
+            if (gameState.isHost) {
+                const shuffled = [...players].sort(() => Math.random() - 0.5);
+                p1 = shuffled[0];
+                p2 = shuffled[1];
+                db.ref(`rooms/${gameState.room.code}/duel`).set({
+                    p1Name: p1.name, p1Emoji: p1.emoji || '😎',
+                    p2Name: p2.name, p2Emoji: p2.emoji || '😎',
+                    phase: 'rules'
+                });
+            }
+            
+            // Listen for duel data
+            const duelRef = db.ref(`rooms/${gameState.room.code}/duel`);
+            const onDuelData = (snapshot) => {
+                const duel = snapshot.val();
+                if (!duel || !duel.p1Name) return;
+                
+                duelRef.off('value', onDuelData);
+                gameState.currentDuel = duel;
+                
+                playSound('duel');
+                
+                // Fill rules screen
+                document.getElementById('duel-r-p1-emoji').textContent = duel.p1Emoji;
+                document.getElementById('duel-r-p1-name').textContent = duel.p1Name;
+                document.getElementById('duel-r-p2-emoji').textContent = duel.p2Emoji;
+                document.getElementById('duel-r-p2-name').textContent = duel.p2Name;
+                
+                showScreen('duel-rules-screen');
+                
+                // Countdown 10s
+                let countdown = 10;
+                document.getElementById('duel-rules-countdown').textContent = countdown;
+                const cdInterval = setInterval(() => {
+                    countdown--;
+                    document.getElementById('duel-rules-countdown').textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(cdInterval);
+                        showDuelBetting(duel);
+                    }
+                }, 1000);
+            };
+            duelRef.on('value', onDuelData);
+        }
+        
+        function showDuelBetting(duel) {
+            gameState.myBet = null;
+            
+            const myName = gameState.room.players[gameState.playerIndex]?.name;
+            const isDuelist = (myName === duel.p1Name || myName === duel.p2Name);
+            
+            // Fill bet screen
+            document.getElementById('bet-p1-emoji').textContent = duel.p1Emoji;
+            document.getElementById('bet-p1-name').textContent = duel.p1Name;
+            document.getElementById('bet-p2-emoji').textContent = duel.p2Emoji;
+            document.getElementById('bet-p2-name').textContent = duel.p2Name;
+            
+            if (isDuelist || gameState.hostDisplayOnly) {
+                document.getElementById('duel-bet-duelist').classList.remove('hidden');
+                document.getElementById('duel-bet-spectator').classList.add('hidden');
+            } else {
+                document.getElementById('duel-bet-duelist').classList.add('hidden');
+                document.getElementById('duel-bet-spectator').classList.remove('hidden');
+                document.getElementById('bet-confirmation').classList.add('hidden');
+                document.getElementById('bet-p1-btn').disabled = false;
+                document.getElementById('bet-p2-btn').disabled = false;
+                document.getElementById('bet-p1-btn').style.opacity = '1';
+                document.getElementById('bet-p2-btn').style.opacity = '1';
+            }
+            
+            showScreen('duel-bet-screen');
+            
+            // Countdown 8s
+            let countdown = 8;
+            document.getElementById('duel-bet-countdown').textContent = countdown;
+            const cdInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('duel-bet-countdown').textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(cdInterval);
+                    startDuelQuestion(duel);
+                }
+            }, 1000);
+        }
+        
+        function placeBet(choice) {
+            if (gameState.myBet) return; // Already bet
+            gameState.myBet = choice;
+            
+            const myName = gameState.room.players[gameState.playerIndex]?.name;
+            const safeName = myName.replace(/[.#$[\]]/g, '_');
+            
+            if (choice !== 'none') {
+                db.ref(`rooms/${gameState.room.code}/bets/${safeName}`).set(choice);
+            }
+            
+            // Visual feedback
+            const conf = document.getElementById('bet-confirmation');
+            conf.classList.remove('hidden');
+            
+            if (choice === 'p1') {
+                conf.textContent = `✅ Pari sur ${gameState.currentDuel.p1Name} !`;
+                document.getElementById('bet-p1-btn').style.border = '3px solid #00c864';
+                document.getElementById('bet-p2-btn').style.opacity = '0.4';
+            } else if (choice === 'p2') {
+                conf.textContent = `✅ Pari sur ${gameState.currentDuel.p2Name} !`;
+                document.getElementById('bet-p2-btn').style.border = '3px solid #00c864';
+                document.getElementById('bet-p1-btn').style.opacity = '0.4';
+            } else {
+                conf.textContent = '🚫 Pas de pari';
+            }
+            
+            document.getElementById('bet-p1-btn').disabled = true;
+            document.getElementById('bet-p2-btn').disabled = true;
+        }
+        
+        function startDuelQuestion(duel) {
+            const myName = gameState.room.players[gameState.playerIndex]?.name;
+            const isDuelist = (myName === duel.p1Name || myName === duel.p2Name);
+            
+            if (isDuelist || gameState.isHost) {
+                // Duelists and host see the actual question
+                gameState.isDuelQuestion = true;
+                showScreen('game-screen');
+                loadQuestion(); // Normal question loading
+            } else {
+                // Spectators see waiting screen
+                gameState.isDuelQuestion = true;
+                const betInfo = document.getElementById('duel-spectator-bet-info');
+                document.getElementById('duel-s-p1-emoji').textContent = duel.p1Emoji;
+                document.getElementById('duel-s-p1-name').textContent = duel.p1Name;
+                document.getElementById('duel-s-p2-emoji').textContent = duel.p2Emoji;
+                document.getElementById('duel-s-p2-name').textContent = duel.p2Name;
+                
+                if (gameState.myBet === 'p1') {
+                    betInfo.textContent = `💰 Ton pari : ${duel.p1Name}`;
+                } else if (gameState.myBet === 'p2') {
+                    betInfo.textContent = `💰 Ton pari : ${duel.p2Name}`;
+                } else {
+                    betInfo.textContent = '🚫 Tu n\'as pas parié';
                 }
                 
-                document.getElementById('duel-winner').textContent = `${getPlayerEmoji(winner)} ${winner} remporte le duel !`;
-                document.getElementById('duel-details').textContent = '+500 pts bonus !';
-            } else {
-                document.getElementById('duel-winner').textContent = '💤 Aucun gagnant !';
-                document.getElementById('duel-details').textContent = 'Personne n\'a trouvé...';
+                showScreen('duel-spectator-screen');
             }
+        }
+        
+        async function resolveDuel() {
+            if (!gameState.isHost || !gameState.currentDuel) return;
+            
+            const duel = gameState.currentDuel;
+            const code = gameState.room.code;
+            
+            // Read last answers
+            const answersSnap = await db.ref(`rooms/${code}/lastAnswers`).once('value');
+            const answers = answersSnap.val() || {};
+            
+            const safe1 = duel.p1Name.replace(/[.#$[\]]/g, '_');
+            const safe2 = duel.p2Name.replace(/[.#$[\]]/g, '_');
+            const a1 = answers[safe1];
+            const a2 = answers[safe2];
+            
+            const currentQ = gameState.room.currentQ;
+            const a1Valid = a1 && a1.questionIndex === currentQ;
+            const a2Valid = a2 && a2.questionIndex === currentQ;
+            
+            let winner = null;
+            let loser = null;
+            
+            if (a1Valid?.correct && a2Valid?.correct) {
+                // Both correct → fastest wins
+                winner = (a1.responseTime || 999) <= (a2.responseTime || 999) ? duel.p1Name : duel.p2Name;
+                loser = winner === duel.p1Name ? duel.p2Name : duel.p1Name;
+            } else if (a1Valid && a1.correct) {
+                winner = duel.p1Name; loser = duel.p2Name;
+            } else if (a2Valid && a2.correct) {
+                winner = duel.p2Name; loser = duel.p1Name;
+            }
+            // If neither correct, no winner
+            
+            // Apply duel points (winner steals 200 from loser)
+            const playersSnap = await db.ref(`rooms/${code}/players`).once('value');
+            const currentPlayers = playersSnap.val() || [];
+            
+            if (winner && loser) {
+                const wi = currentPlayers.findIndex(p => p.name === winner);
+                const li = currentPlayers.findIndex(p => p.name === loser);
+                if (wi >= 0) currentPlayers[wi].score = (currentPlayers[wi].score || 0) + 200;
+                if (li >= 0) currentPlayers[li].score = Math.max(0, (currentPlayers[li].score || 0) - 200);
+            }
+            
+            // Process bets
+            const betsSnap = await db.ref(`rooms/${code}/bets`).once('value');
+            const bets = betsSnap.val() || {};
+            const winnerKey = winner === duel.p1Name ? 'p1' : winner === duel.p2Name ? 'p2' : null;
+            
+            const betResults = {};
+            Object.keys(bets).forEach(safeName => {
+                const betChoice = bets[safeName];
+                const player = currentPlayers.find(p => p.name.replace(/[.#$[\]]/g, '_') === safeName);
+                if (!player) return;
+                
+                const pi = currentPlayers.indexOf(player);
+                if (winnerKey && betChoice === winnerKey) {
+                    // Bet won! +200
+                    currentPlayers[pi].score = (currentPlayers[pi].score || 0) + 200;
+                    betResults[player.name] = '+200';
+                } else if (winnerKey) {
+                    // Bet lost! -100
+                    currentPlayers[pi].score = Math.max(0, (currentPlayers[pi].score || 0) - 100);
+                    betResults[player.name] = '-100';
+                }
+                // If no winner (both wrong), bets are refunded (no change)
+            });
+            
+            // Update all scores at once
+            await db.ref(`rooms/${code}/players`).set(currentPlayers);
+            gameState.room.players = currentPlayers;
+            
+            // Write duel results for all to see
+            await db.ref(`rooms/${code}/duelResult`).set({
+                winner: winner,
+                loser: loser,
+                betResults: betResults,
+                p1Name: duel.p1Name, p1Emoji: duel.p1Emoji,
+                p2Name: duel.p2Name, p2Emoji: duel.p2Emoji
+            });
+            
+            // Clean up
+            await db.ref(`rooms/${code}/bets`).remove();
+        }
+        
+        function showDuelResults() {
+            // Listen for duel results
+            db.ref(`rooms/${gameState.room.code}/duelResult`).once('value', snapshot => {
+                const result = snapshot.val();
+                if (!result) return;
+                
+                const container = document.getElementById('duel-result-content');
+                let html = '';
+                
+                if (result.winner) {
+                    const wEmoji = result.winner === result.p1Name ? result.p1Emoji : result.p2Emoji;
+                    const lEmoji = result.loser === result.p1Name ? result.p1Emoji : result.p2Emoji;
+                    html += `<div style="font-size: 2rem; margin-bottom: 1rem;">
+                        <span style="color: #00c864; font-weight: 800;">${wEmoji} ${result.winner}</span>
+                        <span style="color: white;"> GAGNE ! </span>
+                    </div>`;
+                    html += `<p style="color: #00c864; font-size: 1.2rem; font-weight: 800;">+200 pts volés à ${lEmoji} ${result.loser} !</p>`;
+                } else {
+                    html += `<div style="font-size: 1.5rem; color: #ffbe0b; margin-bottom: 1rem;">💤 Aucun gagnant !</div>`;
+                    html += `<p style="color: rgba(255,255,255,0.7);">Personne n\'a trouvé la bonne réponse</p>`;
+                }
+                
+                // Show bet results
+                if (result.betResults && Object.keys(result.betResults).length > 0) {
+                    html += `<div style="margin-top: 1.2rem; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.8rem;">`;
+                    html += `<h4 style="color: #ffbe0b; margin-bottom: 0.5rem;">💰 Résultats des paris</h4>`;
+                    Object.keys(result.betResults).forEach(name => {
+                        const pts = result.betResults[name];
+                        const color = pts.startsWith('+') ? '#00c864' : '#ef4444';
+                        html += `<p style="color: ${color}; font-weight: 700;">${getPlayerEmoji(name)} ${name} : ${pts} pts</p>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                container.innerHTML = html;
+                showScreen('duel-result-screen');
+                
+                // Countdown 6s then advance
+                let countdown = 6;
+                document.getElementById('duel-result-countdown').textContent = countdown;
+                const cdInterval = setInterval(() => {
+                    countdown--;
+                    document.getElementById('duel-result-countdown').textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(cdInterval);
+                        gameState.currentDuel = null;
+                        gameState.isDuelQuestion = false;
+                        gameState.myBet = null;
+                        
+                        // Advance to next question
+                        if (gameState.isHost) {
+                            db.ref(`rooms/${gameState.room.code}/duelResult`).remove();
+                            db.ref(`rooms/${gameState.room.code}/duel`).remove();
+                            db.ref(`rooms/${gameState.room.code}/currentQ`).once('value', snap => {
+                                db.ref(`rooms/${gameState.room.code}/currentQ`).set(snap.val() + 1);
+                            });
+                        }
+                    }
+                }, 1000);
+            });
         }
 
         console.log('✅ Quiz Party V2 chargé !');
