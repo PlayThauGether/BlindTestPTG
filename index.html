@@ -5624,9 +5624,9 @@
         });
         
         // Si on est en mode PWA sur iOS, changer le bouton
-        if (window.navigator.standalone) {
+        if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
             const btn = document.querySelector('.fullscreen-btn');
-            if (btn) btn.textContent = '✅ Plein écran';
+            if (btn) btn.style.display = 'none';
         }
         
         // Lancer l'auth d'abord, puis tryReconnect si connecté
