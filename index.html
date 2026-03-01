@@ -1945,7 +1945,8 @@
         // WAKE LOCK - Empêcher la mise en veille
         // ===========================================
         let wakeLock = null;
-        let noSleepVideo = null; // Fallback iOS
+        let noSleepAudioCtx = null;
+        let noSleepInterval = null;
 
         async function requestWakeLock() {
             try {
@@ -1957,7 +1958,7 @@
                         console.log('⚠️ Wake Lock désactivé');
                     });
                 } else {
-                    // Fallback iOS : vidéo silencieuse en boucle
+                    // iOS : pas de Wake Lock API → fallback audio silencieux
                     enableNoSleepFallback();
                 }
             } catch (err) {
@@ -1967,27 +1968,43 @@
         }
         
         function enableNoSleepFallback() {
-            if (noSleepVideo) return;
+            if (noSleepInterval) return;
             try {
-                noSleepVideo = document.createElement('video');
-                noSleepVideo.setAttribute('playsinline', '');
-                noSleepVideo.setAttribute('muted', '');
-                noSleepVideo.muted = true;
-                noSleepVideo.loop = true;
-                noSleepVideo.style.position = 'fixed';
-                noSleepVideo.style.top = '-1px';
-                noSleepVideo.style.left = '-1px';
-                noSleepVideo.style.width = '1px';
-                noSleepVideo.style.height = '1px';
-                noSleepVideo.style.opacity = '0.01';
-                // Tiny transparent video (base64 MP4)
-                noSleepVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAA6VtZGF0AAACrwYF//+r3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NCByMzEwOCBiYWVlNDAwIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTI1IHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAD2WIhAA3//728P4FNjuY0AAAAAdfQ0E=';
-                document.body.appendChild(noSleepVideo);
-                noSleepVideo.play().then(() => {
-                    console.log('✅ NoSleep fallback activé (iOS)');
-                }).catch(() => {
-                    console.log('⚠️ NoSleep fallback impossible');
-                });
+                // Méthode 1 : Audio silencieux en boucle (fonctionne sur iOS Safari)
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    noSleepAudioCtx = new AudioContext();
+                    
+                    // Créer un buffer silencieux de 1 seconde
+                    const bufferSize = noSleepAudioCtx.sampleRate;
+                    const buffer = noSleepAudioCtx.createBuffer(1, bufferSize, noSleepAudioCtx.sampleRate);
+                    
+                    function playSilent() {
+                        if (!noSleepAudioCtx || noSleepAudioCtx.state === 'closed') return;
+                        
+                        // Reprendre le contexte si suspendu
+                        if (noSleepAudioCtx.state === 'suspended') {
+                            noSleepAudioCtx.resume();
+                        }
+                        
+                        const source = noSleepAudioCtx.createBufferSource();
+                        source.buffer = buffer;
+                        
+                        // Volume quasi-inaudible
+                        const gain = noSleepAudioCtx.createGain();
+                        gain.gain.value = 0.001;
+                        
+                        source.connect(gain);
+                        gain.connect(noSleepAudioCtx.destination);
+                        source.start(0);
+                    }
+                    
+                    // Jouer toutes les 15 secondes pour garder l'écran actif
+                    playSilent();
+                    noSleepInterval = setInterval(playSilent, 15000);
+                    
+                    console.log('✅ NoSleep iOS activé (audio silencieux)');
+                }
             } catch(e) {
                 console.log('⚠️ NoSleep fallback erreur:', e);
             }
@@ -1999,18 +2016,26 @@
                 wakeLock = null;
                 console.log('🔓 Wake Lock libéré');
             }
-            if (noSleepVideo) {
-                noSleepVideo.pause();
-                noSleepVideo.remove();
-                noSleepVideo = null;
-                console.log('🔓 NoSleep fallback arrêté');
+            if (noSleepInterval) {
+                clearInterval(noSleepInterval);
+                noSleepInterval = null;
+            }
+            if (noSleepAudioCtx) {
+                noSleepAudioCtx.close().catch(() => {});
+                noSleepAudioCtx = null;
+                console.log('🔓 NoSleep iOS arrêté');
             }
         }
 
         // Réactiver le Wake Lock si l'utilisateur revient sur la page
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                await requestWakeLock();
+            if (document.visibilityState === 'visible') {
+                if (wakeLock !== null) {
+                    await requestWakeLock();
+                } else if (noSleepAudioCtx && noSleepAudioCtx.state === 'suspended') {
+                    noSleepAudioCtx.resume();
+                    console.log('🔄 NoSleep iOS repris');
+                }
             }
         });
 
@@ -2996,7 +3021,7 @@
 
         function createRoom(name, mode, tracks, hostMode, distanceMode, playlistName) {
             const code = genCode();
-            const emoji = selectedEmoji.create;
+            const emoji = hostMode ? '🎬' : selectedEmoji.create;
             const teamMode = document.getElementById('team-mode')?.checked || false;
             
             console.log(`🎮 Création de la room avec le code: ${code}`);
@@ -4903,8 +4928,7 @@
                 sorted = sorted.filter(p => p.name !== gameState.room.host);
             }
 
-            // Sauvegarder dans leaderboard all-time
-            saveToAllTimeLeaderboard(sorted);
+            // Scores finaux triés
 
             const podium = document.getElementById('podium-container');
             podium.innerHTML = '';
@@ -4940,9 +4964,6 @@
                 grid.appendChild(div);
             });
 
-            // Afficher all-time leaderboard
-            displayAllTimeLeaderboard();
-            
             // Afficher les stats fun
             generateFunStats();
             
@@ -4959,59 +4980,6 @@
             } else {
                 hostBtn.classList.add('hidden');
                 playerBtn.classList.remove('hidden');
-            }
-        }
-
-        async function saveToAllTimeLeaderboard(players) {
-            for (const player of players) {
-                if (player.score && player.score > 0) {
-                    await db.ref('allTimeLeaderboard').push({
-                        name: player.name,
-                        score: player.score,
-                        date: Date.now()
-                    });
-                }
-            }
-        }
-
-        async function displayAllTimeLeaderboard() {
-            const snapshot = await db.ref('allTimeLeaderboard')
-                .orderByChild('score')
-                .limitToLast(10)
-                .once('value');
-            
-            const allTime = [];
-            snapshot.forEach(child => {
-                allTime.push(child.val());
-            });
-            
-            allTime.reverse(); // Meilleurs en premier
-            
-            if (allTime.length > 0) {
-                const container = document.getElementById('leaderboard-container');
-                
-                const titleDiv = document.createElement('h3');
-                titleDiv.style.cssText = 'color: #ffbe0b; margin: 1.5rem 0 0.8rem; text-align: center;';
-                titleDiv.textContent = '🏆 TOP 10 ALL-TIME';
-                container.appendChild(titleDiv);
-                
-                // Créer une grille pour all-time aussi
-                const gridDiv = document.createElement('div');
-                gridDiv.className = 'leaderboard-grid';
-                
-                allTime.forEach((entry, i) => {
-                    const div = document.createElement('div');
-                    div.className = 'lb-row';
-                    div.style.background = 'rgba(255, 190, 11, 0.1)';
-                    div.innerHTML = `
-                        <span class="rank">#${i + 1}</span>
-                        <span class="name">${entry.name}</span>
-                        <span class="pts">${entry.score} pts</span>
-                    `;
-                    gridDiv.appendChild(div);
-                });
-                
-                container.appendChild(gridDiv);
             }
         }
 
