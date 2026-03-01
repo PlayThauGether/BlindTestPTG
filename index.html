@@ -3119,6 +3119,8 @@
             }
 
             // --- 3. LISTENER : currentQ (1 entier, quelques bytes) — LE PLUS IMPORTANT ---
+            let loadQuestionVersion = 0; // Anti-doublon async
+            
             addListener(`${roomBase}/currentQ`, snapshot => {
                 const newCurrentQ = snapshot.val();
                 if (newCurrentQ === null || newCurrentQ === undefined) return;
@@ -3135,8 +3137,9 @@
                         console.log('✅ Nouvelle question détectée après rafraîchissement, on reprend !');
                         gameState.waitingForNextQ = false;
                         gameState.lastSeenQ = null;
-                        // Rafraîchir les scores avant d'afficher
+                        const myVersion = ++loadQuestionVersion;
                         db.ref(`${roomBase}/players`).once('value', s => {
+                            if (loadQuestionVersion !== myVersion) return; // Stale
                             gameState.room.players = s.val() || gameState.room.players;
                             loadQuestion();
                             updateScoreboard();
@@ -3145,13 +3148,21 @@
                     return;
                 }
 
-                // CAS 2 : Transition en cours
-                if (gameState.transitionInProgress) return;
+                // CAS 2 : Transition en cours — ne pas ignorer, mais mémoriser
+                if (gameState.transitionInProgress) {
+                    gameState.pendingCurrentQ = newCurrentQ;
+                    return;
+                }
 
                 // CAS 3 : Nouvelle question
                 if (newCurrentQ !== oldCurrentQ && newCurrentQ < gameState.room.questions.length) {
                     console.log('📢 Nouvelle question:', newCurrentQ);
+                    // Tuer l'ancien timer immédiatement
+                    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+                    
+                    const myVersion = ++loadQuestionVersion;
                     db.ref(`${roomBase}/players`).once('value', s => {
+                        if (loadQuestionVersion !== myVersion) return; // Stale response
                         gameState.room.players = s.val() || gameState.room.players;
                         loadQuestion();
                         updateScoreboard();
@@ -3161,7 +3172,7 @@
                 // CAS 4 : Fin du jeu
                 if (newCurrentQ >= gameState.room.questions.length) {
                     console.log('🏁 Fin du jeu !');
-                    // Récupérer les scores finaux
+                    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
                     db.ref(`${roomBase}/players`).once('value', s => {
                         gameState.room.players = s.val() || gameState.room.players;
                         goToLeaderboard();
@@ -3283,6 +3294,7 @@
                 gameState.lastType = currentType;
                 gameState.usedQCMValues = []; // Réinitialiser les options utilisées à chaque nouveau niveau
                 gameState.transitionInProgress = true; // Bloquer le listener pendant la transition
+                gameState.pendingCurrentQ = null;
 
                 showScreen(transitionScreen);
                 setTimeout(() => {
@@ -3947,8 +3959,18 @@
 
         function startTimer() {
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            
+            // Sauvegarder l'index de la question pour ce timer
+            const timerQuestionIndex = gameState.room.currentQ;
+            gameState.currentTimerQuestionIndex = timerQuestionIndex;
 
             gameState.timerInterval = setInterval(() => {
+                // GUARD : Si la question a changé, ce timer est obsolète
+                if (gameState.currentTimerQuestionIndex !== timerQuestionIndex) {
+                    clearInterval(gameState.timerInterval);
+                    return;
+                }
+                
                 gameState.currentTime--;
                 document.getElementById('timer').textContent = gameState.currentTime;
 
@@ -3976,13 +3998,19 @@
                 if (gameState.currentTime <= 0) {
                     clearInterval(gameState.timerInterval);
                     
+                    // GUARD : Vérifier que c'est toujours la bonne question
+                    if (gameState.room.currentQ !== timerQuestionIndex) {
+                        console.log('⚠️ Timer obsolète, question déjà changée');
+                        return;
+                    }
+                    
                     document.getElementById('cover-img').style.filter = 'blur(0px)';
                     
                     // Réduire l'image hôte quand la réponse s'affiche
                     document.querySelector('.game-main').classList.remove('host-big-cover');
                     stopHangman();
                     
-                    const q = gameState.room.questions[gameState.room.currentQ];
+                    const q = gameState.room.questions[timerQuestionIndex];
                     
                     // BLOQUER LES INPUTS MODE ÉCRITURE (empêche de valider après timer=0)
                     if (q.type === 'writing') {
@@ -4012,7 +4040,16 @@
                         
                         const pts = gameState.pendingScore || 0;
                         const isCorrect = gameState.pendingCorrect || false;
-                        showResult(isCorrect, pts, `${q.title} - ${q.artist}`);
+                        const streakBonus = gameState.pendingStreakBonus || 0;
+                        let streakFeedback = '';
+                        if (streakBonus > 0 && isCorrect) {
+                            streakFeedback = ` (dont 🔥${streakBonus} série ×${gameState.qcmStreak})`;
+                        }
+                        if (isCorrect && pts > 0) {
+                            showResult(true, pts, '', `+${pts} pts${streakFeedback}`);
+                        } else {
+                            showResult(isCorrect, pts, `${q.title} - ${q.artist}`);
+                        }
                     }
                     
                     // AFFICHER LE FEEDBACK (ÉCRITURE) - Sauf pour l'hôte en mode display-only
@@ -4062,6 +4099,9 @@
                     
                     // ATTENDRE 5 SECONDES pour voir la réponse
                     setTimeout(() => {
+                        // GUARD : Vérifier que c'est toujours la bonne question
+                        if (gameState.room.currentQ !== timerQuestionIndex) return;
+                        
                         if (gameState.isHost) {
                             db.ref(`rooms/${gameState.room.code}/currentQ`).once('value', snapshot => {
                                 const currentQ = snapshot.val();
@@ -4080,10 +4120,26 @@
             const isCorrect = answer === correct;
             const pts = isCorrect ? (50 + gameState.currentTime * 10) : 0;
             
+            // STREAK QCM : bonus pour les séries de bonnes réponses
+            if (!gameState.qcmStreak) gameState.qcmStreak = 0;
+            if (isCorrect) {
+                gameState.qcmStreak++;
+            } else {
+                gameState.qcmStreak = 0;
+            }
+            
+            let streakBonus = 0;
+            if (gameState.qcmStreak >= 5) {
+                streakBonus = 100;
+            } else if (gameState.qcmStreak >= 3) {
+                streakBonus = 50;
+            }
+            
             // STOCKER le score en attente (sera appliqué à 0s)
-            gameState.pendingScore = pts;
+            gameState.pendingScore = pts + streakBonus;
             gameState.pendingCorrect = isCorrect;
-            gameState.pendingAnswer = answer; // Stocker la réponse choisie
+            gameState.pendingAnswer = answer;
+            gameState.pendingStreakBonus = streakBonus;
 
             // Pousser le résultat dans Firebase pour que l'hôte puisse voir qui a bien répondu
             const myName = gameState.room.players[gameState.playerIndex].name;
@@ -4376,7 +4432,7 @@
                     badgeArtist.querySelector('.badge-status').textContent = '✓';
                     
                     // Calculer les points pour l'artiste
-                    const pts = 50 + gameState.currentTime * 10;
+                    const pts = 100 + gameState.currentTime * 5;
                     showWritingFeedback(`✅ Correct ! +${pts}pts`, 'success');
                     
                     gameState.answered = true;
@@ -4423,7 +4479,7 @@
                     badgeTitle.querySelector('.badge-status').textContent = '✓';
                     
                     // Calculer les points pour le titre
-                    const titlePts = 50 + gameState.currentTime * 10;
+                    const titlePts = 100 + gameState.currentTime * 5;
                     ptsGagnes += titlePts;
                     
                     // Stocker dans gameState pour les cumuler
@@ -4443,7 +4499,7 @@
                     badgeArtist.querySelector('.badge-status').textContent = '✓';
                     
                     // Calculer les points pour l'artiste
-                    const artistPts = 50 + gameState.currentTime * 10;
+                    const artistPts = 100 + gameState.currentTime * 5;
                     ptsGagnes += artistPts;
                     
                     // Stocker dans gameState pour les cumuler
@@ -4573,7 +4629,7 @@
                     badgeTitle.classList.add('found');
                     badgeTitle.querySelector('.badge-status').textContent = '✓';
                     
-                    const titlePts = 50 + gameState.currentTime * 10;
+                    const titlePts = 100 + gameState.currentTime * 5;
                     ptsGagnes += titlePts;
                     
                     if (!gameState.currentQuestionPoints) {
@@ -4590,7 +4646,7 @@
                     badgeArtist.classList.add('found');
                     badgeArtist.querySelector('.badge-status').textContent = '✓';
                     
-                    const artistPts = 50 + gameState.currentTime * 10;
+                    const artistPts = 100 + gameState.currentTime * 5;
                     ptsGagnes += artistPts;
                     
                     if (!gameState.currentQuestionPoints) {
@@ -4971,6 +5027,7 @@
             // Réinitialiser gameState mais garder les infos essentielles
             const savedName = playerName;
             const savedCode = roomCode;
+            const savedEmoji = gameState.room?.players[gameState.playerIndex]?.emoji || '😎';
             
             clearSession();
             
@@ -5040,7 +5097,7 @@
                             // Si pas de players, initialiser avec un array vide
                             if (!currentPlayers) {
                                 console.log(`⚠️ ${savedName}: Pas de players, on initialise`);
-                                return [{ name: savedName, score: 0, isHost: false }];
+                                return [{ name: savedName, score: 0, isHost: false, emoji: savedEmoji }];
                             }
                             
                             // Vérifier si le joueur existe déjà
@@ -5053,7 +5110,7 @@
                             
                             // Ajouter le nouveau joueur
                             console.log(`➕ ${savedName}: Ajout à la liste (total: ${currentPlayers.length + 1})`);
-                            return [...currentPlayers, { name: savedName, score: 0, isHost: false }];
+                            return [...currentPlayers, { name: savedName, score: 0, isHost: false, emoji: savedEmoji }];
                         }).then(() => {
                             console.log(`✅ ${savedName}: Transaction réussie, récupération de la room...`);
                             
