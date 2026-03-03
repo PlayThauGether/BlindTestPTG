@@ -747,6 +747,76 @@
 
         /* EMOJI PICKER */
 
+        /* HELP GUIDE */
+        .help-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .help-overlay.hidden { display: none; }
+        .help-modal {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .help-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,0,0,0.5);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: 800;
+        }
+        .help-close:hover { background: rgba(255,0,0,0.8); }
+        .help-section {
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(131,56,236,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .help-title {
+            padding: 1rem;
+            cursor: pointer;
+            color: #00f5ff;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .help-title:hover { background: rgba(131,56,236,0.15); }
+        .help-arrow { font-size: 0.8rem; color: #aaa; transition: transform 0.3s; }
+        .help-title.open .help-arrow { transform: rotate(180deg); }
+        .help-content {
+            display: none;
+            padding: 0 1rem 1rem;
+        }
+        .help-content p {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #ddd;
+        }
+
         /* FULLSCREEN BUTTON */
         .fullscreen-btn {
             position: fixed;
@@ -1073,7 +1143,94 @@
                 <button id="account-menu-btn" class="btn" onclick="goToAccount()" style="display: none;">⚙️ Mon Compte</button>
                 <button id="logout-btn" class="btn danger" onclick="doLogout()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
                 <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion Organisateur</button>
+                <button id="help-menu-btn" class="btn" onclick="toggleHelpGuide()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">❓ Guide d'utilisation</button>
                 <a id="nos-reseaux-menu" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
+            </div>
+        </div>
+
+        <!-- GUIDE D'UTILISATION (modal) -->
+        <div id="help-guide-overlay" class="help-overlay hidden" onclick="if(event.target===this)toggleHelpGuide()">
+            <div class="help-modal">
+                <button class="help-close" onclick="toggleHelpGuide()">✕</button>
+                <h2 style="color: #ffbe0b; margin-bottom: 1.5rem; text-align: center;">❓ Guide d'utilisation</h2>
+                
+                <div class="help-section">
+                    <h3 class="help-title" onclick="toggleHelpSection(this)">🎮 Lancer une partie <span class="help-arrow">▼</span></h3>
+                    <div class="help-content">
+                        <p>1. Clique sur <strong>Créer une partie</strong> depuis le menu</p>
+                        <p>2. Choisis ton <strong>pseudo</strong> et ton <strong>emoji</strong></p>
+                        <p>3. Sélectionne un <strong>mode de jeu</strong> (voir plus bas)</p>
+                        <p>4. Choisis le <strong>nombre de questions</strong> (5, 10, 15, 20 ou 30)</p>
+                        <p>5. Sélectionne ta <strong>playlist</strong> (voir plus bas)</p>
+                        <p>6. Clique sur <strong>Lancer</strong> → un code à 6 chiffres sera généré</p>
+                        <p>7. Partage ce code aux joueurs, ils le tapent pour rejoindre</p>
+                        <p>8. Quand tout le monde est dans le lobby, clique sur <strong>Démarrer</strong></p>
+                        <p style="margin-top: 0.5rem; color: #00f5ff;"><strong>💡 Mode Hôte</strong> : Coche cette option si tu veux que ton écran affiche les questions en grand (pour projeter sur un écran/TV). Tu ne joueras pas, tu seras le maître du jeu.</p>
+                        <p style="color: #00f5ff;"><strong>💡 Mode Distance</strong> : Coche cette option si les joueurs ne sont pas dans la même pièce. Chacun entendra la musique sur son propre téléphone.</p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title" onclick="toggleHelpSection(this)">🎯 Les modes de jeu <span class="help-arrow">▼</span></h3>
+                    <div class="help-content">
+                        <p><strong>🎯 QCM</strong> : 4 choix proposés, trouve le bon titre ou artiste. Fonctionne avec toutes les playlists Deezer.</p>
+                        <p><strong>✍️ Écriture</strong> : Tape au clavier le titre et/ou l'artiste. Plus dur mais plus de points ! Fonctionne avec toutes les playlists Deezer.</p>
+                        <p><strong>💿 Titres uniquement</strong> : Comme l'écriture mais uniquement les titres. Fonctionne avec toutes les playlists Deezer.</p>
+                        <p><strong>🎉 Soirée</strong> : Mix de QCM et d'écriture pour varier les plaisirs. Fonctionne avec toutes les playlists Deezer.</p>
+                        <p style="color: #ffbe0b;">⚠️ <strong>Les modes ci-dessous nécessitent des playlists spécifiques :</strong></p>
+                        <p><strong>🎧 Disney Mix</strong> : 3 niveaux (Normal → Reverse → Extrait). <span style="color: #ff006e;">Fonctionne uniquement avec la playlist Disney.</span></p>
+                        <p><strong>🎬 Film</strong> : Retrouve les films à partir de dialogues et musiques. <span style="color: #ff006e;">Fonctionne uniquement avec la playlist Films.</span></p>
+                        <p><strong>📺 Série</strong> : Retrouve les séries à partir de génériques et extraits. <span style="color: #ff006e;">Fonctionne uniquement avec la playlist Séries.</span></p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title" onclick="toggleHelpSection(this)">🎵 Utiliser une playlist Deezer <span class="help-arrow">▼</span></h3>
+                    <div class="help-content">
+                        <p><strong>Option 1 — Playlist enregistrée :</strong></p>
+                        <p>Dans l'onglet <strong>🎵 Deezer</strong>, choisis une playlist dans la liste déroulante. Ce sont les playlists ajoutées par les administrateurs.</p>
+                        <p style="margin-top: 0.8rem;"><strong>Option 2 — Lien Deezer :</strong></p>
+                        <p>Tu peux aussi coller un lien Deezer directement dans le champ URL. Va sur Deezer, trouve une playlist, copie son lien (ex: <span style="color: #aaa;">https://www.deezer.com/fr/playlist/123456789</span>) et colle-le.</p>
+                        <p style="margin-top: 0.5rem; color: #00f5ff;">💡 Si tu colles un lien, la playlist enregistrée sera automatiquement désélectionnée pour éviter les conflits.</p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title" onclick="toggleHelpSection(this)">📚 Playlists Films, Séries et Disney <span class="help-arrow">▼</span></h3>
+                    <div class="help-content">
+                        <p>Ces playlists sont spéciales et pré-enregistrées. Pour les utiliser :</p>
+                        <p>1. Va dans l'onglet <strong>📚 Mes Playlists</strong></p>
+                        <p>2. Sélectionne la playlist correspondante (Films, Séries ou Disney)</p>
+                        <p>3. Choisis le mode de jeu adapté :</p>
+                        <p style="padding-left: 1rem;">• Playlist <strong>Disney</strong> → mode <strong>🎧 Disney Mix</strong></p>
+                        <p style="padding-left: 1rem;">• Playlist <strong>Films</strong> → mode <strong>🎬 Film</strong></p>
+                        <p style="padding-left: 1rem;">• Playlist <strong>Séries</strong> → mode <strong>📺 Série</strong></p>
+                        <p style="margin-top: 0.5rem; color: #ff006e;">⚠️ Si tu lances un mode spécial avec la mauvaise playlist, les questions ne fonctionneront pas correctement !</p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title" onclick="toggleHelpSection(this)">🔑 Changer mon mot de passe <span class="help-arrow">▼</span></h3>
+                    <div class="help-content">
+                        <p>1. Depuis le menu, clique sur <strong>⚙️ Mon Compte</strong></p>
+                        <p>2. Entre ton ancien mot de passe</p>
+                        <p>3. Entre ton nouveau mot de passe (2 fois pour confirmer)</p>
+                        <p>4. Clique sur <strong>Changer le mot de passe</strong></p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3 class="help-title" onclick="toggleHelpSection(this)">👥 Mode Équipes <span class="help-arrow">▼</span></h3>
+                    <div class="help-content">
+                        <p>Coche <strong>Mode Équipes</strong> à la création pour diviser les joueurs en 2 équipes (🔴 Rouge et 🔵 Bleu).</p>
+                        <p>Les joueurs sont automatiquement répartis. Les scores d'équipes s'affichent en fin de partie en plus des scores individuels.</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                    <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.8rem;">Un problème, un bug, une suggestion ?</p>
+                    <a href="mailto:playthaugether@gmail.com?subject=Blind Test PTG - Contact" style="color: #00f5ff; font-weight: 800; font-size: 1.1rem; text-decoration: none;">📧 playthaugether@gmail.com</a>
+                </div>
             </div>
         </div>
 
@@ -1123,7 +1280,10 @@
 
         <!-- CREATE -->
         <div id="create-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">🎮 Créer une partie</h2>
+            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 0.5rem;">🎮 Créer une partie</h2>
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <button class="btn" onclick="toggleHelpGuide()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">❓ Guide d'utilisation</button>
+            </div>
             
             <input id="create-name" class="input" placeholder="Ton pseudo" maxlength="20">
             <p style="color: #aaa; font-size: 0.85rem; margin: 0.3rem 0;">Choisis ton avatar :</p>
@@ -1661,6 +1821,7 @@
                 document.getElementById('playlists-menu-btn').style.display = currentUser.isAdmin ? '' : 'none';
                 document.getElementById('admin-menu-btn').style.display = currentUser.isAdmin ? '' : 'none';
                 document.getElementById('account-menu-btn').style.display = '';
+                document.getElementById('help-menu-btn').style.display = '';
             } else {
                 // Pas connecté → montrer bouton connexion
                 document.getElementById('logout-btn').style.display = 'none';
@@ -1668,6 +1829,7 @@
                 document.getElementById('playlists-menu-btn').style.display = 'none';
                 document.getElementById('admin-menu-btn').style.display = 'none';
                 document.getElementById('account-menu-btn').style.display = 'none';
+                document.getElementById('help-menu-btn').style.display = 'none';
             }
         }
 
@@ -2529,6 +2691,14 @@
             }
             
             actions.style.display = 'block';
+            
+            // Désélectionner les sources Deezer pour éviter les doublons
+            document.getElementById('custom-playlist-url').value = '';
+            const deezerSelect = document.getElementById('playlist-select');
+            if (deezerSelect) {
+                deezerSelect.value = '';
+                refreshCustomDropdown('playlist-select');
+            }
             
             const snap = await db.ref(`jsonPlaylists/${name}`).once('value');
             const playlist = snap.val();
@@ -5381,6 +5551,62 @@
                 container.appendChild(btn);
             });
         }
+        
+        // ===========================================
+        // GUIDE D'UTILISATION (accordion)
+        // ===========================================
+        function toggleHelpGuide() {
+            const overlay = document.getElementById('help-guide-overlay');
+            overlay.classList.toggle('hidden');
+        }
+        
+        function toggleHelpSection(titleEl) {
+            const content = titleEl.nextElementSibling;
+            const isOpen = titleEl.classList.contains('open');
+            
+            // Fermer toutes les sections
+            document.querySelectorAll('.help-title').forEach(t => {
+                t.classList.remove('open');
+                t.nextElementSibling.style.display = 'none';
+            });
+            
+            // Ouvrir celle cliquée (si elle était fermée)
+            if (!isOpen) {
+                titleEl.classList.add('open');
+                content.style.display = 'block';
+            }
+        }
+        
+        // ===========================================
+        // AUTO-DÉSÉLECTION PLAYLIST (éviter doublons)
+        // ===========================================
+        // Quand on tape un lien Deezer → désélectionner la playlist enregistrée
+        document.getElementById('custom-playlist-url').addEventListener('input', function() {
+            if (this.value.trim()) {
+                // Désélectionner la playlist Deezer enregistrée
+                const playlistSelect = document.getElementById('playlist-select');
+                if (playlistSelect) {
+                    playlistSelect.value = '';
+                    refreshCustomDropdown('playlist-select');
+                }
+                // Vider la playlist sauvegardée (JSON)
+                const savedSelect = document.getElementById('saved-playlist-select');
+                if (savedSelect) {
+                    savedSelect.value = '';
+                    document.getElementById('custom-json').value = '';
+                    document.getElementById('saved-playlist-actions').style.display = 'none';
+                }
+                // S'assurer qu'on est sur l'onglet Deezer
+                switchPlaylistTab('deezer');
+            }
+        });
+        
+        // Quand on sélectionne une playlist Deezer enregistrée → vider le champ URL
+        document.getElementById('playlist-select').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('custom-playlist-url').value = '';
+            }
+        });
         
         function getPlayerEmoji(playerName) {
             const p = gameState.room?.players?.find(pl => pl.name === playerName);
