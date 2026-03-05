@@ -835,10 +835,79 @@
             transition: background 0.2s;
         }
         .fullscreen-btn:hover { background: rgba(131,56,236,0.8); }
-        .emoji-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; max-width: 320px; margin: 0.5rem auto; }
+        .emoji-picker { display: none; }
         .emoji-pick { font-size: 1.6rem; width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .emoji-pick:hover { background: rgba(255,255,255,0.15); transform: scale(1.15); }
-        .emoji-pick.selected { border-color: #ffbe0b; background: rgba(255,190,11,0.2); transform: scale(1.15); box-shadow: 0 0 12px rgba(255,190,11,0.4); }
+        .emoji-pick.selected { border-color: #ff006e; background: rgba(255,0,110,0.2); transform: scale(1.15); box-shadow: 0 0 12px rgba(255,0,110,0.4); }
+
+        /* EMOJI DROPDOWN TRIGGER */
+        .emoji-dropdown-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #ff006e;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+        .emoji-dropdown-trigger:hover { border-color: #a855f7; background: rgba(168,85,247,0.1); }
+        .emoji-dropdown-trigger .emoji-preview { font-size: 2rem; }
+        .emoji-dropdown-trigger .emoji-label { color: #00f5ff; font-weight: 700; font-size: 0.95rem; flex: 1; }
+        .emoji-dropdown-trigger .emoji-caret { color: #aaa; font-size: 0.8rem; }
+
+        /* EMOJI MODAL */
+        .emoji-modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .emoji-modal-overlay.hidden { display: none; }
+        .emoji-modal {
+            background: #1a1f3a;
+            border: 2px solid #8338ec;
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 420px;
+            width: 100%;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        .emoji-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .emoji-modal-header h3 { color: #00f5ff; font-size: 1.1rem; }
+        .emoji-modal-close {
+            background: rgba(255,0,0,0.5);
+            border: none;
+            color: white;
+            font-size: 1rem;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: 800;
+        }
+        .emoji-modal-close:hover { background: rgba(255,0,0,0.8); }
+        .emoji-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.3rem;
+        }
+        @media (max-width: 480px) {
+            .emoji-modal-grid { grid-template-columns: repeat(7, 1fr); }
+        }
 
         /* STATS FIN DE PARTIE */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 700px; margin: 1.5rem auto; }
@@ -1148,6 +1217,17 @@
             </div>
         </div>
 
+        <!-- EMOJI PICKER MODAL -->
+        <div id="emoji-modal-overlay" class="emoji-modal-overlay hidden" onclick="if(event.target===this)closeEmojiModal()">
+            <div class="emoji-modal">
+                <div class="emoji-modal-header">
+                    <h3>😎 Choisis ton emoji</h3>
+                    <button class="emoji-modal-close" onclick="closeEmojiModal()">✕</button>
+                </div>
+                <div class="emoji-modal-grid" id="emoji-modal-grid"></div>
+            </div>
+        </div>
+
         <!-- GUIDE D'UTILISATION (modal) -->
         <div id="help-guide-overlay" class="help-overlay hidden" onclick="if(event.target===this)toggleHelpGuide()">
             <div class="help-modal">
@@ -1286,7 +1366,12 @@
             </div>
             
             <input id="create-name" class="input" placeholder="Ton pseudo" maxlength="20">
-            <p style="color: #aaa; font-size: 0.85rem; margin: 0.3rem 0;">Choisis ton avatar :</p>
+            <p style="color: #00f5ff; font-size: 0.95rem; margin: 0.8rem 0 0.3rem; font-weight: 700; text-align: center;">😎 Ton emoji</p>
+            <div class="emoji-dropdown-trigger" onclick="openEmojiModal('create')">
+                <span class="emoji-preview" id="create-emoji-preview">😎</span>
+                <span class="emoji-label">Choisis ton emoji</span>
+                <span class="emoji-caret">▼</span>
+            </div>
             <div class="emoji-picker" id="create-emoji-picker"></div>
             
             <div class="section">
@@ -1403,7 +1488,12 @@
         <div id="join-screen" class="screen hidden">
             <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Rejoindre</h2>
             <input id="join-name" class="input" placeholder="Ton pseudo" maxlength="20">
-            <p style="color: #aaa; font-size: 0.85rem; margin: 0.3rem 0;">Choisis ton avatar :</p>
+            <p style="color: #00f5ff; font-size: 0.95rem; margin: 0.8rem 0 0.3rem; font-weight: 700; text-align: center;">😎 Ton emoji</p>
+            <div class="emoji-dropdown-trigger" onclick="openEmojiModal('join')">
+                <span class="emoji-preview" id="join-emoji-preview">😎</span>
+                <span class="emoji-label">Choisis ton emoji</span>
+                <span class="emoji-caret">▼</span>
+            </div>
             <div class="emoji-picker" id="join-emoji-picker"></div>
             <input id="join-code" class="input code-input" placeholder="123456" type="tel" maxlength="6">
             <button class="btn large" onclick="joinRoom()">▶️ Rejoindre</button>
@@ -5530,26 +5620,59 @@
         }
 
         // ===========================================
-        // FEATURE: EMOJI AVATARS
+        // FEATURE: EMOJI AVATARS (modal picker)
         // ===========================================
-        const AVATAR_EMOJIS = ['😎','🤩','🥳','😈','👻','🦊','🐱','🐶','🦁','🐸','🎸','🎤','🎧','🔥','⭐','💎','🚀','🎯','🧠','👑','🦄','🐉','🎪','🌟','🍕','🎮','💀','🤖'];
+        const AVATAR_EMOJIS = [
+            // Visages
+            '😎','🤩','🤣','🤠','😈','🤓','😏','😁',
+            '🤯','🤑','🥸','😊','🤫','😜','🤪','😡',
+            // Animaux
+            '🦊','🐱','🐶','🦁','🐸','🦄','🐧','🐼',
+            '🐨','🐯','🐮','🐷','🐵','🦋','🐝','🦈',
+            // Fantastique
+            '👻','🤖','🎃','💀','👽','😈','🧛','🧟',
+            '🧙','🤴','🥷','👸','👑','🎅','👹','👺',
+            // Symboles
+            '🎯','⚡','🔥','💎','🌟','🌈','🌙','🍀',
+            '🎲','🔮','🍆','⭐','🏆','🎵','🎸','🎮',
+            // Nourriture
+            '🍕','🍔','🍟','🌭','🍿','🍪','🍉','🍓',
+            '🍺','☕','🍷','🍭','🎂','🥐'
+        ];
         let selectedEmoji = { create: '😎', join: '😎' };
+        let currentEmojiKey = null; // 'create' ou 'join'
         
         function initEmojiPicker(containerId, key) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-            AVATAR_EMOJIS.forEach((emoji, i) => {
+            // Legacy — le grid est maintenant dans la modal, mais on garde pour compatibilité
+        }
+        
+        function openEmojiModal(key) {
+            currentEmojiKey = key;
+            const grid = document.getElementById('emoji-modal-grid');
+            grid.innerHTML = '';
+            
+            AVATAR_EMOJIS.forEach(emoji => {
                 const btn = document.createElement('div');
-                btn.className = 'emoji-pick' + (i === 0 ? ' selected' : '');
+                btn.className = 'emoji-pick' + (emoji === selectedEmoji[key] ? ' selected' : '');
                 btn.textContent = emoji;
                 btn.onclick = () => {
-                    container.querySelectorAll('.emoji-pick').forEach(b => b.classList.remove('selected'));
+                    grid.querySelectorAll('.emoji-pick').forEach(b => b.classList.remove('selected'));
                     btn.classList.add('selected');
                     selectedEmoji[key] = emoji;
+                    // Mettre à jour le trigger
+                    document.getElementById(key + '-emoji-preview').textContent = emoji;
+                    // Fermer après un court délai
+                    setTimeout(() => closeEmojiModal(), 150);
                 };
-                container.appendChild(btn);
+                grid.appendChild(btn);
             });
+            
+            document.getElementById('emoji-modal-overlay').classList.remove('hidden');
+        }
+        
+        function closeEmojiModal() {
+            document.getElementById('emoji-modal-overlay').classList.add('hidden');
+            currentEmojiKey = null;
         }
         
         // ===========================================
