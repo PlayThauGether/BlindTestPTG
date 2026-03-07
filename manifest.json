@@ -1,6 +1,6 @@
 {
-  "name": "Blind Test PTG",
-  "short_name": "Blind Test",
+  "name": "PTG - Blind Test",
+  "short_name": "PTG - Blind Test",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0a0e27",
