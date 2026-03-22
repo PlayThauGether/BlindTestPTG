@@ -15,7 +15,7 @@
     <meta name="theme-color" content="#0a0e27">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PTG - Blind Test">
+    <meta name="apple-mobile-web-app-title" content="Blind Test PTG">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="msapplication-TileColor" content="#0a0e27">
     <meta name="msapplication-TileImage" content="favicon.png">
@@ -1309,7 +1309,7 @@
 
                 <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
                     <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.8rem;">Un problème, un bug, une suggestion ?</p>
-                    <a href="mailto:playthaugether@gmail.com?subject=Blind Test PTG - Contact" style="color: #00f5ff; font-weight: 800; font-size: 1.1rem; text-decoration: none;">📧 playthaugether@gmail.com</a>
+                    <a href="/cdn-cgi/l/email-protection#c2b2aea3bbb6aaa3b7a5a7b6aaa7b082a5afa3abaeeca1adaffdb1b7a0a8a7a1b6ff80aeabaca6e296a7b1b6e2929685e2efe281adacb6a3a1b6" style="color: #00f5ff; font-weight: 800; font-size: 1.1rem; text-decoration: none;">📧 <span class="__cf_email__" data-cfemail="22524e435b564a43574547564a475062454f434b4e0c414d4f">[email&#160;protected]</span></a>
                 </div>
             </div>
         </div>
@@ -1851,7 +1851,7 @@
     <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Plein écran">📺 Plein écran</button>
 
     <!-- FIREBASE -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
@@ -3594,6 +3594,30 @@
         function goToGame() {
             // Activer le Wake Lock pour empêcher la mise en veille
             requestWakeLock();
+            
+            // DÉVERROUILLER l'audio pour iOS Safari
+            // iOS bloque play() si pas déclenché par un geste utilisateur
+            // On "débloque" l'élément audio ici (appelé depuis un onclick)
+            try {
+                const audio = document.getElementById('audio-player');
+                audio.muted = true;
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.muted = false;
+                    audio.currentTime = 0;
+                    console.log('✅ Audio déverrouillé pour iOS');
+                }).catch(() => {
+                    audio.muted = false;
+                    console.log('⚠️ Audio unlock failed, will retry');
+                });
+                
+                // Débloquer aussi le contexte Web Audio (sons de feedback)
+                if (typeof audioCtx !== 'undefined' && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch(e) {
+                console.log('⚠️ Audio unlock error:', e);
+            }
             
             // Lancer avec compte à rebours de 10 secondes
             startGameWithCountdown();
@@ -5741,6 +5765,45 @@
         // ===========================================
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
+        // DÉVERROUILLAGE AUDIO iOS — Au premier tap/click sur la page
+        // iOS Safari bloque tout audio non déclenché par un geste utilisateur
+        // On débloque l'élément <audio> ET le AudioContext dès le premier contact
+        let audioUnlocked = false;
+        function unlockAudioForIOS() {
+            if (audioUnlocked) return;
+            audioUnlocked = true;
+            
+            try {
+                // Débloquer l'élément audio (pour les previews Deezer)
+                const audio = document.getElementById('audio-player');
+                if (audio) {
+                    audio.muted = true;
+                    const p = audio.play();
+                    if (p) p.then(() => {
+                        audio.pause();
+                        audio.muted = false;
+                        audio.currentTime = 0;
+                        console.log('✅ Audio <audio> déverrouillé (iOS)');
+                    }).catch(() => { audio.muted = false; });
+                }
+                
+                // Débloquer le AudioContext (pour les sons correct/wrong)
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        console.log('✅ AudioContext déverrouillé (iOS)');
+                    });
+                }
+            } catch(e) {
+                console.log('⚠️ Audio unlock:', e);
+            }
+            
+            // Retirer les listeners une fois débloqué
+            document.removeEventListener('touchstart', unlockAudioForIOS);
+            document.removeEventListener('click', unlockAudioForIOS);
+        }
+        document.addEventListener('touchstart', unlockAudioForIOS, { once: true });
+        document.addEventListener('click', unlockAudioForIOS, { once: true });
+        
         function playSound(type) {
             try {
                 const osc = audioCtx.createOscillator();
@@ -6010,9 +6073,4 @@
             }
         });
 
-        // Enter key sur login/setup
-        document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-        document.getElementById('setup-password2').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
-    </script>
-</body>
-</html>
+        // Enter key sur log
