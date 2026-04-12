@@ -3603,6 +3603,11 @@
         // GAME
         // ===========================================
         function goToGame() {
+            // Reset streak QCM (nouvelle partie)
+            gameState.qcmStreak = 0;
+            gameState.pendingStreakBonus = 0;
+            gameState.streakBonusGiven = { three: false, five: false };
+            
             // Activer le Wake Lock pour empêcher la mise en veille
             requestWakeLock();
             
@@ -4503,8 +4508,10 @@
             const isCorrect = answer === correct;
             const pts = isCorrect ? (50 + gameState.currentTime * 10) : 0;
             
-            // STREAK QCM : bonus pour les séries de bonnes réponses
-            if (!gameState.qcmStreak) gameState.qcmStreak = 0;
+            // STREAK QCM : bonus à 3 et 5 bonnes d'affilée, UNE SEULE FOIS par partie
+            if (typeof gameState.qcmStreak !== 'number') gameState.qcmStreak = 0;
+            if (!gameState.streakBonusGiven) gameState.streakBonusGiven = { three: false, five: false };
+            
             if (isCorrect) {
                 gameState.qcmStreak++;
             } else {
@@ -4512,10 +4519,12 @@
             }
             
             let streakBonus = 0;
-            if (gameState.qcmStreak >= 5) {
-                streakBonus = 100;
-            } else if (gameState.qcmStreak >= 3) {
+            if (gameState.qcmStreak === 3 && !gameState.streakBonusGiven.three) {
                 streakBonus = 50;
+                gameState.streakBonusGiven.three = true;
+            } else if (gameState.qcmStreak === 5 && !gameState.streakBonusGiven.five) {
+                streakBonus = 100;
+                gameState.streakBonusGiven.five = true;
             }
             
             // STOCKER le score en attente (sera appliqué à 0s)
@@ -5757,29 +5766,48 @@
             const btn = document.getElementById('unlock-audio-btn');
             const audio = document.getElementById('audio-player');
             
-            // 1. Débloquer l'élément <audio> en jouant un silence
-            audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAABhgFzrmYAAAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAABhgFzrmYAAAAAAAAAAAAAAAAA';
-            const playPromise = audio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
+            try {
+                // 1. Créer un vrai fichier WAV silencieux (100ms)
+                const sampleRate = 22050;
+                const numSamples = Math.floor(sampleRate * 0.1);
+                const dataSize = numSamples * 2;
+                const buffer = new ArrayBuffer(44 + dataSize);
+                const v = new DataView(buffer);
+                const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+                w(0, 'RIFF'); v.setUint32(4, 36 + dataSize, true); w(8, 'WAVE');
+                w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+                v.setUint16(22, 1, true); v.setUint32(24, sampleRate, true);
+                v.setUint32(28, sampleRate * 2, true); v.setUint16(32, 2, true);
+                v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, dataSize, true);
+                
+                const blob = new Blob([buffer], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                
+                audio.src = url;
+                audio.play().then(() => {
                     audio.pause();
                     audio.src = '';
                     audio.currentTime = 0;
+                    URL.revokeObjectURL(url);
                     btn.textContent = '✅ Son activé !';
                     btn.style.background = 'rgba(0, 255, 100, 0.3)';
                     btn.style.borderColor = '#00ff64';
+                    btn.style.animation = 'none';
                     btn.onclick = null;
-                    console.log('✅ Audio <audio> déverrouillé');
+                    console.log('✅ Audio déverrouillé');
                 }).catch(err => {
-                    console.log('⚠️ Audio unlock play failed:', err);
-                    btn.textContent = '❌ Réessayer';
+                    URL.revokeObjectURL(url);
+                    console.log('⚠️ Audio unlock failed:', err);
+                    btn.textContent = '🔊 Réessayer (appuie ici)';
                 });
-            }
-            
-            // 2. Débloquer le AudioContext (sons correct/wrong)
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+                
+                // 2. Débloquer le AudioContext
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch(e) {
+                console.log('⚠️ Audio unlock error:', e);
+                btn.textContent = '🔊 Réessayer (appuie ici)';
             }
         }
         
