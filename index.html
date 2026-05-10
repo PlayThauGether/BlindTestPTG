@@ -745,6 +745,36 @@
             font-family: 'Montserrat', sans-serif;
         }
 
+        /* PODIUM OVERLAY */
+        .podium-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(60px) scale(0.8);
+            transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .podium-card.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .podium-card .po-emoji { font-size: 3.5rem; margin-bottom: 0.3rem; }
+        .podium-card .po-name { color: white; font-weight: 800; font-size: 1rem; text-align: center; margin-bottom: 0.3rem; max-width: 120px; word-break: break-word; }
+        .podium-card .po-score { font-weight: 800; text-align: center; font-size: 1.1rem; }
+        .podium-card .po-medal { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .podium-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            border-radius: 12px 12px 0 0;
+            min-width: 100px;
+            padding: 1rem 0.5rem;
+        }
+        .podium-block.rank1 { background: linear-gradient(180deg, rgba(255,190,11,0.4), rgba(255,190,11,0.1)); border: 2px solid #ffbe0b; height: 130px; box-shadow: 0 0 30px rgba(255,190,11,0.5); }
+        .podium-block.rank2 { background: linear-gradient(180deg, rgba(192,192,192,0.3), rgba(192,192,192,0.05)); border: 2px solid #aaa; height: 90px; }
+        .podium-block.rank3 { background: linear-gradient(180deg, rgba(205,127,50,0.3), rgba(205,127,50,0.05)); border: 2px solid #cd7f32; height: 70px; }
+
         /* EMOJI PICKER */
 
         /* HELP GUIDE */
@@ -910,12 +940,20 @@
         }
 
         /* STATS FIN DE PARTIE */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 700px; margin: 1.5rem auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 800px; margin: 1.5rem auto; }
         .stat-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(131,56,236,0.3); border-radius: 15px; padding: 1rem; text-align: center; }
         .stat-card .stat-emoji { font-size: 2rem; margin-bottom: 0.3rem; }
-        .stat-card .stat-title { color: #00f5ff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
-        .stat-card .stat-player { color: #ffbe0b; font-size: 1.1rem; font-weight: 800; }
-        .stat-card .stat-value { color: rgba(255,255,255,0.7); font-size: 0.8rem; }
+        .stat-card .stat-title { color: #00f5ff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.2rem; letter-spacing: 0.05em; }
+        .stat-card .stat-desc { color: rgba(255,255,255,0.4); font-size: 0.7rem; font-style: italic; margin-bottom: 0.4rem; line-height: 1.3; }
+        .stat-card .stat-player { color: #ffbe0b; font-size: 1.05rem; font-weight: 800; }
+        .stat-card .stat-value { color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 0.2rem; }
+        .speed-podium { background: rgba(255,190,11,0.08); border: 2px solid rgba(255,190,11,0.3); border-radius: 15px; padding: 1.2rem 1.5rem; max-width: 400px; margin: 1.5rem auto 0; }
+        .speed-podium h4 { color: #ffbe0b; text-align: center; margin-bottom: 0.8rem; font-size: 1rem; }
+        .speed-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .speed-row:last-child { border-bottom: none; }
+        .speed-rank { font-size: 1.2rem; width: 28px; text-align: center; }
+        .speed-name { flex: 1; color: white; font-weight: 700; font-size: 0.95rem; }
+        .speed-time { color: #00f5ff; font-weight: 800; font-size: 0.95rem; }
 
         /* TEAMS */
         .team-banner { display: flex; justify-content: center; gap: 2rem; margin: 1rem 0; flex-wrap: wrap; }
@@ -1390,7 +1428,7 @@
             <div class="section">
                 <h3>⚙️ Options</h3>
                 <label class="checkbox-label">
-                    <input type="checkbox" id="host-mode" onchange="if(this.checked) document.getElementById('distance-mode').checked=false;">
+                    <input type="checkbox" id="host-mode" onchange="toggleHostModeUI(this.checked); if(this.checked) document.getElementById('distance-mode').checked=false;">
                     <span>Mode Hôte (Affichage Questions Seulement)</span>
                 </label>
                 <label class="checkbox-label">
@@ -1503,6 +1541,29 @@
         <!-- LOBBY -->
         <div id="lobby-screen" class="screen hidden">
             <h2 style="font-size: 1.8rem; color: #ffbe0b; margin-bottom: 1rem;">Salle d'attente</h2>
+            
+            <!-- RÉCAP HOST (visible uniquement pour l'hôte) -->
+            <div id="host-recap" class="hidden" style="background: rgba(131,56,236,0.15); border: 1px solid rgba(131,56,236,0.5); border-radius: 16px; padding: 1rem 1.2rem; margin-bottom: 1rem; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <h3 style="color: #ffbe0b; font-size: 1rem; margin-bottom: 0.8rem; text-align: center;">⚙️ Récap de la partie</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎵 Playlist</div>
+                        <div id="recap-playlist" style="color: white; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Mode</div>
+                        <div id="recap-mode" style="color: #00f5ff; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">❓ Questions</div>
+                        <div id="recap-questions" style="color: #ffbe0b; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">⏱️ Timer</div>
+                        <div id="recap-timer" style="color: #ff006e; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                    </div>
+                </div>
+            </div>
             
             <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem;">
                 <div class="code-display" style="margin-bottom: 0;">
@@ -1794,8 +1855,17 @@
             </div>
         </div>
 
+        <!-- PODIUM OVERLAY (animation plein écran 5s) -->
+        <div id="podium-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:20000; background: linear-gradient(135deg, #0a0e27 0%, #1a0a3a 50%, #0a0e27 100%); flex-direction:column; align-items:center; justify-content:center; overflow:hidden;">
+            <canvas id="podium-confetti" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
+            <div id="podium-overlay-title" style="font-family:'Bungee Shade',cursive; font-size:2.5rem; color:#ffbe0b; text-align:center; margin-bottom:2rem; opacity:0; transform:translateY(-30px); transition:all 0.6s ease; text-shadow:0 0 40px rgba(255,190,11,0.8);">🏆 PODIUM 🏆</div>
+            <div id="podium-overlay-players" style="display:flex; align-items:flex-end; justify-content:center; gap:1.5rem; width:100%; max-width:700px; padding:0 1rem;"></div>
+            <div id="podium-skip" style="position:absolute; bottom:2rem; color:rgba(255,255,255,0.4); font-size:0.85rem; cursor:pointer;" onclick="skipPodiumAnimation()">Appuie pour passer →</div>
+        </div>
+
         <!-- LEADERBOARD -->
         <div id="leaderboard-screen" class="screen hidden">
+            <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;"></canvas>
             <h1 class="leaderboard-title">🏆 CLASSEMENT FINAL 🏆</h1>
             <div id="podium-container" class="podium"></div>
             <div id="leaderboard-container" class="leaderboard"></div>
@@ -2596,10 +2666,23 @@
             loadPlaylistsSelect();
             showScreen('create-screen');
             
-            // Si on a déjà une musicDB (partie précédente), la sauvegarder temporairement
-            if (gameState.musicDB && gameState.musicDB.length > 0) {
-                console.log(`💾 Playlist précédente sauvegardée (${gameState.musicDB.length} tracks)`);
-                // On garde gameState.musicDB pour le réutiliser
+            // Synchroniser les boutons nombre de questions avec gameState
+            document.querySelectorAll('.num-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.textContent) === gameState.numQuestions) {
+                    btn.classList.add('active');
+                }
+            });
+            // Si aucun bouton actif (ex: 1ère visite), activer 10 par défaut
+            if (!document.querySelector('.num-btn.active')) {
+                document.querySelector('.num-btn[onclick*="10"]')?.classList.add('active');
+            }
+            
+            // Réinitialiser l'état du mode hôte visuellement
+            const hostCheckbox = document.getElementById('host-mode');
+            if (hostCheckbox) {
+                hostCheckbox.checked = false;
+                toggleHostModeUI(false);
             }
         }
 
@@ -2712,6 +2795,37 @@
             gameState.numQuestions = num;
             document.querySelectorAll('.num-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
+        }
+        
+        function toggleHostModeUI(isHost) {
+            const nameInput = document.getElementById('create-name');
+            const emojiTrigger = document.querySelector('#create-screen .emoji-dropdown-trigger');
+            const emojiPreview = document.getElementById('create-emoji-preview');
+            
+            if (isHost) {
+                // Forcer nom "Hôte" et emoji 🎬
+                nameInput.value = 'Hôte';
+                nameInput.disabled = true;
+                nameInput.style.opacity = '0.5';
+                nameInput.style.cursor = 'not-allowed';
+                if (emojiTrigger) {
+                    emojiTrigger.style.opacity = '0.5';
+                    emojiTrigger.style.pointerEvents = 'none';
+                }
+                if (emojiPreview) emojiPreview.textContent = '🎬';
+                selectedEmoji.create = '🎬';
+            } else {
+                // Réactiver
+                nameInput.disabled = false;
+                nameInput.style.opacity = '';
+                nameInput.style.cursor = '';
+                if (nameInput.value === 'Hôte') nameInput.value = '';
+                if (emojiTrigger) {
+                    emojiTrigger.style.opacity = '';
+                    emojiTrigger.style.pointerEvents = '';
+                }
+                if (emojiPreview) emojiPreview.textContent = selectedEmoji.create || '😎';
+            }
         }
 
         function switchPlaylistTab(tab) {
@@ -3387,14 +3501,46 @@
                 document.getElementById('start-btn').classList.remove('hidden');
                 document.getElementById('change-code-btn').classList.remove('hidden');
                 document.getElementById('waiting-div').classList.add('hidden');
+                
+                // Afficher le récap host
+                const recap = document.getElementById('host-recap');
+                recap.classList.remove('hidden');
+                
+                // Playlist
+                const playlistName = gameState.playlistName || gameState.room.playlistName || '—';
+                document.getElementById('recap-playlist').textContent = playlistName;
+                
+                // Mode
+                const modeLabels = {
+                    'qcm': '🎯 QCM',
+                    'writing': '✍️ Écriture',
+                    'mix': '🎉 Soirée',
+                    'qcm-film': '🎬 Film',
+                    'qcm-serie': '📺 Série',
+                    'mix-disney': '🎧 Disney'
+                };
+                const mode = gameState.room.gameMode || '—';
+                document.getElementById('recap-mode').textContent = modeLabels[mode] || mode;
+                
+                // Nombre de questions
+                const nbQ = gameState.numQuestions || gameState.room.questions?.length || '—';
+                document.getElementById('recap-questions').textContent = nbQ + ' questions';
+                
+                // Timer (d'après le mode)
+                const timerByMode = {
+                    'qcm': '20 sec', 'qcm-film': '20 sec', 'qcm-serie': '20 sec',
+                    'writing': '30 sec', 'mix': '20-30 sec', 'mix-disney': '20-30 sec'
+                };
+                document.getElementById('recap-timer').textContent = timerByMode[mode] || '—';
+
             } else {
                 document.getElementById('start-btn').classList.add('hidden');
                 document.getElementById('change-code-btn').classList.add('hidden');
                 document.getElementById('waiting-div').classList.remove('hidden');
+                document.getElementById('host-recap').classList.add('hidden');
             }
 
             // Afficher le bouton "Activer le son" si ce joueur aura besoin d'audio
-            // = host (toujours) ou joueur en mode distance
             const needsAudio = gameState.isHost || gameState.distanceMode;
             const unlockBtn = document.getElementById('unlock-audio-btn');
             if (needsAudio) {
@@ -5184,39 +5330,33 @@
             if (gameState.roomRef) gameState.roomRef.off();
             clearSession();
 
-            showScreen('leaderboard-screen');
-
             const players = gameState.room.players || [];
-            // Tri avec départage : 1) Score décroissant, 2) Si égalité → temps de réponse croissant (plus rapide = meilleur)
             let sorted = [...players].sort((a, b) => {
                 const scoreA = a.score || 0;
                 const scoreB = b.score || 0;
-                
-                // Si les scores sont différents, trier par score
-                if (scoreB !== scoreA) {
-                    return scoreB - scoreA;
-                }
-                
-                // Si égalité de score, départager par timestamp (le plus petit = le plus rapide)
+                if (scoreB !== scoreA) return scoreB - scoreA;
                 const timeA = a.lastAnswerTime || 0;
                 const timeB = b.lastAnswerTime || 0;
                 return timeA - timeB;
             });
 
-            // En mode hôte (affichage seulement), enlever l'hôte du classement
             if (gameState.room.hostMode) {
                 sorted = sorted.filter(p => p.name !== gameState.room.host);
             }
 
-            // Scores finaux triés
-
+            // Montrer d'abord l'animation podium plein écran (5s)
+            showPodiumAnimation(sorted, () => {
+                showScreen('leaderboard-screen');
+                renderLeaderboard(sorted);
+            });
+        }
+        
+        function renderLeaderboard(sorted) {
+            // Podium classique
             const podium = document.getElementById('podium-container');
             podium.innerHTML = '';
-            
-            // Créer le podium dans l'ordre 2ème/1er/3ème avec les bonnes classes
             const podiumClasses = ['first', 'second', 'third'];
             const medals = ['🥇','🥈','🥉'];
-            
             sorted.slice(0, 3).forEach((p, i) => {
                 const div = document.createElement('div');
                 div.className = `podium-item ${podiumClasses[i]}`;
@@ -5228,9 +5368,9 @@
                 podium.appendChild(div);
             });
 
+            // Liste complète
             const list = document.getElementById('leaderboard-container');
             list.innerHTML = '<h3 style="color: #00f5ff; margin-bottom: 0.8rem; text-align: center;">🎯 Cette partie</h3><div class="leaderboard-grid"></div>';
-            
             const grid = list.querySelector('.leaderboard-grid');
             sorted.forEach((p, i) => {
                 const div = document.createElement('div');
@@ -5244,16 +5384,12 @@
                 grid.appendChild(div);
             });
 
-            // Afficher les stats fun
             generateFunStats();
-            
-            // Afficher les résultats d'équipes
+            launchConfetti();
             displayTeamResults();
-            
-            // Afficher les bons boutons selon le rôle
+
             const hostBtn = document.getElementById('host-new-game-btn');
             const playerBtn = document.getElementById('player-rejoin-btn');
-            
             if (gameState.isHost) {
                 hostBtn.classList.remove('hidden');
                 playerBtn.classList.add('hidden');
@@ -5262,6 +5398,108 @@
                 playerBtn.classList.remove('hidden');
             }
         }
+
+        // ===========================================
+        // ANIMATION PODIUM PLEIN ÉCRAN
+        // ===========================================
+        let podiumAnimTimeout = null;
+
+        function showPodiumAnimation(sorted, callback) {
+            const overlay = document.getElementById('podium-overlay');
+            const container = document.getElementById('podium-overlay-players');
+            const title = document.getElementById('podium-overlay-title');
+            overlay.style.display = 'flex';
+            container.innerHTML = '';
+            title.style.opacity = '0';
+            title.style.transform = 'translateY(-30px)';
+
+            // Confettis sur le podium
+            const canvas = document.getElementById('podium-confetti');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            const colors = ['#ff006e','#00f5ff','#ffbe0b','#8338ec','#00ff64','#ffffff','#ff9500'];
+            const pieces = Array.from({length: 200}, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                w: Math.random() * 12 + 5, h: Math.random() * 7 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 4 + 2, angle: Math.random() * Math.PI * 2,
+                spin: (Math.random() - 0.5) * 0.15, drift: (Math.random() - 0.5) * 2
+            }));
+            let animRunning = true;
+            function animConfetti() {
+                if (!animRunning) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    ctx.save(); ctx.globalAlpha = 0.85;
+                    ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                    ctx.restore();
+                    p.y += p.speed; p.x += p.drift; p.angle += p.spin;
+                    if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+                });
+                requestAnimationFrame(animConfetti);
+            }
+            animConfetti();
+
+            // Ordre d'apparition : 3ème → 2ème → 1er
+            const display = [sorted[2], sorted[1], sorted[0]].filter(Boolean);
+            const ranks = sorted.length >= 3 ? [2, 1, 0] : sorted.length === 2 ? [1, 0] : [0];
+            const rankClasses = ['rank3', 'rank2', 'rank1'];
+            const medals = ['🥇','🥈','🥉'];
+            const scoreColors = ['#ffbe0b','#aaa','#cd7f32'];
+            const blockHeights = ['130px','90px','70px'];
+
+            display.forEach((p, i) => {
+                const realRank = ranks[i];
+                const card = document.createElement('div');
+                card.className = 'podium-card';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.alignItems = 'center';
+                card.innerHTML = `
+                    <div class="po-medal">${medals[realRank]}</div>
+                    <div class="po-emoji">${p.emoji || '😎'}</div>
+                    <div class="po-name">${p.name}</div>
+                    <div class="po-score" style="color:${scoreColors[realRank]}">${p.score || 0} pts</div>
+                    <div class="podium-block ${rankClasses[realRank]}" style="width:110px; height:${blockHeights[realRank]};"></div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Apparition séquentielle : titre → 3ème → 2ème → 1er
+            setTimeout(() => {
+                title.style.opacity = '1';
+                title.style.transform = 'translateY(0)';
+            }, 300);
+
+            const cards = container.querySelectorAll('.podium-card');
+            // 3ème apparaît en 1er, puis 2ème, puis 1er
+            if (cards[0]) setTimeout(() => cards[0].classList.add('show'), 800);  // 3ème
+            if (cards[1]) setTimeout(() => cards[1].classList.add('show'), 1500); // 2ème
+            if (cards[2]) setTimeout(() => cards[2].classList.add('show'), 2400); // 1er (effet "waouh")
+
+            // Après 7s : fade out et callback
+            const dismiss = () => {
+                clearTimeout(podiumAnimTimeout);
+                animRunning = false;
+                overlay.style.transition = 'opacity 0.8s ease';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.style.opacity = '1';
+                    overlay.style.transition = '';
+                    callback();
+                }, 800);
+            };
+
+            podiumAnimTimeout = setTimeout(dismiss, 7000);
+            document.getElementById('podium-skip').onclick = dismiss;
+        }
+
+        function skipPodiumAnimation() {} // défini dynamiquement dans showPodiumAnimation
 
         function showIntroScreen(screenId) {
             showScreen(screenId);
@@ -5846,139 +6084,218 @@
             
             const players = gameState.room?.players || [];
             if (players.length < 2) return;
-            
             const log = gameState.answerLog || [];
             if (log.length === 0) return;
-            
-            const stats = [];
-            
-            // Initialiser les compteurs par joueur
+
+            // --- Init compteurs ---
             const pData = {};
             players.forEach(p => {
                 pData[p.name] = {
-                    bothFound: 0,
-                    qcmCorrect: 0,
-                    writingCorrect: 0,
-                    rank1Correct: 0,
-                    rank1Wrong: 0,
-                    rank2: 0,
-                    rank3: 0,
-                    totalAnswered: 0
+                    correct: 0, wrong: 0, total: 0,
+                    responseTimes: [], correctTimes: [],
+                    bothFound: 0, artistCorrect: 0,
+                    rank1Correct: 0, rank1Wrong: 0, lastPlace: 0,
+                    currentStreak: 0, maxStreak: 0,
+                    startStreak: 0, inStartStreak: true,
+                    scoreByHalf: [0, 0], questionIdx: 0,
+                    fastAnswers: 0, alwaysAnswered: true,
+                    neverWrong: true, perQScore: []
                 };
             });
-            
-            // Parcourir le log de réponses
-            log.forEach(entry => {
-                if (!entry || !entry.answers) return;
-                
-                // Calculer les rangs pour cette question
-                const answered = [];
-                Object.keys(entry.answers).forEach(name => {
-                    const a = entry.answers[name];
-                    if (a && a.responseTime !== undefined) {
-                        answered.push({ name, ...a });
+
+            const totalQ = log.length;
+
+            log.forEach((entry, qIdx) => {
+                if (!entry?.answers) return;
+                const answered = Object.keys(entry.answers)
+                    .map(name => ({ name, ...entry.answers[name] }))
+                    .filter(a => a.responseTime !== undefined);
+                answered.sort((a, b) => (a.responseTime || 999) - (b.responseTime || 999));
+                const n = answered.length;
+
+                // Joueurs qui n'ont pas répondu
+                Object.keys(pData).forEach(name => {
+                    if (!answered.find(a => a.name === name)) {
+                        pData[name].alwaysAnswered = false;
                     }
                 });
-                
-                // Trier par temps de réponse
-                answered.sort((a, b) => (a.responseTime || 999) - (b.responseTime || 999));
-                
+
                 answered.forEach((a, idx) => {
                     const d = pData[a.name];
                     if (!d) return;
-                    
-                    d.totalAnswered++;
-                    
-                    // Both found (Fan)
+                    d.total++;
+                    d.responseTimes.push(a.responseTime || 20);
+
+                    if (a.correct) {
+                        d.correct++;
+                        d.correctTimes.push(a.responseTime || 20);
+                        d.currentStreak++;
+                        if (d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
+                        if (d.inStartStreak) d.startStreak++;
+                        if (a.responseTime < 5) d.fastAnswers++;
+                    } else {
+                        d.wrong++;
+                        d.neverWrong = false;
+                        d.currentStreak = 0;
+                        d.inStartStreak = false;
+                    }
+
                     if (a.bothFound) d.bothFound++;
-                    
-                    // QCM vs Writing
-                    if (entry.questionType === 'qcm' && a.correct) d.qcmCorrect++;
-                    if (entry.questionType === 'writing' && a.correct) d.writingCorrect++;
-                    
-                    // Rangs
+                    if (a.artistCorrect) d.artistCorrect++;
                     if (idx === 0 && a.correct) d.rank1Correct++;
                     if (idx === 0 && !a.correct) d.rank1Wrong++;
-                    if (idx === 1 && a.correct) d.rank2++;
-                    if (idx === 2 && a.correct) d.rank3++;
+                    if (idx === n - 1 && n > 1 && a.correct) d.lastPlace++;
+
+                    // Score par moitié
+                    const half = qIdx < totalQ / 2 ? 0 : 1;
+                    d.scoreByHalf[half] += (a.correct ? 1 : 0);
+
+                    d.perQScore.push(a.correct ? 1 : 0);
                 });
             });
-            
-            const names = Object.keys(pData).filter(n => pData[n].totalAnswered > 0);
+
+            const names = Object.keys(pData).filter(n => pData[n].total > 0);
             if (names.length === 0) return;
-            
-            // 🎵 Le Fan : le plus de titre + artiste trouvés ensemble
-            const fanBest = names.reduce((best, n) => pData[n].bothFound > pData[best].bothFound ? n : best, names[0]);
-            if (pData[fanBest].bothFound > 0) {
-                stats.push({
-                    emoji: '🎵', title: 'LE FAN',
-                    player: `${getPlayerEmoji(fanBest)} ${fanBest}`,
-                    value: `${pData[fanBest].bothFound} titre + artiste trouvés !`
-                });
+
+            const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 999;
+            const stdDev = arr => {
+                if (arr.length < 2) return 0;
+                const m = avg(arr);
+                return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
+            };
+
+            const stats = [];
+            const push = (emoji, title, desc, player, value) => stats.push({ emoji, title, desc, player, value });
+
+            // 👑 LE BOSS — 1er ET correct le plus souvent
+            const boss = names.reduce((b, n) => pData[n].rank1Correct > pData[b].rank1Correct ? n : b, names[0]);
+            if (pData[boss].rank1Correct >= 2) push('👑', 'LE BOSS', 'Le plus souvent 1er à répondre ET correct',
+                `${getPlayerEmoji(boss)} ${boss}`, `${pData[boss].rank1Correct}x le plus rapide ET correct !`);
+
+            // ⚡ L'ÉCLAIR — le plus de réponses justes en < 5s
+            const eclair = names.reduce((b, n) => pData[n].fastAnswers > pData[b].fastAnswers ? n : b, names[0]);
+            if (pData[eclair].fastAnswers >= 2) push('⚡', "L'ÉCLAIR", 'A répondu correctement en moins de 5 secondes le plus souvent',
+                `${getPlayerEmoji(eclair)} ${eclair}`, `${pData[eclair].fastAnswers}x juste en moins de 5 sec !`);
+
+            // 🧠 LE GÉNIE — meilleur taux de bonnes réponses
+            const genie = names.filter(n => pData[n].total >= 3).sort((a, b) =>
+                (pData[b].correct / pData[b].total) - (pData[a].correct / pData[a].total))[0];
+            if (genie) {
+                const pct = Math.round(pData[genie].correct / pData[genie].total * 100);
+                if (pct >= 75) push('🧠', 'LE GÉNIE', 'Meilleur taux de bonnes réponses (min. 3 questions)',
+                    `${getPlayerEmoji(genie)} ${genie}`, `${pct}% de bonnes réponses !`);
             }
-            
-            // 🎲 Pro du hasard : bon en QCM, nul en écriture
-            const hasardBest = names.reduce((best, n) => {
-                const score = pData[n].qcmCorrect - pData[n].writingCorrect * 2;
-                const bestScore = pData[best].qcmCorrect - pData[best].writingCorrect * 2;
-                return score > bestScore ? n : best;
-            }, names[0]);
-            if (pData[hasardBest].qcmCorrect > 0 && pData[hasardBest].writingCorrect <= 1) {
-                stats.push({
-                    emoji: '🎲', title: 'PRO DU HASARD',
-                    player: `${getPlayerEmoji(hasardBest)} ${hasardBest}`,
-                    value: `${pData[hasardBest].qcmCorrect} QCM corrects, ${pData[hasardBest].writingCorrect} en écriture`
-                });
+
+            // 🔥 EN FEU — plus longue série
+            const enFeu = names.reduce((b, n) => pData[n].maxStreak > pData[b].maxStreak ? n : b, names[0]);
+            if (pData[enFeu].maxStreak >= 3) push('🔥', 'EN FEU', 'La plus longue série de bonnes réponses d\'affilée',
+                `${getPlayerEmoji(enFeu)} ${enFeu}`, `${pData[enFeu].maxStreak} bonnes réponses d'affilée !`);
+
+            // 🐌 LA TORTUE — dernier à répondre mais correct
+            const tortue = names.reduce((b, n) => pData[n].lastPlace > pData[b].lastPlace ? n : b, names[0]);
+            if (pData[tortue].lastPlace >= 2) push('🐌', 'LA TORTUE', 'Souvent le dernier à répondre... mais correct !',
+                `${getPlayerEmoji(tortue)} ${tortue}`, `${pData[tortue].lastPlace}x dernier mais correct !`);
+
+            // 🤡 LE BOULET — le plus de mauvaises réponses
+            const boulet = names.reduce((b, n) => pData[n].wrong > pData[b].wrong ? n : b, names[0]);
+            if (pData[boulet].wrong >= 3) push('🤡', 'LE BOULET', 'Le recordman des mauvaises réponses',
+                `${getPlayerEmoji(boulet)} ${boulet}`, `${pData[boulet].wrong} mauvaises réponses 😬`);
+
+            // 💨 TROP PRESSÉ — 1er mais faux
+            const presse = names.reduce((b, n) => pData[n].rank1Wrong > pData[b].rank1Wrong ? n : b, names[0]);
+            if (pData[presse].rank1Wrong >= 2) push('💨', 'TROP PRESSÉ', 'Le plus souvent premier à répondre... mais faux',
+                `${getPlayerEmoji(presse)} ${presse}`, `${pData[presse].rank1Wrong}x premier... mais faux !`);
+
+            // 😴 LE DORMEUR — temps de réponse moyen le plus lent
+            const dormeur = names.filter(n => pData[n].responseTimes.length >= 3)
+                .sort((a, b) => avg(pData[b].responseTimes) - avg(pData[a].responseTimes))[0];
+            if (dormeur) {
+                const t = avg(pData[dormeur].responseTimes).toFixed(1);
+                if (parseFloat(t) > 12) push('😴', 'LE DORMEUR', 'Le temps de réponse moyen le plus lent de la partie',
+                    `${getPlayerEmoji(dormeur)} ${dormeur}`, `${t}s de moyenne... il prend son temps !`);
             }
-            
-            // 🥉 Médaille de bronze : le plus de 3ème place
-            const bronzeBest = names.reduce((best, n) => pData[n].rank3 > pData[best].rank3 ? n : best, names[0]);
-            if (pData[bronzeBest].rank3 >= 2) {
-                stats.push({
-                    emoji: '🥉', title: 'MÉDAILLE DE BRONZE',
-                    player: `${getPlayerEmoji(bronzeBest)} ${bronzeBest}`,
-                    value: `${pData[bronzeBest].rank3}x 3ème à répondre !`
-                });
+
+            // 🦅 L'AIGLE — 0 erreur sur toute la partie
+            const aigle = names.find(n => pData[n].neverWrong && pData[n].correct >= 3);
+            if (aigle) push('🦅', "L'AIGLE", 'N\'a commis aucune erreur de toute la partie',
+                `${getPlayerEmoji(aigle)} ${aigle}`, `${pData[aigle].correct} bonnes réponses, 0 erreur !`);
+
+            // 🧊 LE SANG-FROID — temps de réponse le plus régulier
+            const sangFroid = names.filter(n => pData[n].responseTimes.length >= 4)
+                .sort((a, b) => stdDev(pData[a].responseTimes) - stdDev(pData[b].responseTimes))[0];
+            if (sangFroid && stdDev(pData[sangFroid].responseTimes) < 4) push('🧊', 'LE SANG-FROID', 'Le temps de réponse le plus régulier, jamais ni trop vite ni trop lent',
+                `${getPlayerEmoji(sangFroid)} ${sangFroid}`, `Écart-type de ${stdDev(pData[sangFroid].responseTimes).toFixed(1)}s, régularité parfaite !`);
+
+            // 🏹 LE SNIPER — peu de réponses mais très précis
+            const sniper = names.filter(n => pData[n].total >= 2 && pData[n].correct / pData[n].total === 1 && pData[n].total < totalQ * 0.7).sort((a, b) => pData[b].correct - pData[a].correct)[0];
+            if (sniper && pData[sniper].correct >= 2) push('🏹', 'LE SNIPER', 'Répond rarement mais ne rate jamais sa cible',
+                `${getPlayerEmoji(sniper)} ${sniper}`, `${pData[sniper].correct}/${pData[sniper].total} : 100% de précision !`);
+
+            // 🤝 LE FAIR-PLAY — finit exactement au milieu du classement
+            const sorted = [...names].sort((a, b) => (pData[b].correct) - (pData[a].correct));
+            const midIdx = Math.floor(sorted.length / 2);
+            if (sorted.length >= 4) {
+                const fairPlay = sorted[midIdx];
+                push('🤝', 'LE FAIR-PLAY', 'A terminé exactement au milieu du classement',
+                    `${getPlayerEmoji(fairPlay)} ${fairPlay}`, `Ni dans le top ni dans le fond, parfaitement au centre !`);
             }
-            
-            // 🥈 Presque Boss : le plus de 2ème place
-            const silverBest = names.reduce((best, n) => pData[n].rank2 > pData[best].rank2 ? n : best, names[0]);
-            if (pData[silverBest].rank2 >= 2) {
-                stats.push({
-                    emoji: '🥈', title: 'PRESQUE BOSS',
-                    player: `${getPlayerEmoji(silverBest)} ${silverBest}`,
-                    value: `${pData[silverBest].rank2}x 2ème à répondre`
-                });
+
+            // 🌪️ LA TORNADE — plus grand écart avec le 2ème
+            const sortedByScore = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+            if (sortedByScore.length >= 2) {
+                const gap = (sortedByScore[0].score || 0) - (sortedByScore[1].score || 0);
+                if (gap >= 200) push('🌪️', 'LA TORNADE', 'A écrasé la concurrence avec le plus grand écart sur le 2ème',
+                    `${getPlayerEmoji(sortedByScore[0].name)} ${sortedByScore[0].name}`, `+${gap} pts d'avance sur le 2ème !`);
             }
-            
-            // 👑 Boss : le plus de 1ère place (et correct)
-            const bossBest = names.reduce((best, n) => pData[n].rank1Correct > pData[best].rank1Correct ? n : best, names[0]);
-            if (pData[bossBest].rank1Correct >= 2) {
-                stats.push({
-                    emoji: '👑', title: 'LE BOSS',
-                    player: `${getPlayerEmoji(bossBest)} ${bossBest}`,
-                    value: `${pData[bossBest].rank1Correct}x le plus rapide ET correct !`
-                });
+
+            // 🎲 PILE OU FACE — exactement 50% de bonnes réponses
+            const pileOuFace = names.find(n => pData[n].total >= 4 && Math.abs(pData[n].correct / pData[n].total - 0.5) < 0.15);
+            if (pileOuFace) push('🎲', 'PILE OU FACE', 'A répondu correctement exactement une fois sur deux',
+                `${getPlayerEmoji(pileOuFace)} ${pileOuFace}`, `${pData[pileOuFace].correct}/${pData[pileOuFace].total} : exactement 50/50 !`);
+
+            // 🪑 LE SPECTATEUR — a répondu à moins de la moitié des questions
+            const spectateur = names.filter(n => !pData[n].alwaysAnswered && pData[n].total < totalQ * 0.5)
+                .sort((a, b) => pData[a].total - pData[b].total)[0];
+            if (spectateur) push('🪑', 'LE SPECTATEUR', 'A répondu à moins de la moitié des questions',
+                `${getPlayerEmoji(spectateur)} ${spectateur}`, `Seulement ${pData[spectateur].total}/${totalQ} questions répondues !`);
+
+            // 😰 LE STRESSÉ — forte chute en 2ème moitié
+            const stresse = names.filter(n => pData[n].scoreByHalf[0] > 0).sort((a, b) => {
+                const dropA = pData[a].scoreByHalf[0] - pData[a].scoreByHalf[1];
+                const dropB = pData[b].scoreByHalf[0] - pData[b].scoreByHalf[1];
+                return dropB - dropA;
+            })[0];
+            if (stresse) {
+                const drop = pData[stresse].scoreByHalf[0] - pData[stresse].scoreByHalf[1];
+                if (drop >= 2) push('😰', 'LE STRESSÉ', 'Excellente 1ère moitié, tout s\'effondre en 2ème moitié',
+                    `${getPlayerEmoji(stresse)} ${stresse}`, `${pData[stresse].scoreByHalf[0]} bonnes en 1ère moitié, ${pData[stresse].scoreByHalf[1]} en 2ème...`);
             }
-            
-            // 💨 Trop pressé : le plus de 1ère place mais faux
-            const rushBest = names.reduce((best, n) => pData[n].rank1Wrong > pData[best].rank1Wrong ? n : best, names[0]);
-            if (pData[rushBest].rank1Wrong >= 2) {
-                stats.push({
-                    emoji: '💨', title: 'TROP PRESSÉ',
-                    player: `${getPlayerEmoji(rushBest)} ${rushBest}`,
-                    value: `${pData[rushBest].rank1Wrong}x premier à répondre... mais faux !`
-                });
-            }
-            
-            // Afficher
+
+            // 🎤 LE KARAOKÉ — le plus d'artistes trouvés en écriture
+            const karaoke = names.reduce((b, n) => pData[n].artistCorrect > pData[b].artistCorrect ? n : b, names[0]);
+            if (pData[karaoke].artistCorrect >= 2) push('🎤', 'LE KARAOKÉ', 'A trouvé le plus d\'artistes en mode écriture',
+                `${getPlayerEmoji(karaoke)} ${karaoke}`, `${pData[karaoke].artistCorrect} artistes trouvés !`);
+
+            // 🌊 LA VAGUE — bonne série au début puis chute
+            const vague = names.filter(n => pData[n].startStreak >= 3)
+                .sort((a, b) => pData[b].startStreak - pData[a].startStreak)[0];
+            if (vague) push('🌊', 'LA VAGUE', 'Superbe début de partie... puis tout s\'écroule',
+                `${getPlayerEmoji(vague)} ${vague}`, `${pData[vague].startStreak} bonnes réponses d'affilée au départ !`);
+
+            // 🫀 LE RÉGULIER — a marqué des points à chaque question
+            const regulier = names.find(n => pData[n].alwaysAnswered && pData[n].perQScore.every(s => s > 0) && pData[n].total === totalQ);
+            if (regulier) push('🫀', 'LE RÉGULIER', 'A marqué des points à absolument chaque question',
+                `${getPlayerEmoji(regulier)} ${regulier}`, `${pData[regulier].correct}/${totalQ} : aucune question sans point !`);
+
+            // --- Affichage stats ---
             if (stats.length > 0) {
-                let html = '<h3 style="color: #ff006e; text-align: center; margin-bottom: 1rem;">🏅 Stats de la partie</h3>';
+                let html = '<h3 style="color: #ffbe0b; text-align: center; margin-bottom: 1rem; font-size: 1.3rem;">🏅 Stats de la partie</h3>';
                 html += '<div class="stats-grid">';
                 stats.forEach(s => {
                     html += `<div class="stat-card">
                         <div class="stat-emoji">${s.emoji}</div>
                         <div class="stat-title">${s.title}</div>
+                        <div class="stat-desc">${s.desc}</div>
                         <div class="stat-player">${s.player}</div>
                         <div class="stat-value">${s.value}</div>
                     </div>`;
@@ -5986,6 +6303,108 @@
                 html += '</div>';
                 container.innerHTML = html;
             }
+
+            // --- TOP 3 VITESSE ---
+            const speedRanks = names
+                .filter(n => pData[n].correctTimes.length >= 1)
+                .map(n => ({ name: n, avgTime: avg(pData[n].correctTimes) }))
+                .sort((a, b) => a.avgTime - b.avgTime)
+                .slice(0, 3);
+
+            if (speedRanks.length >= 2) {
+                const medals = ['🥇', '🥈', '🥉'];
+                let speedHtml = `<div class="speed-podium">
+                    <h4>⚡ Top 3 des réponses les plus rapides</h4>`;
+                speedRanks.forEach((p, i) => {
+                    speedHtml += `<div class="speed-row">
+                        <span class="speed-rank">${medals[i]}</span>
+                        <span class="speed-name">${getPlayerEmoji(p.name)} ${p.name}</span>
+                        <span class="speed-time">${p.avgTime.toFixed(1)}s en moyenne</span>
+                    </div>`;
+                });
+                speedHtml += '</div>';
+                container.innerHTML += speedHtml;
+            }
+        }
+        
+        // ===========================================
+        // CONFETTIS 🎉
+        // ===========================================
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Plein écran absolu
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            
+            const colors = ['#ff006e', '#00f5ff', '#ffbe0b', '#8338ec', '#00ff64', '#ff4444', '#ffffff', '#ff9500', '#a855f7'];
+            const pieces = [];
+            const count = 250; // Beaucoup plus de confettis
+            
+            for (let i = 0; i < count; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 1.5 - canvas.height,
+                    w: Math.random() * 14 + 6,
+                    h: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 4 + 1.5,
+                    angle: Math.random() * Math.PI * 2,
+                    spin: (Math.random() - 0.5) * 0.15,
+                    drift: (Math.random() - 0.5) * 2.5,
+                    shape: Math.random() > 0.5 ? 'rect' : 'circle' // mix rectangles et cercles
+                });
+            }
+            
+            let frame = 0;
+            const maxFrames = 900; // ~30 secondes à 30fps
+            const fadeStart = maxFrames - 60; // fade sur les 2 dernières secondes
+            
+            function animate() {
+                if (frame >= maxFrames) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    return;
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const alpha = frame > fadeStart ? (maxFrames - frame) / 60 : 1;
+                
+                pieces.forEach(p => {
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle);
+                    ctx.fillStyle = p.color;
+                    if (p.shape === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    }
+                    ctx.restore();
+                    
+                    p.y += p.speed;
+                    p.x += p.drift;
+                    p.angle += p.spin;
+                    
+                    // Reboucle depuis le haut quand sorti en bas
+                    if (p.y > canvas.height + 20) {
+                        p.y = -20;
+                        p.x = Math.random() * canvas.width;
+                    }
+                });
+                
+                frame++;
+                requestAnimationFrame(animate);
+            }
+            animate();
         }
 
 
