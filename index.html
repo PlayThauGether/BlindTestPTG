@@ -745,6 +745,15 @@
             font-family: 'Montserrat', sans-serif;
         }
 
+        /* SCORES INTERMÉDIAIRES (écrans de transition) */
+        .intro-scores-container { max-width: 550px; margin: 0 auto 0.8rem; }
+        .intro-scores-title { color: #ffbe0b; font-size: 1.1rem; font-weight: 800; text-align: center; margin-bottom: 0.6rem; letter-spacing: 0.05em; }
+        .intro-scores-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .intro-score-row { display: flex; align-items: center; gap: 0.8rem; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.5rem 1rem; }
+        .intro-score-rank { color: #ffbe0b; font-weight: 800; font-size: 1.1rem; width: 28px; }
+        .intro-score-name { flex: 1; color: white; font-weight: 700; font-size: 1.05rem; }
+        .intro-score-pts { color: #00f5ff; font-weight: 800; font-size: 1.05rem; }
+
         /* PODIUM OVERLAY */
         .podium-card {
             display: flex;
@@ -1620,164 +1629,123 @@
 
         <!-- QCM INTRO (unique) -->
         <div id="qcm-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
-                    🎯 MODE QCM
-                </h1>
-                <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem;">
-                    <p style="font-size: 1.8rem; color: white; font-weight: 800;">4 CHOIX DE RÉPONSE</p>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">🎯 MODE QCM</h1>
+                <div style="background: rgba(0,245,255,0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">4 CHOIX DE RÉPONSE</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Une seule bonne réponse parmi les 4 propositions. Sois rapide — plus tu réponds vite, plus tu gagnes de points ! Attention, une mauvaise réponse ne rapporte rien.</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="qcm-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
         <!-- FILM WRITING INTRO -->
         <div id="film-writing-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
-                    🎬 MODE FILM
-                </h1>
-                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
-                    <p style="font-size: 1.8rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        ✍️ TAPE LE NOM DU FILM
-                    </p>
-                    <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
-                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
-                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
-                    </div>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">🎬 MODE FILM</h1>
+                <div style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">✍️ TAPE LE NOM DU FILM</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute l'extrait et tape le nom du film. L'orthographe est tolérante, les accents et majuscules ne comptent pas. Valide avec <strong style="color:#ffbe0b;">Entrée</strong> ou le bouton ✅ !</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="film-writing-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
         <!-- SÉRIE WRITING INTRO -->
         <div id="serie-writing-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #a855f7; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(168,85,247,0.5);">
-                    📺 MODE SÉRIE
-                </h1>
-                <div style="background: rgba(168, 85, 247, 0.1); border: 3px solid #a855f7; border-radius: 20px; padding: 2rem;">
-                    <p style="font-size: 1.8rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        ✍️ TAPE LE NOM DE LA SÉRIE
-                    </p>
-                    <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
-                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
-                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
-                    </div>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #a855f7; margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(168,85,247,0.5);">📺 MODE SÉRIE</h1>
+                <div style="background: rgba(168,85,247,0.1); border: 3px solid #a855f7; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">✍️ TAPE LE NOM DE LA SÉRIE</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute le générique et tape le nom de la série. L'orthographe est tolérante, les accents et majuscules ne comptent pas. Valide avec <strong style="color:#ffbe0b;">Entrée</strong> ou le bouton ✅ !</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="serie-writing-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
         <!-- WRITING LEVEL 1 INTRO -->
         <div id="writing-lvl1-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
-                    ✍️ MODE ÉCRITURE
-                </h1>
-                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1.5rem;">NIVEAU 1</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        ✍️ TAPER LE NOM DE L'ARTISTE
-                    </p>
-                    <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
-                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
-                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">N'oubliez pas de valider avec Entrée</p>
-                    </div>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ ÉCRITURE</h1>
+                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 1 — L'ARTISTE</p>
+                <div style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎤 TAPE LE NOM DE L'ARTISTE</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute l'extrait et tape le nom de l'artiste ou du groupe. Pas de panique sur l'orthographe, les petites fautes sont tolérées. Valide avec <strong style="color:#ffbe0b;">Entrée</strong> ou le bouton ✅ !</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="writing-lvl1-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
         <!-- WRITING LEVEL 2 INTRO -->
         <div id="writing-lvl2-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
-                    ✍️ MODE ÉCRITURE
-                </h1>
-                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1.5rem;">NIVEAU 2</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800; margin-bottom: 1.5rem;">
-                        ✍️ TAPER LE TITRE ET LE NOM DE L'ARTISTE
-                    </p>
-                    <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px; margin-top: 1.5rem;">
-                        <p style="font-size: 1.2rem; color: #ffbe0b; font-weight: 800;">💡 ASTUCE</p>
-                        <p style="font-size: 1rem; color: white; margin-top: 0.5rem;">Orthographe tolérante !</p>
-                        <p style="font-size: 1rem; color: white;">Un champ = une réponse (titre OU artiste)</p>
-                        <p style="font-size: 1rem; color: white;">Trouvez les 2 pour le bonus !</p>
-                    </div>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ ÉCRITURE</h1>
+                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — TITRE + ARTISTE</p>
+                <div style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎵 TITRE ET ARTISTE À TROUVER</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Deux champs : un pour le titre, un pour l'artiste. Tu peux répondre l'un, l'autre, ou les deux ! Chaque bonne réponse rapporte des points, et si tu trouves les <strong style="color:#00ff64;">deux ensemble tu gagnes un bonus</strong> supplémentaire !</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="writing-lvl2-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
-        <!-- WRITING TRANSITION (ancien, on garde pour compatibilité) -->
+        <!-- WRITING TRANSITION (compatibilité) -->
         <div id="writing-transition-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 600px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
-                    ✍️ MODE ÉCRITURE
-                </h1>
-                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin: 2rem 0;">
-                    <h2 style="color: #ffbe0b; font-size: 2rem; margin-bottom: 1.5rem;">⚠️ ATTENTION</h2>
-                    <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
-                        📝 <strong>Orthographe tolérante !</strong>
-                    </p>
-                    <p style="font-size: 1.3rem; color: white; margin-bottom: 1rem;">
-                        ✅ <strong>N'oubliez pas de VALIDER votre réponse !</strong>
-                    </p>
-                    <p style="font-size: 1rem; color: #aaa; margin-top: 1.5rem;">
-                        (Les majuscules ne comptent pas)
-                    </p>
+            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 1.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ MODE ÉCRITURE</h1>
+                <div style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin: 2rem 0;">
+                    <p style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">📝 <strong>Orthographe tolérante !</strong></p>
+                    <p style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">✅ <strong>N'oubliez pas de VALIDER !</strong></p>
+                    <p style="font-size: 1.1rem; color: #aaa; margin-top: 1.5rem;">(Les majuscules ne comptent pas)</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="spinner" style="margin: 2rem auto;"></div>
             </div>
         </div>
 
-        <!-- MIX LEVEL 1 INTRO (Normal) -->
+        <!-- MIX LEVEL 1 INTRO -->
         <div id="mix-lvl1-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
-                    🎧 MODE MIX
-                </h1>
-                <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 1 — NORMAL</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">🎵 Extraits classiques</p>
-                    <p style="font-size: 1.2rem; color: #aaa; margin-top: 0.8rem;">4 choix de réponse</p>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">🎧 MODE SOIRÉE</h1>
+                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 1 — QCM CLASSIQUE</p>
+                <div style="background: rgba(0,245,255,0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎯 4 CHOIX DE RÉPONSE</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Extraits musicaux classiques avec 4 propositions. Une seule bonne réponse — sois rapide, les points diminuent avec le temps ! Attention à ne pas te précipiter non plus.</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="mix-lvl1-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
-        <!-- MIX LEVEL 2 INTRO (Reverse) -->
+        <!-- MIX LEVEL 2 INTRO -->
         <div id="mix-lvl2-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #ff006e; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">
-                    🎧 MODE MIX
-                </h1>
-                <div style="background: rgba(255, 0, 110, 0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ffbe0b; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 2 — REVERSE</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">⏪ Musiques inversées !</p>
-                    <p style="font-size: 1.2rem; color: #aaa; margin-top: 0.8rem;">4 choix de réponse</p>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">🎧 MODE SOIRÉE</h1>
+                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — REVERSE 🔥</p>
+                <div style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">⏪ MUSIQUES À L'ENVERS !</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Même principe que la manche 1, mais les morceaux sont joués <strong style="color:#ff006e;">à l'envers</strong> ! Toujours 4 choix, toujours 1 seule bonne réponse. Bonne chance pour reconnaître ça...</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="mix-lvl2-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
-        <!-- MIX LEVEL 3 INTRO (Extrait) -->
+        <!-- MIX LEVEL 3 INTRO -->
         <div id="mix-lvl3-intro-screen" class="screen hidden">
-            <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 3.5rem; color: #ffbe0b; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">
-                    🎧 MODE MIX
-                </h1>
-                <div style="background: rgba(255, 190, 11, 0.1); border: 3px solid #ffbe0b; border-radius: 20px; padding: 2rem;">
-                    <h2 style="color: #ff006e; font-size: 2.5rem; margin-bottom: 1rem;">NIVEAU 3 — DIALOGUES</h2>
-                    <p style="font-size: 1.5rem; color: white; font-weight: 800;">🎬 Extraits de films !</p>
-                    <p style="font-size: 1.2rem; color: #aaa; margin-top: 0.8rem;">Trouve le film parmi 4 propositions</p>
+            <div style="text-align: center; max-width: 750px; margin: 0 auto;">
+                <h1 style="font-size: 4rem; color: #ffbe0b; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">🎧 MODE SOIRÉE</h1>
+                <p style="color: #ff006e; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 3 — DIALOGUES 🎬</p>
+                <div style="background: rgba(255,190,11,0.1); border: 3px solid #ffbe0b; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                    <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎬 EXTRAITS DE FILMS & SÉRIES</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Fini la musique ! Cette manche c'est des extraits de films et de séries. Reconnaître la voix, le dialogue ou l'ambiance sonore parmi 4 propositions. La dernière ligne droite !</p>
                 </div>
-                <div class="spinner" style="margin: 3rem auto;"></div>
+                <div class="intro-scores-container" id="mix-lvl3-intro-scores"></div>
+                <div class="spinner" style="margin: 1.5rem auto;"></div>
             </div>
         </div>
 
@@ -2673,16 +2641,14 @@
                     btn.classList.add('active');
                 }
             });
-            // Si aucun bouton actif (ex: 1ère visite), activer 10 par défaut
             if (!document.querySelector('.num-btn.active')) {
                 document.querySelector('.num-btn[onclick*="10"]')?.classList.add('active');
             }
             
-            // Réinitialiser l'état du mode hôte visuellement
+            // Appliquer l'UI selon l'état RÉEL de la checkbox (cochée ou non)
             const hostCheckbox = document.getElementById('host-mode');
             if (hostCheckbox) {
-                hostCheckbox.checked = false;
-                toggleHostModeUI(false);
+                toggleHostModeUI(hostCheckbox.checked);
             }
         }
 
@@ -5504,10 +5470,36 @@
         function showIntroScreen(screenId) {
             showScreen(screenId);
             
+            // Injecter les scores actuels dans le conteneur de l'écran
+            const scoresContainerId = screenId.replace('-screen', '-scores');
+            const container = document.getElementById(scoresContainerId);
+            if (container && gameState.room?.players) {
+                let players = [...(gameState.room.players || [])];
+                if (gameState.room.hostMode) {
+                    players = players.filter(p => p.name !== gameState.room.host);
+                }
+                players.sort((a, b) => (b.score || 0) - (a.score || 0));
+                
+                if (players.length > 0) {
+                    const medals = ['🥇','🥈','🥉'];
+                    let html = '<div class="intro-scores-title">📊 SCORES ACTUELS</div><div class="intro-scores-list">';
+                    players.slice(0, 5).forEach((p, i) => {
+                        const rank = medals[i] || `#${i + 1}`;
+                        html += `<div class="intro-score-row">
+                            <span class="intro-score-rank">${rank}</span>
+                            <span class="intro-score-name">${p.emoji || '😎'} ${p.name}</span>
+                            <span class="intro-score-pts">${p.score || 0} pts</span>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                }
+            }
+            
             setTimeout(() => {
                 showScreen('game-screen');
                 loadQuestion();
-            }, 3000); // 3 secondes
+            }, 8000); // 8 secondes pour lire + voir les scores
         }
 
         function startGameWithCountdown() {
@@ -6286,6 +6278,15 @@
             const regulier = names.find(n => pData[n].alwaysAnswered && pData[n].perQScore.every(s => s > 0) && pData[n].total === totalQ);
             if (regulier) push('🫀', 'LE RÉGULIER', 'A marqué des points à absolument chaque question',
                 `${getPlayerEmoji(regulier)} ${regulier}`, `${pData[regulier].correct}/${totalQ} : aucune question sans point !`);
+
+            // --- Mélanger et limiter à 6 stats (différentes à chaque partie) ---
+            if (stats.length > 6) {
+                for (let i = stats.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [stats[i], stats[j]] = [stats[j], stats[i]];
+                }
+                stats.splice(6);
+            }
 
             // --- Affichage stats ---
             if (stats.length > 0) {
