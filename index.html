@@ -439,7 +439,7 @@
         .theme-chip:hover, .theme-chip.active { border-color:#ffbe0b; background:rgba(255,190,11,0.15); }
         .theme-suggest { font-size:0.7rem; color:#ffbe0b; text-align:right; padding-right:4px; margin-bottom:-2px; }
         @keyframes timerDanger { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-        @keyframes hostGlow { 0%,100% { box-shadow:0 0 30px rgba(255,190,11,0.4),0 0 60px rgba(131,56,236,0.2); } 50% { box-shadow:0 0 50px rgba(255,190,11,0.7),0 0 100px rgba(131,56,236,0.4); } }
+        @keyframes hostGlow { 0%,100% { opacity:1; } }
         @keyframes msgIn { from { opacity:0; transform:translateX(-50%) translateY(20px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
         @keyframes msgOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-20px); } }
         @keyframes pauseIn { from { opacity:0; } to { opacity:1; } }
@@ -454,10 +454,7 @@
         .timer-bar-fill.danger { background:#ff006e; animation:timerDanger 0.4s infinite; }
 
         /* HOST COVER FRAME */
-        .host-cover-wrap { position:relative; display:inline-block; width:100%; }
-        .host-cover-wrap .cover { animation:hostGlow 3s ease infinite; border-radius:16px; border:3px solid #ffbe0b; }
-        .host-cover-badge { position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#ffbe0b,#ff006e); color:#000; font-weight:900; font-size:0.75rem; padding:0.25rem 0.7rem; border-radius:20px; z-index:3; letter-spacing:0.05em; }
-        .host-cover-wrap::after { content:''; position:absolute; inset:-3px; border-radius:19px; background:linear-gradient(135deg,#ffbe0b,#ff006e,#8338ec,#00f5ff); z-index:-1; animation:spin 4s linear infinite; }
+        /* host cover — supprimé */
 
         /* PAUSE */
         .pause-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.88); z-index:9995; flex-direction:column; align-items:center; justify-content:center; }
@@ -4120,20 +4117,6 @@
                 coverImg.style.opacity = '0';
                 coverBox.style.background = '#000';
                 
-                // Thème spécial cover pour l'hôte
-                if (gameState.isHost) {
-                    coverBox.classList.add('host-cover-wrap');
-                    if (!coverBox.querySelector('.host-cover-badge')) {
-                        const badge = document.createElement('div');
-                        badge.className = 'host-cover-badge';
-                        badge.textContent = '🎬 HÔTE';
-                        coverBox.appendChild(badge);
-                    }
-                } else {
-                    coverBox.classList.remove('host-cover-wrap');
-                    coverBox.querySelector('.host-cover-badge')?.remove();
-                }
-                
                 coverImg.onload = function() {
                     setTimeout(() => {
                         coverImg.style.visibility = 'visible';
@@ -5563,6 +5546,13 @@
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
             if (gameState.roomRef) gameState.roomRef.off();
             clearSession();
+
+            // Réinitialiser la pause et couper l'audio du jeu
+            pauseState = false;
+            document.getElementById('pause-overlay').classList.remove('active');
+            document.getElementById('pause-fab').classList.remove('visible', 'paused');
+            const audioPlayer = document.getElementById('audio-player');
+            if (audioPlayer) { audioPlayer.pause(); audioPlayer.src = ''; }
 
             const players = gameState.room.players || [];
             let sorted = [...players].sort((a, b) => {
