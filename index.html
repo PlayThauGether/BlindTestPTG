@@ -2113,7 +2113,6 @@
         }
 
         async function initAuth() {
-            // Vérifier session locale
             const saved = localStorage.getItem('quizPartyAuth');
             if (saved) {
                 try {
@@ -2126,8 +2125,9 @@
                     localStorage.removeItem('quizPartyAuth');
                 }
             }
-            // Toujours afficher le menu (connecté ou pas)
             updateMenuButtons();
+            // Musique uniquement si connecté
+            if (currentUser) initAmbientMusic();
         }
 
         function updateMenuButtons() {
@@ -2231,6 +2231,7 @@
             errorEl.style.display = 'none';
             currentUser = { username: safeKey, isAdmin: userData.isAdmin || false };
             localStorage.setItem('quizPartyAuth', JSON.stringify({ username: safeKey }));
+            initAmbientMusic(); // Lancer la musique à la connexion
 
             showMenuLoggedIn();
             if (pendingAction) { const action = pendingAction; pendingAction = null; action(); }
@@ -2240,6 +2241,9 @@
             currentUser = null;
             pendingAction = null;
             localStorage.removeItem('quizPartyAuth');
+            // Couper la musique à la déconnexion
+            const amb = document.getElementById('ambient-audio');
+            if (amb) { amb.pause(); amb.src = ''; }
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
             document.getElementById('login-error').style.display = 'none';
@@ -6482,23 +6486,16 @@
             wrap.style.display = 'block';
         })();
 
-        // =============================================
-        // 🔊 MUSIQUE D'AMBIANCE — MusicBlindTest.mp3
-        // =============================================
-        (function initAmbientMusic() {
+        // 🔊 MUSIQUE D'AMBIANCE — chargée seulement si connecté (voir initAuth)
+        function initAmbientMusic() {
+            if (!currentUser) return; // Pas de musique pour les joueurs non connectés
             const amb = document.getElementById('ambient-audio');
-            if (!amb) return;
-            // Lien raw GitHub (blob → raw)
+            if (!amb || amb.src.includes('MusicBlindTest')) return; // Déjà initialisée
             amb.src = 'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/MusicBlindTest.mp3';
             amb.loop = true;
             amb.volume = 0.35;
-            // Tenter de jouer (sera retentée au premier clic via showScreen)
-            amb.play().catch(() => { /* iOS : sera jouée au premier tap */ });
-        })();
-
-        // Ces fonctions ne font plus rien (gardées pour compatibilité)
-        function startAmbientSound() {}
-        function stopAmbientSound() {}
+            amb.play().catch(() => {});
+        }
 
         // =============================================
         // 🎨 THÈMES VISUELS
