@@ -63,6 +63,9 @@
         /* GOLD ALL CORRECT */
         .gold-flash-el { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,190,11,0.18); pointer-events:none; z-index:9990; animation:goldFlash 1.8s ease forwards; border-radius:0; }
         .gold-ring-el { position:fixed; top:50%; left:50%; width:120px; height:120px; margin:-60px 0 0 -60px; border:5px solid #ffbe0b; border-radius:50%; pointer-events:none; z-index:9991; animation:goldRing 1.1s ease-out forwards; }
+        @keyframes goldTextPop { 0% { opacity:0; transform:translate(-50%,-50%) scale(0.5); } 20% { opacity:1; transform:translate(-50%,-50%) scale(1.08); } 80% { opacity:1; transform:translate(-50%,-50%) scale(1); } 100% { opacity:0; transform:translate(-50%,-50%) scale(0.9); } }
+        .gold-text-el { position:fixed; top:50%; left:50%; z-index:9993; pointer-events:none; text-align:center; animation:goldTextPop 2.8s ease forwards; white-space:nowrap; }
+        .gold-text-el span { display:block; font-family:'Bungee Shade',cursive; font-size:clamp(1.8rem, 5vw, 3.5rem); color:#ffbe0b; text-shadow:0 0 30px rgba(255,190,11,0.9), 0 0 60px rgba(255,190,11,0.5), 0 4px 12px rgba(0,0,0,0.8); letter-spacing:0.02em; }
 
         .screen {
             position: relative;
@@ -393,6 +396,97 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* THEMES VISUELS */
+        body.theme-80s { background: #1a0020 !important; }
+        body.theme-80s .bg { background: radial-gradient(circle at 20% 50%, rgba(255,0,200,0.18), transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,200,0,0.12), transparent 50%); }
+        body.theme-80s .btn.large:not(.secondary) { background: linear-gradient(135deg, #ff00cc, #ffcc00) !important; color: #1a0020 !important; border-color: #ff00cc !important; }
+        body.theme-80s .title { background: linear-gradient(135deg, #ff00cc, #ffcc00) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+        body.theme-80s .opt { border-color: #ff00cc !important; }
+        body.theme-80s .timer { color: #ff00cc !important; }
+        body.theme-80s .timer-bar-fill { background: linear-gradient(90deg, #ff00cc, #ffcc00) !important; }
+
+        body.theme-hiphop { background: #080808 !important; }
+        body.theme-hiphop .bg { background: radial-gradient(circle at 30% 50%, rgba(255,180,0,0.12), transparent 50%), radial-gradient(circle at 70% 50%, rgba(200,0,0,0.08), transparent 50%); }
+        body.theme-hiphop .btn.large:not(.secondary) { background: linear-gradient(135deg, #c8960c, #dc143c) !important; border-color: #c8960c !important; }
+        body.theme-hiphop .title { background: linear-gradient(135deg, #ffd700, #dc143c) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+        body.theme-hiphop .opt { border-color: #c8960c !important; }
+        body.theme-hiphop .timer { color: #ffd700 !important; }
+        body.theme-hiphop .timer-bar-fill { background: linear-gradient(90deg, #c8960c, #dc143c) !important; }
+
+        body.theme-electro { background: #001122 !important; }
+        body.theme-electro .bg { background: radial-gradient(circle at 20% 50%, rgba(0,255,200,0.12), transparent 50%), radial-gradient(circle at 80% 30%, rgba(0,100,255,0.12), transparent 50%); }
+        body.theme-electro .btn.large:not(.secondary) { background: linear-gradient(135deg, #00ffcc, #0055ff) !important; color: #001122 !important; border-color: #00ffcc !important; }
+        body.theme-electro .title { background: linear-gradient(135deg, #00ffcc, #0055ff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+        body.theme-electro .opt { border-color: #00ffcc !important; }
+        body.theme-electro .timer { color: #00ffcc !important; }
+        body.theme-electro .timer-bar-fill { background: linear-gradient(90deg, #00ffcc, #0055ff) !important; }
+
+        body.theme-chill { background: #0d2018 !important; }
+        body.theme-chill .bg { background: radial-gradient(circle at 30% 60%, rgba(0,200,120,0.12), transparent 50%), radial-gradient(circle at 70% 30%, rgba(100,200,255,0.08), transparent 50%); }
+        body.theme-chill .btn.large:not(.secondary) { background: linear-gradient(135deg, #00c878, #00bfff) !important; color: #0d2018 !important; border-color: #00c878 !important; }
+        body.theme-chill .title { background: linear-gradient(135deg, #00c878, #00bfff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+        body.theme-chill .opt { border-color: #00c878 !important; }
+        body.theme-chill .timer { color: #00c878 !important; }
+        body.theme-chill .timer-bar-fill { background: linear-gradient(90deg, #00c878, #00bfff) !important; }
+
+        /* THEME PANEL */
+        .theme-fab { position:fixed; bottom:22px; right:15px; z-index:9990; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.2); color:white; font-size:1.2rem; cursor:pointer; display:none; align-items:center; justify-content:center; }
+        .theme-fab.visible { display:flex; }
+        .theme-popup { position:fixed; bottom:75px; right:10px; z-index:9990; display:none; flex-direction:column; gap:0.4rem; align-items:flex-end; }
+        .theme-popup.open { display:flex; animation:slideInUp 0.25s ease; }
+        .theme-chip { padding:0.35rem 0.9rem; border-radius:20px; font-size:0.8rem; font-weight:700; cursor:pointer; border:2px solid rgba(255,255,255,0.15); background:rgba(10,14,39,0.92); color:white; white-space:nowrap; transition:all 0.2s; }
+        .theme-chip:hover, .theme-chip.active { border-color:#ffbe0b; background:rgba(255,190,11,0.15); }
+        .theme-suggest { font-size:0.7rem; color:#ffbe0b; text-align:right; padding-right:4px; margin-bottom:-2px; }
+        @keyframes timerDanger { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        @keyframes hostGlow { 0%,100% { box-shadow:0 0 30px rgba(255,190,11,0.4),0 0 60px rgba(131,56,236,0.2); } 50% { box-shadow:0 0 50px rgba(255,190,11,0.7),0 0 100px rgba(131,56,236,0.4); } }
+        @keyframes msgIn { from { opacity:0; transform:translateX(-50%) translateY(20px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+        @keyframes msgOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-20px); } }
+        @keyframes pauseIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes kickSlide { to { transform:translateX(120%); opacity:0; } }
+        @keyframes readyPulse { 0%,100% { box-shadow:0 0 0 0 rgba(0,255,100,0.4); } 70% { box-shadow:0 0 0 10px rgba(0,255,100,0); } }
+
+        /* TIMER BAR */
+        .timer-bar-wrap { width:100%; padding:0 0 4px; }
+        .timer-bar-bg { height:8px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+        .timer-bar-fill { height:100%; border-radius:4px; transition:width 1s linear, background-color 0.5s; background:linear-gradient(90deg,#00ff64,#ffbe0b); }
+        .timer-bar-fill.warn { background:linear-gradient(90deg,#ffbe0b,#ff6600); }
+        .timer-bar-fill.danger { background:#ff006e; animation:timerDanger 0.4s infinite; }
+
+        /* HOST COVER FRAME */
+        .host-cover-wrap { position:relative; display:inline-block; width:100%; }
+        .host-cover-wrap .cover { animation:hostGlow 3s ease infinite; border-radius:16px; border:3px solid #ffbe0b; }
+        .host-cover-badge { position:absolute; top:10px; left:10px; background:linear-gradient(135deg,#ffbe0b,#ff006e); color:#000; font-weight:900; font-size:0.75rem; padding:0.25rem 0.7rem; border-radius:20px; z-index:3; letter-spacing:0.05em; }
+        .host-cover-wrap::after { content:''; position:absolute; inset:-3px; border-radius:19px; background:linear-gradient(135deg,#ffbe0b,#ff006e,#8338ec,#00f5ff); z-index:-1; animation:spin 4s linear infinite; }
+
+        /* PAUSE */
+        .pause-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.88); z-index:9995; flex-direction:column; align-items:center; justify-content:center; }
+        .pause-overlay.active { display:flex; animation:pauseIn 0.3s ease; }
+        .pause-title { font-family:'Bungee Shade',cursive; font-size:5rem; color:#ffbe0b; text-shadow:0 0 60px rgba(255,190,11,0.9); margin-bottom:0.5rem; }
+        .pause-sub { color:rgba(255,255,255,0.6); font-size:1.1rem; margin-bottom:2rem; }
+        .pause-fab { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:9996; background:rgba(255,190,11,0.15); border:2px solid #ffbe0b; color:#ffbe0b; padding:0.5rem 1.5rem; border-radius:30px; font-weight:800; font-size:0.9rem; cursor:pointer; white-space:nowrap; display:none; }
+        .pause-fab.visible { display:block; }
+        .pause-fab.paused { background:rgba(0,255,100,0.15); border-color:#00ff64; color:#00ff64; }
+
+        /* DYNAMIC MESSAGES */
+        .dyn-msg { position:fixed; bottom:130px; left:50%; z-index:9993; background:rgba(10,14,39,0.95); border:2px solid #ffbe0b; border-radius:30px; padding:0.65rem 1.8rem; font-weight:800; font-size:1rem; color:white; white-space:nowrap; pointer-events:none; }
+        .dyn-msg.in { animation:msgIn 0.4s ease forwards; }
+        .dyn-msg.out { animation:msgOut 0.4s ease forwards; }
+
+        /* READY */
+        #ready-btn { display:none; }
+        #ready-btn.visible { display:block; animation:readyPulse 1.5s infinite; }
+        #ready-btn.is-ready { animation:none; opacity:0.7; }
+        .ready-status { color:#aaa; font-size:0.85rem; text-align:center; margin-top:0.3rem; display:none; }
+        .ready-status.visible { display:block; }
+
+        /* KICK */
+        .player-item { display:flex; align-items:center; gap:0.6rem; padding:0.45rem 0.8rem; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:0.3rem; }
+        .player-ready-dot { width:8px; height:8px; border-radius:50%; background:#444; flex-shrink:0; transition:all 0.3s; }
+        .player-ready-dot.ready { background:#00ff64; box-shadow:0 0 8px #00ff64; }
+        .kick-btn { margin-left:auto; background:rgba(255,0,0,0.12); border:1px solid rgba(255,0,0,0.35); color:#ff6666; padding:0.15rem 0.5rem; border-radius:6px; font-size:0.75rem; cursor:pointer; flex-shrink:0; }
+        .kick-btn:hover { background:rgba(255,0,0,0.28); }
+        .player-item.kicking { animation:kickSlide 0.4s ease forwards; }
 
         /* GAME */
         .game-header {
@@ -1252,8 +1346,26 @@
 <body>
     <div class="app">
         <div class="bg"></div>
+
+        <!-- PAUSE OVERLAY -->
+        <div class="pause-overlay" id="pause-overlay">
+            <div class="pause-title">⏸ PAUSE</div>
+            <div class="pause-sub">L'hôte va reprendre la partie...</div>
+        </div>
+        <button class="pause-fab" id="pause-fab" onclick="togglePause()">⏸ Pause</button>
         <div class="stars-wrap" id="stars-wrap" style="display:none;"></div>
         <audio id="ambient-audio" loop preload="none"></audio>
+
+        <!-- THEME PANEL (hôte uniquement) -->
+        <div class="theme-popup" id="theme-popup">
+            <div class="theme-suggest" id="theme-suggest"></div>
+            <div class="theme-chip active" data-theme="" onclick="applyTheme('')">🌙 Défaut</div>
+            <div class="theme-chip" data-theme="theme-80s" onclick="applyTheme('theme-80s')">🪩 Disco / 80s</div>
+            <div class="theme-chip" data-theme="theme-hiphop" onclick="applyTheme('theme-hiphop')">🎤 Hip-Hop / Rap</div>
+            <div class="theme-chip" data-theme="theme-electro" onclick="applyTheme('theme-electro')">⚡ Électro / Gaming</div>
+            <div class="theme-chip" data-theme="theme-chill" onclick="applyTheme('theme-chill')">🌿 Chill / Lofi</div>
+        </div>
+        <button class="theme-fab" id="theme-fab" onclick="toggleThemePopup()" title="Thème visuel">🎨</button>
 
         <!-- LOADING -->
         <div id="loading-overlay" class="loading-overlay hidden">
@@ -1669,6 +1781,8 @@
             </div>
 
             <button id="start-btn" class="btn large hidden" onclick="startGame()">▶️ Lancer la partie</button>
+            <button id="ready-btn" class="btn large" onclick="toggleReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
+            <div class="ready-status" id="ready-status"></div>
             <button id="unlock-audio-btn" class="btn hidden" onclick="unlockAudio()" style="margin-top: 0.8rem; background: linear-gradient(135deg, #00f5ff, #8338ec); animation: pulse 2s infinite;">🔊 Activer le son (obligatoire sur iPhone)</button>
             <div id="waiting-div" class="waiting hidden">
                 <div class="spinner"></div>
@@ -1825,6 +1939,7 @@
 
         <!-- GAME -->
         <div id="game-screen" class="screen hidden">
+            <div class="timer-bar-wrap"><div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar"></div></div></div>
             <div class="game-header">
                 <div class="timer">⏱️ <span id="timer">20</span>s <span id="level-badge" style="font-size:0.75rem; background:rgba(255,255,255,0.12); border-radius:6px; padding:2px 7px; margin-left:6px; color:#aaa;"></span></div>
                 <div>Q <span id="current-q">1</span>/<span id="total-q">10</span></div>
@@ -2642,11 +2757,21 @@
             const stars = document.getElementById('stars-wrap');
             if (stars) stars.style.display = ['menu-screen','lobby-screen'].includes(screenId) ? 'block' : 'none';
 
-            // Son d'ambiance : jouer au menu, couper ailleurs
+            // Musique d'ambiance : joue partout SAUF pendant une partie
+            const gameScreens = ['game-screen', 'mode-start-screen'];
             const amb = document.getElementById('ambient-audio');
-            if (amb && amb.src) {
-                if (screenId === 'menu-screen') amb.play().catch(()=>{});
-                else amb.pause();
+            if (amb) {
+                if (gameScreens.includes(screenId)) {
+                    // Fade out doux avant de couper
+                    amb.style.transition = 'volume 1s';
+                    const fadeOut = setInterval(() => {
+                        if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
+                        else { amb.pause(); amb.volume = 0.35; clearInterval(fadeOut); }
+                    }, 80);
+                } else {
+                    amb.volume = 0.35;
+                    amb.play().catch(() => {});
+                }
             }
         }
 
@@ -3458,9 +3583,18 @@
             
             gameState.musicDB = tracks;
             gameState.playlistName = playlistName || '';
-            // hostDisplayOnly UNIQUEMENT pour l'hôte (pas les autres joueurs)
-            gameState.hostDisplayOnly = hostMode && true; // true car on EST l'hôte ici
+            gameState.hostDisplayOnly = hostMode && true;
             gameState.distanceMode = distanceMode;
+            
+            // 🎨 Auto-détecter le thème depuis le nom de la playlist
+            if (playlistName) {
+                const suggestedTheme = detectThemeFromPlaylist(playlistName);
+                if (suggestedTheme) {
+                    applyTheme(suggestedTheme, true);
+                    const suggest = document.getElementById('theme-suggest');
+                    if (suggest) suggest.textContent = `✨ Thème suggéré pour "${playlistName}"`;
+                }
+            }
             
             const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
             
@@ -3593,7 +3727,13 @@
                 document.getElementById('change-code-btn').classList.add('hidden');
                 document.getElementById('waiting-div').classList.remove('hidden');
                 document.getElementById('host-recap').classList.add('hidden');
+                // Écouter si on se fait kicker
+                const myName = gameState.room.players[gameState.playerIndex]?.name;
+                if (myName) listenKick(gameState.room.code, myName);
             }
+
+            // Theme fab visible pour l'hôte en lobby aussi
+            showThemeFab(gameState.isHost);
 
             // Afficher le bouton "Activer le son" si ce joueur aura besoin d'audio
             const needsAudio = gameState.isHost || gameState.distanceMode;
@@ -3613,18 +3753,50 @@
             const count = document.getElementById('player-count');
             
             list.innerHTML = '';
-            count.textContent = gameState.room.players.length;
+            const nonHostPlayers = gameState.room.players.filter(p => !gameState.room.hostMode || p.name !== gameState.room.host);
+            count.textContent = nonHostPlayers.length;
             
             gameState.room.players.forEach((p, i) => {
                 const div = document.createElement('div');
-                div.className = 'player';
+                div.className = 'player-item';
+                div.dataset.name = p.name;
                 const teamTag = p.team ? `<span class="team-tag ${p.team}">${p.team === 'red' ? '🔴' : '🔵'}</span>` : '';
+                const isHost = p.name === gameState.room.host;
+                const readyDot = `<div class="player-ready-dot ${p.ready ? 'ready' : ''}"></div>`;
+                const kickBtn = (gameState.isHost && !isHost && currentScreen === 'lobby')
+                    ? `<button class="kick-btn" onclick="kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕ Kick</button>`
+                    : '';
                 div.innerHTML = `
-                    <span class="player-num">${p.emoji || '😎'}</span>
-                    <span class="player-name">${p.name}${teamTag}</span>
-                    ${p.name === gameState.room.host ? '<span>👑</span>' : ''}
+                    ${readyDot}
+                    <span>${p.emoji || '😎'}</span>
+                    <span style="font-weight:700;">${p.name}${isHost ? ' 👑' : ''}${teamTag}</span>
+                    ${kickBtn}
                 `;
                 list.appendChild(div);
+            });
+            
+            // Vérifier si tout le monde est prêt
+            checkAllReady(gameState.room.players);
+            
+            // Afficher/masquer le bouton Prêt (joueurs non-hôte)
+            const readyBtn = document.getElementById('ready-btn');
+            const waitDiv = document.getElementById('waiting-div');
+            if (!gameState.isHost) {
+                readyBtn.classList.add('visible');
+                if (waitDiv) waitDiv.classList.add('hidden');
+            } else {
+                readyBtn.classList.remove('visible');
+            }
+        }
+
+        // Écouter si le joueur a été kické
+        function listenKick(code, playerName) {
+            const safeName = playerName.replace(/[.#$[\]]/g,'_');
+            db.ref(`rooms/${code}/kicked/${safeName}`).on('value', snap => {
+                if (snap.val()) {
+                    alert('👢 Tu as été exclu de la partie par l\'hôte.');
+                    goToMenu();
+                }
             });
         }
 
@@ -3642,16 +3814,16 @@
         }
 
         function listenToRoom() {
-            // Nettoyer les anciens listeners
             cleanupRoomListeners();
-            // Compat avec l'ancien code qui fait gameState.roomRef.off()
             if (gameState.roomRef) gameState.roomRef.off();
             gameState.roomRef = { off: cleanupRoomListeners };
 
             const code = gameState.room.code;
             const roomBase = `rooms/${code}`;
 
-            // Helper pour tracker les listeners
+            // Listener pause (joueurs non-hôte)
+            listenPause(code);
+
             function addListener(path, callback) {
                 const ref = db.ref(path);
                 ref.on('value', callback);
@@ -3804,15 +3976,19 @@
         // GAME
         // ===========================================
         function goToGame() {
-            // Reset streak QCM (nouvelle partie)
             gameState.qcmStreak = 0;
             gameState.pendingStreakBonus = 0;
             gameState.streakBonusGiven = { three: false, five: false };
+            pauseState = false;
+            lastRankSnapshot = {};
             
-            // Activer le Wake Lock pour empêcher la mise en veille
             requestWakeLock();
+
+            // Pause fab + theme fab visible seulement pour l'hôte
+            const fab = document.getElementById('pause-fab');
+            if (fab) fab.classList.toggle('visible', gameState.isHost);
+            showThemeFab(gameState.isHost);
             
-            // Lancer avec compte à rebours de 10 secondes
             startGameWithCountdown();
         }
 
@@ -3881,27 +4057,12 @@
                 gameState.lastMode = currentMode;
                 gameState.lastLevel = currentLevel;
                 gameState.lastType = currentType;
-                gameState.usedQCMValues = []; // Réinitialiser les options utilisées à chaque nouveau niveau
-                gameState.transitionInProgress = true; // Bloquer le listener pendant la transition
+                gameState.usedQCMValues = [];
+                gameState.transitionInProgress = true;
                 gameState.pendingCurrentQ = null;
 
-                showScreen(transitionScreen);
-                setTimeout(() => {
-                    gameState.transitionInProgress = false;
-                    // Recharger la room depuis Firebase pour avoir le bon currentQ
-                    db.ref(`rooms/${gameState.room.code}`).once('value', snapshot => {
-                        const freshData = snapshot.val();
-                        if (freshData) {
-                            gameState.room = freshData;
-                            if (freshData.currentQ >= freshData.questions.length) {
-                                goToLeaderboard();
-                                return;
-                            }
-                        }
-                        showScreen('game-screen');
-                        loadQuestion();
-                    });
-                }, 3000);
+                // ← Utiliser showIntroScreen (scores + countdown + 15s)
+                showIntroScreen(transitionScreen);
                 return;
             }
             
@@ -3950,16 +4111,26 @@
             if (gameState.room.hostMode && !gameState.isHost) {
                 coverBox.style.display = 'none';
             } else {
-                // Rendre l'image complètement invisible + blur max
                 coverImg.style.visibility = 'hidden';
                 coverImg.style.filter = 'blur(30px)';
                 coverImg.style.opacity = '0';
-                
-                // Mettre un fond noir temporaire pour cacher le flash
                 coverBox.style.background = '#000';
                 
+                // Thème spécial cover pour l'hôte
+                if (gameState.isHost) {
+                    coverBox.classList.add('host-cover-wrap');
+                    if (!coverBox.querySelector('.host-cover-badge')) {
+                        const badge = document.createElement('div');
+                        badge.className = 'host-cover-badge';
+                        badge.textContent = '🎬 HÔTE';
+                        coverBox.appendChild(badge);
+                    }
+                } else {
+                    coverBox.classList.remove('host-cover-wrap');
+                    coverBox.querySelector('.host-cover-badge')?.remove();
+                }
+                
                 coverImg.onload = function() {
-                    // Attendre 50ms après le load pour être sûr que le blur est appliqué
                     setTimeout(() => {
                         coverImg.style.visibility = 'visible';
                         coverImg.style.opacity = '1';
@@ -4077,9 +4248,11 @@
                 const scoreA = a.score || 0;
                 const scoreB = b.score || 0;
                 if (scoreB !== scoreA) return scoreB - scoreA;
-                // Départage par timestamp
                 return (a.lastAnswerTime || 0) - (b.lastAnswerTime || 0);
             });
+
+            // 💬 Messages dynamiques classement (hôte uniquement)
+            analyzeDynMessages(gameState.room.players);
 
             sorted.forEach(p => {
                 // En mode hôte, ne pas afficher l'hôte dans le scoreboard
@@ -4552,12 +4725,14 @@
         function startTimer() {
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
             
-            // Sauvegarder l'index de la question pour ce timer
             const timerQuestionIndex = gameState.room.currentQ;
             gameState.currentTimerQuestionIndex = timerQuestionIndex;
+            const maxTime = gameState.timerDuration || 20;
+
+            // Init barre timer
+            updateTimerBar(maxTime, maxTime);
 
             gameState.timerInterval = setInterval(() => {
-                // GUARD : Si la question a changé, ce timer est obsolète
                 if (gameState.currentTimerQuestionIndex !== timerQuestionIndex) {
                     clearInterval(gameState.timerInterval);
                     return;
@@ -4565,20 +4740,17 @@
                 
                 gameState.currentTime--;
                 document.getElementById('timer').textContent = gameState.currentTime;
+                updateTimerBar(gameState.currentTime, maxTime);
 
                 if (!gameState.answered) {
                     const secsLeft = gameState.currentTime;
-                    const maxTime = gameState.timerDuration || 20;
                     let blurValue;
                     if (secsLeft > 5) {
-                        // De maxTime à 5s : dégressif de 30px → 15px
                         const ratio = (secsLeft - 5) / (maxTime - 5);
                         blurValue = 15 + ratio * 15;
                     } else if (secsLeft > 3) {
-                        // 5s → 3s : de 15px → 10px (linéaire)
                         blurValue = 10 + ((secsLeft - 3) / 2) * 5;
                     } else if (secsLeft > 2) {
-                        // 3s → 2s : de 10px → 5px (linéaire)
                         blurValue = 5 + (secsLeft - 2) * 5;
                     } else {
                         // 2s → 0s : de 5px → 0px (linéaire)
@@ -5603,8 +5775,20 @@
             }
             
             setTimeout(() => {
-                showScreen('game-screen');
-                loadQuestion();
+                gameState.transitionInProgress = false;
+                // Recharger depuis Firebase pour avoir le currentQ à jour
+                db.ref(`rooms/${gameState.room.code}`).once('value', snapshot => {
+                    const freshData = snapshot.val();
+                    if (freshData) {
+                        gameState.room = freshData;
+                        if (freshData.currentQ >= freshData.questions.length) {
+                            goToLeaderboard();
+                            return;
+                        }
+                    }
+                    showScreen('game-screen');
+                    loadQuestion();
+                });
             }, duration * 1000);
         }
 
@@ -6099,8 +6283,189 @@
             return p?.emoji || '😎';
         }
 
+        // ============================================
+        // ⏱ BARRE TIMER
+        // ============================================
+        function updateTimerBar(current, max) {
+            const bar = document.getElementById('timer-bar');
+            if (!bar) return;
+            const pct = Math.max(0, (current / max) * 100);
+            bar.style.width = pct + '%';
+            bar.classList.remove('warn','danger');
+            if (pct <= 20) bar.classList.add('danger');
+            else if (pct <= 45) bar.classList.add('warn');
+        }
+
+        // ============================================
+        // ⏸ PAUSE
+        // ============================================
+        let pauseState = false;
+
+        function togglePause() {
+            if (!gameState.isHost) return;
+            pauseState = !pauseState;
+            const fab = document.getElementById('pause-fab');
+            const overlay = document.getElementById('pause-overlay');
+            const audio = document.getElementById('audio-player');
+
+            if (pauseState) {
+                clearInterval(gameState.timerInterval);
+                overlay.classList.add('active');
+                fab.textContent = '▶️ Reprendre';
+                fab.classList.add('paused');
+                if (audio) audio.pause();
+                db.ref(`rooms/${gameState.room.code}/paused`).set(true);
+            } else {
+                overlay.classList.remove('active');
+                fab.textContent = '⏸ Pause';
+                fab.classList.remove('paused');
+                if (audio) audio.play().catch(()=>{});
+                db.ref(`rooms/${gameState.room.code}/paused`).set(false);
+                startTimer();
+            }
+        }
+
+        function listenPause(code) {
+            db.ref(`rooms/${code}/paused`).on('value', snap => {
+                if (gameState.isHost) return;
+                const overlay = document.getElementById('pause-overlay');
+                const audio = document.getElementById('audio-player');
+                if (snap.val()) {
+                    overlay.classList.add('active');
+                    clearInterval(gameState.timerInterval);
+                    if (audio) audio.pause();
+                } else {
+                    overlay.classList.remove('active');
+                    if (audio) audio.play().catch(()=>{});
+                    startTimer();
+                }
+            });
+        }
+
+        // ============================================
+        // ✅ BOUTON PRÊT
+        // ============================================
+        function toggleReady() {
+            const btn = document.getElementById('ready-btn');
+            gameState.playerReady = !gameState.playerReady;
+            if (gameState.playerReady) {
+                btn.textContent = '✅ Prêt !';
+                btn.classList.add('is-ready');
+            } else {
+                btn.textContent = '⬜ Pas encore prêt';
+                btn.classList.remove('is-ready');
+            }
+            if (gameState.playerIndex !== undefined && gameState.room?.code) {
+                db.ref(`rooms/${gameState.room.code}/players/${gameState.playerIndex}/ready`).set(gameState.playerReady);
+            }
+        }
+
+        function checkAllReady(players) {
+            if (!gameState.isHost) return;
+            const nonHost = players.filter(p => !p.isHost);
+            if (nonHost.length < 1) return;
+            const readyCount = nonHost.filter(p => p.ready).length;
+            const statusEl = document.getElementById('ready-status');
+            if (statusEl) {
+                statusEl.textContent = `${readyCount} / ${nonHost.length} prêts`;
+                statusEl.classList.add('visible');
+            }
+            if (readyCount === nonHost.length) {
+                setTimeout(() => {
+                    if (nonHost.every(p => p.ready)) startGame();
+                }, 1200);
+            }
+        }
+
+        // ============================================
+        // 🥾 KICK JOUEUR
+        // ============================================
+        function kickPlayer(playerName) {
+            if (!gameState.isHost) return;
+            const item = document.querySelector(`.player-item[data-name="${playerName}"]`);
+            if (item) {
+                item.classList.add('kicking');
+                setTimeout(() => doKick(playerName), 400);
+            } else {
+                doKick(playerName);
+            }
+        }
+
+        function doKick(playerName) {
+            const players = (gameState.room.players || []).filter(p => p.name !== playerName);
+            db.ref(`rooms/${gameState.room.code}/players`).set(players);
+            db.ref(`rooms/${gameState.room.code}/kicked/${playerName.replace(/[.#$[\]]/g,'_')}`).set(true);
+        }
+
+        // ============================================
+        // 💬 MESSAGES DYNAMIQUES (hôte uniquement)
+        // ============================================
+        let dynMsgEl = null;
+        let dynMsgTimeout = null;
+        let lastRankSnapshot = {};
+
+        function showDynMsg(text) {
+            if (!gameState.isHost) return;
+            if (dynMsgEl) {
+                dynMsgEl.classList.remove('in');
+                dynMsgEl.classList.add('out');
+                clearTimeout(dynMsgTimeout);
+                setTimeout(() => dynMsgEl?.remove(), 400);
+            }
+            const el = document.createElement('div');
+            el.className = 'dyn-msg in';
+            el.textContent = text;
+            document.body.appendChild(el);
+            dynMsgEl = el;
+            dynMsgTimeout = setTimeout(() => {
+                el.classList.remove('in');
+                el.classList.add('out');
+                setTimeout(() => { if (dynMsgEl === el) { el.remove(); dynMsgEl = null; } }, 400);
+            }, 3500);
+        }
+
+        function analyzeDynMessages(players) {
+            if (!gameState.isHost || players.length < 2) return;
+            const sorted = [...players].sort((a,b) => (b.score||0) - (a.score||0));
+
+            // Construire snapshot actuel des rangs
+            const currentRanks = {};
+            sorted.forEach((p,i) => { currentRanks[p.name] = i; });
+
+            const messages = [];
+
+            // Coude à coude 1er/2ème
+            const gap = (sorted[0]?.score||0) - (sorted[1]?.score||0);
+            if (gap <= 50 && (sorted[0]?.score||0) > 0) {
+                messages.push(`⚔️ ${sorted[0].emoji||'👤'} ${sorted[0].name} et ${sorted[1].emoji||'👤'} ${sorted[1].name} sont au coude à coude !`);
+            }
+
+            // Remontée spectaculaire
+            Object.keys(lastRankSnapshot).forEach(name => {
+                const was = lastRankSnapshot[name];
+                const now = currentRanks[name];
+                const p = players.find(x => x.name === name);
+                if (now !== undefined && was - now >= 2 && (p?.score||0) > 0) {
+                    messages.push(`🚀 ${p?.emoji||'👤'} ${name} remonte en flèche !`);
+                } else if (now !== undefined && now - was >= 2 && (p?.score||0) > 0) {
+                    messages.push(`📉 ${p?.emoji||'👤'} ${name} s'effondre !`);
+                }
+            });
+
+            // Nouveau leader
+            if (Object.keys(lastRankSnapshot).length > 0) {
+                const prevLeader = Object.entries(lastRankSnapshot).sort((a,b)=>a[1]-b[1])[0]?.[0];
+                if (prevLeader && sorted[0]?.name !== prevLeader && (sorted[0]?.score||0) > 0) {
+                    messages.push(`👑 ${sorted[0].emoji||'👤'} ${sorted[0].name} prend la tête !`);
+                }
+            }
+
+            if (messages.length > 0) showDynMsg(messages[0]);
+            lastRankSnapshot = currentRanks;
+        }
+
         // =============================================
-        // ⭐ ÉTOILES FLOTTANTES (menu + lobby)
+        // ⭐ ÉTOILES — fix initial load
         // =============================================
         (function initStars() {
             const wrap = document.getElementById('stars-wrap');
@@ -6113,54 +6478,92 @@
                 s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;font-size:${Math.random()*12+8}px;animation-duration:${Math.random()*6+5}s;animation-delay:${Math.random()*6}s;`;
                 wrap.appendChild(s);
             }
+            // Afficher immédiatement si on est sur le menu au chargement
+            wrap.style.display = 'block';
         })();
 
         // =============================================
-        // 🔊 SON D'AMBIANCE MENU (Web Audio, sans fichier)
+        // 🔊 MUSIQUE D'AMBIANCE — MusicBlindTest.mp3
         // =============================================
-        let ambientNodes = null;
-        let ambientCtx = null;
+        (function initAmbientMusic() {
+            const amb = document.getElementById('ambient-audio');
+            if (!amb) return;
+            // Lien raw GitHub (blob → raw)
+            amb.src = 'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/MusicBlindTest.mp3';
+            amb.loop = true;
+            amb.volume = 0.35;
+            // Tenter de jouer (sera retentée au premier clic via showScreen)
+            amb.play().catch(() => { /* iOS : sera jouée au premier tap */ });
+        })();
 
-        function startAmbientSound() {
-            if (ambientNodes) return;
-            try {
-                ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const bufSize = ambientCtx.sampleRate * 2;
-                const buf = ambientCtx.createBuffer(1, bufSize, ambientCtx.sampleRate);
-                const data = buf.getChannelData(0);
-                // Bruit rose doux
-                let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-                for (let i = 0; i < bufSize; i++) {
-                    const white = Math.random() * 2 - 1;
-                    b0=.99886*b0+white*.0555179; b1=.99332*b1+white*.0750759;
-                    b2=.96900*b2+white*.1538520; b3=.86650*b3+white*.3104856;
-                    b4=.55000*b4+white*.5329522; b5=-.7616*b5-white*.0168980;
-                    data[i] = (b0+b1+b2+b3+b4+b5+b6+white*.5362) * 0.02;
-                    b6 = white * 0.115926;
-                }
-                const src = ambientCtx.createBufferSource();
-                src.buffer = buf;
-                src.loop = true;
-                const gain = ambientCtx.createGain();
-                gain.gain.value = 0.08;
-                src.connect(gain);
-                gain.connect(ambientCtx.destination);
-                src.start();
-                ambientNodes = { src, gain };
-                console.log('🔊 Ambiance menu activée');
-            } catch(e) { console.log('⚠️ Ambient:', e); }
+        // Ces fonctions ne font plus rien (gardées pour compatibilité)
+        function startAmbientSound() {}
+        function stopAmbientSound() {}
+
+        // =============================================
+        // 🎨 THÈMES VISUELS
+        // =============================================
+        let themePopupOpen = false;
+        const THEME_CLASSES = ['theme-80s','theme-hiphop','theme-electro','theme-chill'];
+
+        // Mots-clés → thème suggéré
+        const THEME_KEYWORDS = {
+            'theme-80s':     ['80','disco','retro','rétro','pop','funk','eighties','nineties','90','michael','madonna','queen','abba','daft','stranger'],
+            'theme-hiphop':  ['hip','hop','rap','rnb','r&b','urban','reggae','reggaeton','trap','drill','grime','soul','afro','dancehall'],
+            'theme-electro': ['electro','techno','house','trance','edm','gaming','game','rave','dj','dubstep','club','dance','festival','electronic','cyber'],
+            'theme-chill':   ['chill','lofi','lo-fi','relax','jazz','acoustic','indie','soft','slow','calm','nature','sleep','study','cozy','bossa','ambient']
+        };
+
+        function detectThemeFromPlaylist(playlistName) {
+            if (!playlistName) return '';
+            const lower = playlistName.toLowerCase();
+            for (const [theme, keywords] of Object.entries(THEME_KEYWORDS)) {
+                if (keywords.some(k => lower.includes(k))) return theme;
+            }
+            return '';
         }
 
-        function stopAmbientSound() {
-            if (!ambientNodes) return;
-            try {
-                ambientNodes.gain.gain.setTargetAtTime(0, ambientCtx.currentTime, 0.5);
-                setTimeout(() => {
-                    try { ambientNodes.src.stop(); } catch(e){}
-                    ambientNodes = null;
-                }, 1000);
-            } catch(e) {}
+        function applyTheme(theme, fromPlaylist = false) {
+            THEME_CLASSES.forEach(t => document.body.classList.remove(t));
+            if (theme) document.body.classList.add(theme);
+            
+            // Mettre à jour les chips
+            document.querySelectorAll('.theme-chip').forEach(c => {
+                c.classList.toggle('active', c.dataset.theme === theme);
+            });
+            
+            localStorage.setItem('ptg-theme', theme);
+            themePopupOpen = false;
+            document.getElementById('theme-popup')?.classList.remove('open');
+            
+            if (fromPlaylist && theme) {
+                const labels = {
+                    'theme-80s': '🪩 Disco / 80s',
+                    'theme-hiphop': '🎤 Hip-Hop',
+                    'theme-electro': '⚡ Électro',
+                    'theme-chill': '🌿 Chill'
+                };
+                console.log(`🎨 Thème auto-détecté : ${labels[theme]}`);
+            }
         }
+
+        function toggleThemePopup() {
+            themePopupOpen = !themePopupOpen;
+            document.getElementById('theme-popup').classList.toggle('open', themePopupOpen);
+        }
+
+        function showThemeFab(visible) {
+            const fab = document.getElementById('theme-fab');
+            const popup = document.getElementById('theme-popup');
+            if (fab) fab.classList.toggle('visible', visible);
+            if (!visible && popup) { popup.classList.remove('open'); themePopupOpen = false; }
+        }
+
+        // Restaurer thème sauvegardé
+        (() => {
+            const saved = localStorage.getItem('ptg-theme');
+            if (saved) applyTheme(saved);
+        })();
 
         // =============================================
         // ✨ ANIMATION DORÉE — tout le monde a bon
@@ -6171,6 +6574,13 @@
             flash.className = 'gold-flash-el';
             document.body.appendChild(flash);
             setTimeout(() => flash.remove(), 1900);
+
+            // Texte doré central
+            const textEl = document.createElement('div');
+            textEl.className = 'gold-text-el';
+            textEl.innerHTML = '<span>✨ Tout le monde a<br>la bonne réponse ! ✨</span>';
+            document.body.appendChild(textEl);
+            setTimeout(() => textEl.remove(), 2900);
 
             // Anneaux qui s'expandent
             for (let i = 0; i < 3; i++) {
