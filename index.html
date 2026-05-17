@@ -2764,17 +2764,17 @@
             // Musique d'ambiance : joue partout SAUF pendant une partie
             const gameScreens = ['game-screen', 'mode-start-screen'];
             const amb = document.getElementById('ambient-audio');
-            if (amb) {
+            if (amb && amb.src && !amb.src.endsWith('/ambient-audio')) {
                 if (gameScreens.includes(screenId)) {
-                    // Fade out doux avant de couper
-                    amb.style.transition = 'volume 1s';
                     const fadeOut = setInterval(() => {
                         if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
                         else { amb.pause(); amb.volume = 0.35; clearInterval(fadeOut); }
                     }, 80);
                 } else {
-                    amb.volume = 0.35;
-                    amb.play().catch(() => {});
+                    if (amb.paused) {
+                        amb.volume = 0.35;
+                        amb.play().catch(() => {});
+                    }
                 }
             }
         }
@@ -6487,6 +6487,11 @@
         })();
 
         // 🔊 MUSIQUE D'AMBIANCE — chargée seulement si connecté (voir initAuth)
+        // 🔊 MUSIQUE D'AMBIANCE — MusicBlindTest.mp3
+        // (ces stubs existent pour la compatibilité avec les appels existants)
+        function startAmbientSound() {}
+        function stopAmbientSound() {}
+
         function initAmbientMusic() {
             if (!currentUser) return; // Pas de musique pour les joueurs non connectés
             const amb = document.getElementById('ambient-audio');
