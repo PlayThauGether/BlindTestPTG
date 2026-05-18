@@ -52,6 +52,25 @@
         @keyframes starFloat { 0%,100% { transform:translateY(0) rotate(0deg); opacity:.5; } 50% { transform:translateY(-22px) rotate(180deg); opacity:1; } }
         @keyframes goldFlash { 0%,100% { opacity:0; } 25%,75% { opacity:1; } }
         @keyframes goldRing { 0% { transform:translate(-50%,-50%) scale(0.4); opacity:1; } 100% { transform:translate(-50%,-50%) scale(3.5); opacity:0; } }
+        @keyframes emojiFloat { 0% { transform:translateY(0) scale(1); opacity:1; } 100% { transform:translateY(-120px) scale(1.4); opacity:0; } }
+        @keyframes lastPlaceShake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-8px) rotate(-2deg); } 40%,80% { transform:translateX(8px) rotate(2deg); } }
+        @keyframes greyConfetti { 0% { transform:translateY(-20px) rotate(0deg); opacity:1; } 100% { transform:translateY(100vh) rotate(720deg); opacity:0; } }
+
+        /* RÉACTIONS EMOJI */
+        .emoji-reactions { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-top:0.8rem; }
+        .reaction-btn { font-size:1.6rem; background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.15); border-radius:12px; padding:0.4rem 0.7rem; cursor:pointer; transition:transform 0.15s; }
+        .reaction-btn:active { transform:scale(0.85); }
+        .emoji-float { position:fixed; pointer-events:none; z-index:9993; font-size:2.5rem; animation:emojiFloat 1.8s ease-out forwards; }
+
+        /* DERNIER DU CLASSEMENT */
+        .last-place-card { border-color:rgba(150,150,150,0.4) !important; background:rgba(80,80,80,0.15) !important; animation:lastPlaceShake 0.6s ease 1s both; }
+        .last-place-label { font-size:0.75rem; color:#888; margin-top:0.2rem; }
+        .grey-confetti-el { position:fixed; pointer-events:none; z-index:9988; width:8px; height:8px; border-radius:2px; animation:greyConfetti linear forwards; }
+
+        /* PARTAGE PODIUM */
+        .share-btn { background:linear-gradient(135deg,#8338ec,#ff006e); border:none; color:white; padding:0.7rem 1.5rem; border-radius:30px; font-weight:800; font-size:0.9rem; cursor:pointer; margin:0.5rem; }
+        .share-btn:hover { opacity:0.85; }
+        .share-confirm { color:#00ff64; font-size:0.85rem; text-align:center; height:1.2rem; margin-top:0.2rem; }
 
         /* ENTRY ANIMATION */
         .screen.enter { animation: slideInUp 0.35s ease both; }
@@ -1763,8 +1782,8 @@
                     <div class="code-value" id="lobby-code">000000</div>
                 </div>
                 <div style="text-align: center;">
-                    <img src="qr-reseaux.png" alt="QR Code" style="width: 120px; height: 120px; border-radius: 10px; border: 2px solid #ffbe0b;">
-                    <p style="color: #ffbe0b; font-weight: 800; font-size: 0.85rem; margin-top: 0.4rem; max-width: 140px; line-height: 1.2;">📱 Scannez pour voir nos réseaux sociaux</p>
+                    <canvas id="lobby-qr" style="border-radius:10px; border:2px solid #ffbe0b; display:block;"></canvas>
+                    <p style="color: #ffbe0b; font-weight: 800; font-size: 0.8rem; margin-top: 0.4rem;">📱 Scanner pour rejoindre</p>
                 </div>
             </div>
             
@@ -1958,6 +1977,15 @@
                             <h4>Réponse :</h4>
                             <div class="answer-text" id="answer-text"></div>
                         </div>
+                        <!-- Réactions emoji (joueurs non-hôte) -->
+                        <div class="emoji-reactions" id="emoji-reactions" style="display:none;">
+                            <button class="reaction-btn" onclick="sendReaction('😱')">😱</button>
+                            <button class="reaction-btn" onclick="sendReaction('🔥')">🔥</button>
+                            <button class="reaction-btn" onclick="sendReaction('🤡')">🤡</button>
+                            <button class="reaction-btn" onclick="sendReaction('👏')">👏</button>
+                            <button class="reaction-btn" onclick="sendReaction('😭')">😭</button>
+                            <button class="reaction-btn" onclick="sendReaction('🤯')">🤯</button>
+                        </div>
                     </div>
                     
                     <!-- Pendu hôte (affiché sous l'image en mode hôte) -->
@@ -2029,15 +2057,12 @@
             
             <!-- Boutons de fin de partie -->
             <div id="leaderboard-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
-                <!-- Bouton pour l'HÔTE -->
-                <button id="host-new-game-btn" class="btn large secondary hidden" onclick="goToCreate()">🎮 Créer une nouvelle partie</button>
-                
-                <!-- Bouton pour les JOUEURS -->
-                <button id="player-rejoin-btn" class="btn large hidden" onclick="rejoinSameRoom()">🔄 Rejouer (attendre l'hôte)</button>
-                
-                <!-- Bouton menu pour tout le monde -->
+                <button class="host-new-game-btn btn large secondary hidden" id="host-new-game-btn" onclick="goToCreate()">🎮 Créer une nouvelle partie</button>
+                <button class="btn large hidden" id="player-rejoin-btn" onclick="rejoinSameRoom()">🔄 Rejouer (attendre l'hôte)</button>
+                <button class="share-btn" onclick="sharePodium()">📤 Partager le podium</button>
                 <button class="btn large" onclick="restartGame()">🏠 Menu principal</button>
             </div>
+            <div class="share-confirm" id="share-confirm"></div>
         </div>
 
         <!-- ÉCRAN D'ATTENTE REJOIN -->
@@ -2078,6 +2103,7 @@
     <!-- FIREBASE -->
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
     <script>
         // ===========================================
@@ -3686,6 +3712,8 @@
             showScreen('lobby-screen');
             
             document.getElementById('lobby-code').textContent = gameState.room.code;
+            // QR code dynamique
+            generateLobbyQR(gameState.room.code);
             
             if (gameState.isHost) {
                 document.getElementById('start-btn').classList.remove('hidden');
@@ -3824,6 +3852,9 @@
 
             // Listener pause (joueurs non-hôte)
             listenPause(code);
+            
+            // Listener réactions emoji (hôte uniquement)
+            listenReactions(code);
 
             function addListener(path, callback) {
                 const ref = db.ref(path);
@@ -4757,8 +4788,13 @@
                     
                     document.getElementById('cover-img').style.filter = 'blur(0px)';
                     
-                    // Réduire l'image hôte quand la réponse s'affiche
-                    document.querySelector('.game-main').classList.remove('host-big-cover');
+                    // 🥁 Son de suspense + délai dramatique avant révélation
+                    playSuspenseSound();
+                    const audioEl = document.getElementById('audio-player');
+                    if (audioEl) audioEl.pause();
+                    
+                    // Légère pause dramatique (500ms) avant d'afficher la réponse
+                    setTimeout(() => {
                     stopHangman();
                     
                     const q = gameState.room.questions[timerQuestionIndex];
@@ -4860,8 +4896,22 @@
                             });
                         }
                     }, 5000); // 5 secondes au lieu de 2.5
-                }
-            }, 1000);
+
+                    // Afficher les boutons de réaction (joueurs non-hôte)
+                    if (!gameState.isHost && !gameState.hostDisplayOnly) {
+                        const reactEl = document.getElementById('emoji-reactions');
+                        if (reactEl) {
+                            reactEl.style.display = 'flex';
+                            setTimeout(() => { reactEl.style.display = 'none'; }, 5000);
+                        }
+                    }
+
+                    // Précharger la prochaine question
+                    preloadNextQuestion();
+
+                    }, 500); // fin du délai suspense
+                } // fin if (currentTime <= 0)
+            }, 1000); // fin setInterval
         }
 
         function submitQCM(answer, correct) {
@@ -5598,15 +5648,21 @@
             const grid = list.querySelector('.leaderboard-grid');
             sorted.forEach((p, i) => {
                 const div = document.createElement('div');
-                div.className = 'lb-row';
+                const isLast = i === sorted.length - 1 && sorted.length > 1;
+                div.className = 'lb-row' + (isLast ? ' last-place-card' : '');
                 const teamTag = p.team ? `<span class="team-tag ${p.team}">${p.team === 'red' ? '🔴' : '🔵'}</span>` : '';
                 div.innerHTML = `
                     <span class="rank">#${i + 1}</span>
-                    <span class="name">${p.emoji || '😎'} ${p.name}${teamTag}</span>
+                    <span class="name">${p.emoji || '😎'} ${p.name}${teamTag}${isLast ? '<br><span class="last-place-label">🪦 Dernier... courage !</span>' : ''}</span>
                     <span class="pts">${p.score || 0} pts</span>
                 `;
                 grid.appendChild(div);
             });
+
+            // Animation dernier du classement
+            if (sorted.length > 1) {
+                setTimeout(() => triggerLastPlaceAnimation(sorted[sorted.length-1].name), 1500);
+            }
 
             generateFunStats();
             launchConfetti();
@@ -6275,6 +6331,177 @@
         function getPlayerEmoji(playerName) {
             const p = gameState.room?.players?.find(pl => pl.name === playerName);
             return p?.emoji || '😎';
+        }
+
+        // =============================================
+        // 🥁 SON DE SUSPENSE (tambour avant révélation)
+        // =============================================
+        function playSuspenseSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                // Roulement de tambour : 6 hits rapides
+                const hits = [0, 0.12, 0.22, 0.30, 0.37, 0.42];
+                hits.forEach((t, i) => {
+                    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+                    const data = buf.getChannelData(0);
+                    for (let j = 0; j < data.length; j++) {
+                        data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (ctx.sampleRate * 0.02));
+                    }
+                    const src = ctx.createBufferSource();
+                    src.buffer = buf;
+                    const gain = ctx.createGain();
+                    gain.gain.value = 0.3 + i * 0.1; // crescendo
+                    src.connect(gain);
+                    gain.connect(ctx.destination);
+                    src.start(ctx.currentTime + t);
+                });
+                // Cymbale finale
+                setTimeout(() => {
+                    const buf2 = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+                    const d2 = buf2.getChannelData(0);
+                    for (let j = 0; j < d2.length; j++) {
+                        d2[j] = (Math.random() * 2 - 1) * Math.exp(-j / (ctx.sampleRate * 0.08));
+                    }
+                    const src2 = ctx.createBufferSource();
+                    src2.buffer = buf2;
+                    const g2 = ctx.createGain();
+                    g2.gain.value = 0.5;
+                    src2.connect(g2);
+                    g2.connect(ctx.destination);
+                    src2.start();
+                }, 500);
+            } catch(e) {}
+        }
+
+        // =============================================
+        // 😱 RÉACTIONS EMOJI LIVE
+        // =============================================
+        function sendReaction(emoji) {
+            if (!gameState.room?.code) return;
+            const player = gameState.room.players?.[gameState.playerIndex];
+            if (!player) return;
+            const key = player.name.replace(/[.#$[\]]/g, '_');
+            db.ref(`rooms/${gameState.room.code}/reactions/${key}`).set({
+                emoji, ts: Date.now()
+            });
+            // Feedback local immédiat
+            showFloatingEmoji(emoji, window.innerWidth / 2, window.innerHeight * 0.6);
+        }
+
+        function showFloatingEmoji(emoji, x, y) {
+            const el = document.createElement('div');
+            el.className = 'emoji-float';
+            el.textContent = emoji;
+            el.style.left = (x - 20 + Math.random() * 40 - 20) + 'px';
+            el.style.top = y + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1900);
+        }
+
+        function listenReactions(code) {
+            if (!gameState.isHost) return;
+            db.ref(`rooms/${code}/reactions`).on('child_changed', snap => {
+                const data = snap.val();
+                if (!data) return;
+                // Afficher l'emoji flottant sur l'écran hôte à position aléatoire
+                const x = Math.random() * window.innerWidth * 0.8 + window.innerWidth * 0.1;
+                const y = Math.random() * window.innerHeight * 0.5 + window.innerHeight * 0.3;
+                showFloatingEmoji(data.emoji, x, y);
+            });
+        }
+
+        // =============================================
+        // 📱 QR CODE DYNAMIQUE LOBBY
+        // =============================================
+        function generateLobbyQR(code) {
+            const canvas = document.getElementById('lobby-qr');
+            if (!canvas || typeof QRious === 'undefined') return;
+            const joinUrl = `${window.location.href.split('?')[0]}?join=${code}`;
+            new QRious({
+                element: canvas,
+                value: joinUrl,
+                size: 120,
+                level: 'M',
+                background: '#ffffff',
+                foreground: '#000000',
+                padding: 8
+            });
+        }
+
+        // =============================================
+        // 📤 PARTAGE PODIUM
+        // =============================================
+        function sharePodium() {
+            const players = gameState.room?.players || [];
+            const sorted = [...players]
+                .filter(p => !gameState.room.hostMode || p.name !== gameState.room.host)
+                .sort((a, b) => (b.score || 0) - (a.score || 0));
+            
+            const medals = ['🥇', '🥈', '🥉'];
+            let text = '🏆 BLIND TEST PTG — Résultats\n';
+            text += '─────────────────\n';
+            sorted.slice(0, 10).forEach((p, i) => {
+                const medal = medals[i] || `${i + 1}.`;
+                text += `${medal} ${p.emoji || ''} ${p.name} — ${p.score || 0} pts\n`;
+            });
+            text += '─────────────────\n';
+            text += '🎮 playthaugether.github.io/BlindTestPTG/';
+            
+            const confirmEl = document.getElementById('share-confirm');
+            if (navigator.share) {
+                navigator.share({ title: 'Blind Test PTG', text });
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    if (confirmEl) { confirmEl.textContent = '✅ Copié dans le presse-papier !'; setTimeout(() => confirmEl.textContent = '', 3000); }
+                });
+            } else {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                if (confirmEl) { confirmEl.textContent = '✅ Copié !'; setTimeout(() => confirmEl.textContent = '', 3000); }
+            }
+        }
+
+        // =============================================
+        // 😢 ANIMATION DERNIER DU CLASSEMENT
+        // =============================================
+        function triggerLastPlaceAnimation(playerName) {
+            // Confettis gris
+            for (let i = 0; i < 25; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div');
+                    c.className = 'grey-confetti-el';
+                    c.style.cssText = `left:${Math.random()*100}vw;top:-10px;background:hsl(0,0%,${Math.random()*40+30}%);animation-duration:${Math.random()*2+1.5}s;animation-delay:0s;width:${Math.random()*8+4}px;height:${Math.random()*8+4}px;`;
+                    document.body.appendChild(c);
+                    setTimeout(() => c.remove(), 3500);
+                }, i * 80);
+            }
+        }
+
+        // =============================================
+        // ⚡ CACHE PREVIEW — précharger la prochaine question
+        // =============================================
+        let preloadedAudio = null;
+
+        function preloadNextQuestion() {
+            if (!gameState.room?.questions) return;
+            const nextIdx = gameState.room.currentQ + 1;
+            if (nextIdx >= gameState.room.questions.length) return;
+            const nextQ = gameState.room.questions[nextIdx];
+            if (!nextQ?.preview) return;
+            
+            // Précharger l'audio de la prochaine question
+            if (gameState.distanceMode || gameState.isHost) {
+                preloadedAudio = new Audio();
+                preloadedAudio.src = nextQ.preview;
+                preloadedAudio.preload = 'auto';
+                preloadedAudio.volume = 0;
+                console.log('⚡ Préchargement audio question suivante');
+            }
         }
 
         // ============================================
