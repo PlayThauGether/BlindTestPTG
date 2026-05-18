@@ -540,7 +540,7 @@
         .pause-overlay.active { display:flex; animation:pauseIn 0.3s ease; }
         .pause-title { font-family:'Bungee Shade',cursive; font-size:5rem; color:#ffbe0b; text-shadow:0 0 60px rgba(255,190,11,0.9); margin-bottom:0.5rem; }
         .pause-sub { color:rgba(255,255,255,0.6); font-size:1.1rem; margin-bottom:2rem; }
-        .pause-fab { position:fixed; top: calc(15px + env(safe-area-inset-top, 0px)); right: 110px; z-index:9996; background:rgba(255,190,11,0.15); border:2px solid #ffbe0b; color:#ffbe0b; padding:0.5rem 1rem; border-radius:30px; font-weight:800; font-size:0.85rem; cursor:pointer; white-space:nowrap; display:none; }
+        .pause-fab { position:fixed; top: calc(15px + env(safe-area-inset-top, 0px)); right: 160px; z-index:9996; background:rgba(255,190,11,0.15); border:2px solid #ffbe0b; color:#ffbe0b; padding:0.5rem 1rem; border-radius:30px; font-weight:800; font-size:0.85rem; cursor:pointer; white-space:nowrap; display:none; }
         .pause-fab.visible { display:block; }
         .pause-fab.paused { background:rgba(0,255,100,0.15); border-color:#00ff64; color:#00ff64; }
 
@@ -2867,33 +2867,32 @@
             const stars = document.getElementById('stars-wrap');
             if (stars) stars.style.display = ['menu-screen','lobby-screen'].includes(screenId) ? 'block' : 'none';
 
-            // Musique d'ambiance : joue partout SAUF en jeu (Deezer)
+            // Musique d'ambiance : joue partout SAUF en jeu (Deezer) et sur le leaderboard
             const gameScreens = ['game-screen'];
+            const noAmbient = ['game-screen', 'leaderboard-screen'];
             const amb = document.getElementById('ambient-audio');
             if (amb && amb.src && !amb.src.endsWith('/ambient-audio')) {
-                if (gameScreens.includes(screenId)) {
-                    // Couper proprement quand le jeu démarre
-                    if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); }
-                    window._ambFadeInterval = setInterval(() => {
-                        if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
-                        else { amb.pause(); amb.volume = 0.35; clearInterval(window._ambFadeInterval); }
-                    }, 80);
-                } else {
-                    // Annuler tout fade en cours et reprendre
+                if (noAmbient.includes(screenId)) {
+                    // Couper l'ambiance
                     if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
+                    if (gameScreens.includes(screenId)) {
+                        // Fade out progressif pour le jeu
+                        window._ambFadeInterval = setInterval(() => {
+                            if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
+                            else { amb.pause(); amb.volume = 0.35; clearInterval(window._ambFadeInterval); }
+                        }, 80);
+                    } else {
+                        // Leaderboard : couper direct (podium music prend le relai)
+                        amb.pause();
+                        amb.volume = 0.35;
+                    }
+                } else {
+                    // Tous les autres écrans : reprendre l'ambiance, arrêter podium
+                    if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
+                    const pod = document.getElementById('podium-audio');
+                    if (pod) { pod.pause(); pod.currentTime = 0; }
                     amb.volume = 0.35;
                     if (amb.paused) amb.play().catch(() => {});
-                    // Podium : couper la musique de jeu et garder l'ambiance
-                    if (screenId === 'leaderboard-screen') {
-                        const podAudio = document.getElementById('podium-audio');
-                        if (podAudio && podAudio.src && !podAudio.src.endsWith('/podium-audio')) {
-                            podAudio.volume = 0.5;
-                            podAudio.play().catch(() => {});
-                        }
-                    } else {
-                        const podAudio = document.getElementById('podium-audio');
-                        if (podAudio) { podAudio.pause(); podAudio.currentTime = 0; }
-                    }
                 }
             }
         }
@@ -5786,6 +5785,16 @@
             container.innerHTML = '';
             title.style.opacity = '0';
             title.style.transform = 'translateY(-30px)';
+
+            // Couper l'ambiance, démarrer la musique podium
+            const amb = document.getElementById('ambient-audio');
+            if (amb) { if (window._ambFadeInterval) clearInterval(window._ambFadeInterval); amb.pause(); }
+            const pod = document.getElementById('podium-audio');
+            if (pod && pod.src && !pod.src.endsWith('/podium-audio')) {
+                pod.volume = 0.6;
+                pod.currentTime = 0;
+                pod.play().catch(() => {});
+            }
 
             // Confettis sur le podium
             const canvas = document.getElementById('podium-confetti');
