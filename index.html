@@ -1431,6 +1431,7 @@
         <button class="pause-fab" id="pause-fab" onclick="togglePause()">⏸ Pause</button>
         <div class="stars-wrap" id="stars-wrap" style="display:none;"></div>
         <audio id="ambient-audio" loop preload="none"></audio>
+        <audio id="podium-audio" loop preload="none"></audio>
 
         <!-- THEME PANEL (hôte uniquement) -->
         <div class="theme-popup" id="theme-popup">
@@ -1819,41 +1820,56 @@
         <div id="lobby-screen" class="screen hidden">
             <h2 style="font-size: 1.8rem; color: #ffbe0b; margin-bottom: 1rem;">Salle d'attente</h2>
             
-            <!-- RÉCAP HOST (visible uniquement pour l'hôte) -->
-            <div id="host-recap" class="hidden" style="background: rgba(131,56,236,0.15); border: 1px solid rgba(131,56,236,0.5); border-radius: 16px; padding: 1rem 1.2rem; margin-bottom: 1rem; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
-                <h3 style="color: #ffbe0b; font-size: 1rem; margin-bottom: 0.8rem; text-align: center;">⚙️ Récap de la partie</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎵 Playlist</div>
-                        <div id="recap-playlist" style="color: white; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+            <!-- LAYOUT 2 COLONNES : gauche (récap + code) | droite (QR) — visible hôte uniquement -->
+            <div id="lobby-host-layout" class="hidden" style="display:none; gap: 2rem; align-items: stretch; margin-bottom: 1.2rem; max-width: 900px; margin-left: auto; margin-right: auto;">
+                
+                <!-- COLONNE GAUCHE : récap + code -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Récap -->
+                    <div id="host-recap" style="background: rgba(131,56,236,0.15); border: 1px solid rgba(131,56,236,0.5); border-radius: 16px; padding: 1rem 1.2rem; flex: 1;">
+                        <h3 style="color: #ffbe0b; font-size: 1rem; margin-bottom: 0.8rem; text-align: center;">⚙️ Récap de la partie</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎵 Playlist</div>
+                                <div id="recap-playlist" style="color: white; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Mode</div>
+                                <div id="recap-mode" style="color: #00f5ff; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">❓ Questions</div>
+                                <div id="recap-questions" style="color: #ffbe0b; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
+                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">⏱️ Timer</div>
+                                <div id="recap-timer" style="color: #ff006e; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                            </div>
+                        </div>
                     </div>
-                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Mode</div>
-                        <div id="recap-mode" style="color: #00f5ff; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">❓ Questions</div>
-                        <div id="recap-questions" style="color: #ffbe0b; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                        <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">⏱️ Timer</div>
-                        <div id="recap-timer" style="color: #ff006e; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                    <!-- Code -->
+                    <div class="code-display" style="margin: 0; text-align: center;">
+                        <div class="code-label">Code de la partie</div>
+                        <div class="code-value" id="lobby-code">000000</div>
                     </div>
                 </div>
+
+                <!-- COLONNE DROITE : QR code -->
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <canvas id="lobby-qr" style="border-radius:12px; border:4px solid #ffbe0b; box-shadow:0 0 40px rgba(255,190,11,0.5); display:block;"></canvas>
+                    <p style="color: #ffbe0b; font-weight: 800; font-size: 0.85rem; margin-top: 0.6rem; text-align:center;">📱 Scanner pour rejoindre directement</p>
+                </div>
             </div>
-            
-            <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                <div class="code-display" style="margin-bottom: 0;">
+
+            <!-- CODE SEUL pour les joueurs non-hôte -->
+            <div id="lobby-player-code" style="text-align:center; margin-bottom: 1rem;">
+                <div class="code-display" style="display:inline-block;">
                     <div class="code-label">Code de la partie</div>
-                    <div class="code-value" id="lobby-code">000000</div>
+                    <div class="code-value" id="lobby-code-player">000000</div>
                 </div>
             </div>
-            <div style="text-align: center; margin-bottom: 1rem;">
-                <canvas id="lobby-qr" style="border-radius:16px; border:4px solid #ffbe0b; box-shadow:0 0 30px rgba(255,190,11,0.4); display:block; margin:0 auto;"></canvas>
-                <p style="color: #ffbe0b; font-weight: 800; font-size: 0.9rem; margin-top: 0.6rem;">📱 Scanner pour rejoindre directement</p>
-            </div>
             
-            <button id="change-code-btn" class="btn secondary hidden" onclick="changeRoomCode()" style="margin-top: 1rem;">
+            <button id="change-code-btn" class="btn secondary hidden" onclick="changeRoomCode()" style="margin-top: 0.5rem;">
                 🔄 Changer le code pour les prochaines parties
             </button>
 
@@ -2330,9 +2346,10 @@
             currentUser = null;
             pendingAction = null;
             localStorage.removeItem('quizPartyAuth');
-            // Couper la musique à la déconnexion
             const amb = document.getElementById('ambient-audio');
             if (amb) { amb.pause(); amb.src = ''; }
+            const pod = document.getElementById('podium-audio');
+            if (pod) { pod.pause(); pod.currentTime = 0; }
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
             document.getElementById('login-error').style.display = 'none';
@@ -2850,19 +2867,32 @@
             const stars = document.getElementById('stars-wrap');
             if (stars) stars.style.display = ['menu-screen','lobby-screen'].includes(screenId) ? 'block' : 'none';
 
-            // Musique d'ambiance : joue partout SAUF pendant une partie
-            const gameScreens = ['game-screen', 'mode-start-screen'];
+            // Musique d'ambiance : joue partout SAUF en jeu (Deezer)
+            const gameScreens = ['game-screen'];
             const amb = document.getElementById('ambient-audio');
             if (amb && amb.src && !amb.src.endsWith('/ambient-audio')) {
                 if (gameScreens.includes(screenId)) {
-                    const fadeOut = setInterval(() => {
+                    // Couper proprement quand le jeu démarre
+                    if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); }
+                    window._ambFadeInterval = setInterval(() => {
                         if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
-                        else { amb.pause(); amb.volume = 0.35; clearInterval(fadeOut); }
+                        else { amb.pause(); amb.volume = 0.35; clearInterval(window._ambFadeInterval); }
                     }, 80);
                 } else {
-                    if (amb.paused) {
-                        amb.volume = 0.35;
-                        amb.play().catch(() => {});
+                    // Annuler tout fade en cours et reprendre
+                    if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
+                    amb.volume = 0.35;
+                    if (amb.paused) amb.play().catch(() => {});
+                    // Podium : couper la musique de jeu et garder l'ambiance
+                    if (screenId === 'leaderboard-screen') {
+                        const podAudio = document.getElementById('podium-audio');
+                        if (podAudio && podAudio.src && !podAudio.src.endsWith('/podium-audio')) {
+                            podAudio.volume = 0.5;
+                            podAudio.play().catch(() => {});
+                        }
+                    } else {
+                        const podAudio = document.getElementById('podium-audio');
+                        if (podAudio) { podAudio.pause(); podAudio.currentTime = 0; }
                     }
                 }
             }
@@ -3784,51 +3814,41 @@
         function goToLobby() {
             showScreen('lobby-screen');
             
-            document.getElementById('lobby-code').textContent = gameState.room.code;
-            // QR code dynamique
-            generateLobbyQR(gameState.room.code);
-            
             if (gameState.isHost) {
+                // Layout hôte : 2 colonnes (récap+code | QR)
+                const hostLayout = document.getElementById('lobby-host-layout');
+                hostLayout.style.display = 'flex';
+                hostLayout.classList.remove('hidden');
+                document.getElementById('lobby-player-code').style.display = 'none';
                 document.getElementById('start-btn').classList.remove('hidden');
                 document.getElementById('change-code-btn').classList.remove('hidden');
                 document.getElementById('waiting-div').classList.add('hidden');
                 
-                // Afficher le récap host
-                const recap = document.getElementById('host-recap');
-                recap.classList.remove('hidden');
+                // Code (dans la colonne gauche)
+                document.getElementById('lobby-code').textContent = gameState.room.code;
                 
-                // Playlist
+                // QR code dynamique
+                generateLobbyQR(gameState.room.code);
+                
+                // Récap
                 const playlistName = gameState.playlistName || gameState.room.playlistName || '—';
                 document.getElementById('recap-playlist').textContent = playlistName;
-                
-                // Mode
-                const modeLabels = {
-                    'qcm': '🎯 QCM',
-                    'writing': '✍️ Écriture',
-                    'mix': '🎉 Soirée',
-                    'qcm-film': '🎬 Film',
-                    'qcm-serie': '📺 Série',
-                    'mix-disney': '🎧 Disney'
-                };
+                const modeLabels = { 'qcm':'🎯 QCM','writing':'✍️ Écriture','mix':'🎉 Soirée','qcm-film':'🎬 Film','qcm-serie':'📺 Série','mix-disney':'🎧 Disney' };
                 const mode = gameState.room.gameMode || '—';
                 document.getElementById('recap-mode').textContent = modeLabels[mode] || mode;
-                
-                // Nombre de questions
                 const nbQ = gameState.numQuestions || gameState.room.questions?.length || '—';
                 document.getElementById('recap-questions').textContent = nbQ + ' questions';
-                
-                // Timer (d'après le mode)
-                const timerByMode = {
-                    'qcm': '20 sec', 'qcm-film': '20 sec', 'qcm-serie': '20 sec',
-                    'writing': '30 sec', 'mix': '20-30 sec', 'mix-disney': '20-30 sec'
-                };
+                const timerByMode = { 'qcm':'20 sec','qcm-film':'20 sec','qcm-serie':'20 sec','writing':'30 sec','mix':'20-30 sec','mix-disney':'20-30 sec' };
                 document.getElementById('recap-timer').textContent = timerByMode[mode] || '—';
 
             } else {
+                // Layout joueur : juste le code
+                document.getElementById('lobby-host-layout').style.display = 'none';
+                document.getElementById('lobby-player-code').style.display = 'block';
+                document.getElementById('lobby-code-player').textContent = gameState.room.code;
                 document.getElementById('start-btn').classList.add('hidden');
                 document.getElementById('change-code-btn').classList.add('hidden');
                 document.getElementById('waiting-div').classList.remove('hidden');
-                document.getElementById('host-recap').classList.add('hidden');
                 // Écouter si on se fait kicker
                 const myName = gameState.room.players[gameState.playerIndex]?.name;
                 if (myName) listenKick(gameState.room.code, myName);
@@ -6453,17 +6473,16 @@
         function generateLobbyQR(code) {
             const canvas = document.getElementById('lobby-qr');
             if (!canvas || typeof QRious === 'undefined') return;
-            // URL qui ouvre directement l'écran "Rejoindre" avec le code pré-rempli
             const base = window.location.href.split('?')[0].replace(/\/$/, '');
             const joinUrl = `${base}?join=${code}`;
             new QRious({
                 element: canvas,
                 value: joinUrl,
-                size: 280,        // beaucoup plus grand
+                size: 300,
                 level: 'M',
                 background: '#ffffff',
                 foreground: '#000000',
-                padding: 12
+                padding: 4  // padding minimal
             });
         }
 
@@ -6749,13 +6768,21 @@
         function stopAmbientSound() {}
 
         function initAmbientMusic() {
-            if (!currentUser) return; // Pas de musique pour les joueurs non connectés
+            if (!currentUser) return;
             const amb = document.getElementById('ambient-audio');
-            if (!amb || amb.src.includes('MusicBlindTest')) return; // Déjà initialisée
+            if (!amb || amb.src.includes('MusicBlindTest')) return;
             amb.src = 'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/MusicBlindTest.mp3';
             amb.loop = true;
             amb.volume = 0.35;
             amb.play().catch(() => {});
+
+            // 🏆 Musique podium — uploader MusicPodium.mp3 sur GitHub pour l'activer
+            const pod = document.getElementById('podium-audio');
+            if (pod) {
+                pod.src = 'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/MusicPodium.mp3';
+                pod.loop = true;
+                pod.volume = 0.5;
+            }
         }
 
         // =============================================
@@ -6778,21 +6805,7 @@
             'theme-world':   ['world','monde','latina','reggae','africain','arabic','flamenco','samba','bollywood','international']
         };
 
-        // Musiques de fond par thème
-        // Tu peux uploader les fichiers sur GitHub avec ces noms exacts
-        const THEME_MUSIC = {
-            '':              'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/MusicBlindTest.mp3',
-            'theme-80s':     'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-80s.mp3',
-            'theme-90s':     'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-90s.mp3',
-            'theme-2000s':   'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-2000s.mp3',
-            'theme-pop':     'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-pop.mp3',
-            'theme-hiphop':  'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-hiphop.mp3',
-            'theme-rock':    'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-rock.mp3',
-            'theme-electro': 'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-electro.mp3',
-            'theme-french':  'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-french.mp3',
-            'theme-chill':   'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-chill.mp3',
-            'theme-world':   'https://raw.githubusercontent.com/PlayThauGether/BlindTestPTG/main/music-world.mp3',
-        };
+        // (musiques par thème supprimées — une seule musique de fond)
 
         function detectThemeFromPlaylist(playlistName) {
             if (!playlistName) return '';
@@ -6815,19 +6828,6 @@
             localStorage.setItem('ptg-theme', theme);
             themePopupOpen = false;
             document.getElementById('theme-popup')?.classList.remove('open');
-
-            // Changer la musique de fond si connecté
-            if (currentUser) {
-                const amb = document.getElementById('ambient-audio');
-                const musicUrl = THEME_MUSIC[theme] || THEME_MUSIC[''];
-                if (amb && amb.src !== musicUrl) {
-                    const wasPlaying = !amb.paused;
-                    amb.src = musicUrl;
-                    amb.loop = true;
-                    amb.volume = 0.35;
-                    if (wasPlaying) amb.play().catch(() => {});
-                }
-            }
         }
 
         function toggleThemePopup() {
