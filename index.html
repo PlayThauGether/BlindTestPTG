@@ -1881,6 +1881,7 @@
             </div>
 
             <button id="start-btn" class="btn large hidden" onclick="startGame()">▶️ Lancer la partie</button>
+            <button id="host-ready-btn" class="btn large hidden" onclick="toggleHostReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
             <button id="ready-btn" class="btn large" onclick="toggleReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
             <div class="ready-status" id="ready-status"></div>
             <button id="unlock-audio-btn" class="btn hidden" onclick="unlockAudio()" style="margin-top: 0.8rem; background: linear-gradient(135deg, #00f5ff, #8338ec); animation: pulse 2s infinite;">🔊 Activer le son (obligatoire sur iPhone)</button>
@@ -3821,7 +3822,11 @@
                 hostLayout.style.display = 'flex';
                 hostLayout.classList.remove('hidden');
                 document.getElementById('lobby-player-code').style.display = 'none';
-                document.getElementById('start-btn').classList.remove('hidden');
+                // Bouton prêt pour l'hôte (à la place du bouton Lancer)
+                document.getElementById('start-btn').classList.add('hidden');
+                document.getElementById('host-ready-btn').classList.remove('hidden');
+                document.getElementById('ready-btn').classList.remove('visible');
+                document.getElementById('ready-btn').style.display = 'none';
                 document.getElementById('change-code-btn').classList.remove('hidden');
                 document.getElementById('waiting-div').classList.add('hidden');
                 
@@ -3886,29 +3891,38 @@
                 const teamTag = p.team ? `<span class="team-tag ${p.team}">${p.team === 'red' ? '🔴' : '🔵'}</span>` : '';
                 const isHost = p.name === gameState.room.host;
                 const readyDot = `<div class="player-ready-dot ${p.ready ? 'ready' : ''}"></div>`;
+                // Indicateur ✓ / … visible pour l'hôte
+                const readyLabel = gameState.isHost
+                    ? (p.ready
+                        ? `<span style="color:#00ff64;font-size:0.75rem;font-weight:800;margin-left:auto;">✓ Prêt</span>`
+                        : `<span style="color:#666;font-size:0.75rem;margin-left:auto;">…</span>`)
+                    : '';
                 const kickBtn = (gameState.isHost && !isHost && currentScreen === 'lobby')
-                    ? `<button class="kick-btn" onclick="kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕ Kick</button>`
+                    ? `<button class="kick-btn" onclick="kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕</button>`
                     : '';
                 div.innerHTML = `
                     ${readyDot}
                     <span>${p.emoji || '😎'}</span>
                     <span style="font-weight:700;">${p.name}${isHost ? ' 👑' : ''}${teamTag}</span>
+                    ${readyLabel}
                     ${kickBtn}
                 `;
                 list.appendChild(div);
             });
             
-            // Vérifier si tout le monde est prêt
             checkAllReady(gameState.room.players);
             
-            // Afficher/masquer le bouton Prêt (joueurs non-hôte)
+            // Boutons selon le rôle
             const readyBtn = document.getElementById('ready-btn');
+            const hostReadyBtn = document.getElementById('host-ready-btn');
             const waitDiv = document.getElementById('waiting-div');
             if (!gameState.isHost) {
-                readyBtn.classList.add('visible');
+                if (readyBtn) readyBtn.style.display = 'block';
+                if (hostReadyBtn) hostReadyBtn.classList.add('hidden');
                 if (waitDiv) waitDiv.classList.add('hidden');
             } else {
-                readyBtn.classList.remove('visible');
+                if (readyBtn) readyBtn.style.display = 'none';
+                if (hostReadyBtn) hostReadyBtn.classList.remove('hidden');
             }
         }
 
@@ -6468,14 +6482,16 @@
 
         function listenReactions(code) {
             if (!gameState.isHost) return;
-            db.ref(`rooms/${code}/reactions`).on('child_changed', snap => {
+            const ref = db.ref(`rooms/${code}/reactions`);
+            const handler = snap => {
                 const data = snap.val();
-                if (!data) return;
-                // Afficher l'emoji flottant sur l'écran hôte à position aléatoire
+                if (!data?.emoji) return;
                 const x = Math.random() * window.innerWidth * 0.8 + window.innerWidth * 0.1;
                 const y = Math.random() * window.innerHeight * 0.5 + window.innerHeight * 0.3;
                 showFloatingEmoji(data.emoji, x, y);
-            });
+            };
+            ref.on('child_added', handler);
+            ref.on('child_changed', handler);
         }
 
         // =============================================
@@ -6584,7 +6600,9 @@
         function updateTimerBar(current, max) {
             const bar = document.getElementById('timer-bar');
             if (!bar) return;
-            const pct = Math.max(0, (current / max) * 100);
+            // Décalage visuel de 1s : la barre finit à 0 quand current=1
+            const adjusted = Math.max(0, current - 1);
+            const pct = Math.max(0, (adjusted / (max - 1)) * 100);
             bar.style.width = pct + '%';
             bar.classList.remove('warn','danger');
             if (pct <= 20) bar.classList.add('danger');
@@ -6655,19 +6673,47 @@
             }
         }
 
+        function toggleHostReady() {
+            const btn = document.getElementById('host-ready-btn');
+            gameState.hostReady = !gameState.hostReady;
+            if (gameState.hostReady) {
+                btn.textContent = '✅ Prêt !';
+                btn.style.opacity = '0.7';
+                btn.style.animation = 'none';
+                // Écrire dans Firebase pour que les joueurs voient
+                const hostPlayer = gameState.room.players.find(p => p.name === gameState.room.host);
+                if (hostPlayer) {
+                    const idx = gameState.room.players.indexOf(hostPlayer);
+                    db.ref(`rooms/${gameState.room.code}/players/${idx}/ready`).set(true);
+                }
+            } else {
+                btn.textContent = '⬜ Pas encore prêt';
+                btn.style.opacity = '1';
+                const hostPlayer = gameState.room.players.find(p => p.name === gameState.room.host);
+                if (hostPlayer) {
+                    const idx = gameState.room.players.indexOf(hostPlayer);
+                    db.ref(`rooms/${gameState.room.code}/players/${idx}/ready`).set(false);
+                }
+            }
+        }
+
         function checkAllReady(players) {
             if (!gameState.isHost) return;
-            const nonHost = players.filter(p => !p.isHost);
-            if (nonHost.length < 1) return;
-            const readyCount = nonHost.filter(p => p.ready).length;
+            // Inclure l'hôte dans le check
+            if (players.length < 1) return;
+            const readyCount = players.filter(p => p.ready).length;
+            const total = players.length;
             const statusEl = document.getElementById('ready-status');
             if (statusEl) {
-                statusEl.textContent = `${readyCount} / ${nonHost.length} prêts`;
+                statusEl.textContent = `${readyCount} / ${total} prêts`;
                 statusEl.classList.add('visible');
             }
-            if (readyCount === nonHost.length) {
+            if (readyCount === total && total >= 1) {
                 setTimeout(() => {
-                    if (nonHost.every(p => p.ready)) startGame();
+                    if (players.every(p => p.ready)) {
+                        // Lancer via startGame
+                        startGame();
+                    }
                 }, 1200);
             }
         }
