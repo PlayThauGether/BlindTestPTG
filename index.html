@@ -533,9 +533,7 @@
         .timer-bar-fill.danger { background:#ff006e; animation:timerDanger 0.4s infinite; }
 
         /* HOST COVER FRAME */
-        /* host cover — supprimé */
-
-        /* PAUSE */
+/* PAUSE */
         .pause-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.88); z-index:9995; flex-direction:column; align-items:center; justify-content:center; }
         .pause-overlay.active { display:flex; animation:pauseIn 0.3s ease; }
         .pause-title { font-family:'Bungee Shade',cursive; font-size:5rem; color:#ffbe0b; text-shadow:0 0 60px rgba(255,190,11,0.9); margin-bottom:0.5rem; }
@@ -2546,10 +2544,8 @@
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('✅ Wake Lock activé - écran restera allumé');
                     
                     wakeLock.addEventListener('release', () => {
-                        console.log('⚠️ Wake Lock désactivé');
                     });
                 } else {
                     // iOS : pas de Wake Lock API → fallback audio silencieux
@@ -2597,10 +2593,8 @@
                     playSilent();
                     noSleepInterval = setInterval(playSilent, 15000);
                     
-                    console.log('✅ NoSleep iOS activé (audio silencieux)');
                 }
             } catch(e) {
-                console.log('⚠️ NoSleep fallback erreur:', e);
             }
         }
 
@@ -2608,7 +2602,6 @@
             if (wakeLock !== null) {
                 wakeLock.release();
                 wakeLock = null;
-                console.log('🔓 Wake Lock libéré');
             }
             if (noSleepInterval) {
                 clearInterval(noSleepInterval);
@@ -2617,7 +2610,6 @@
             if (noSleepAudioCtx) {
                 noSleepAudioCtx.close().catch(() => {});
                 noSleepAudioCtx = null;
-                console.log('🔓 NoSleep iOS arrêté');
             }
         }
 
@@ -2628,7 +2620,6 @@
                     await requestWakeLock();
                 } else if (noSleepAudioCtx && noSleepAudioCtx.state === 'suspended') {
                     noSleepAudioCtx.resume();
-                    console.log('🔄 NoSleep iOS repris');
                 }
             }
         });
@@ -2657,14 +2648,12 @@
             try { session = JSON.parse(raw); } catch(e) { clearSession(); return; }
             if (!session || !session.code || !session.name) { clearSession(); return; }
 
-            console.log('🔄 Session trouvée, tentative de reconnexion...', session);
 
             db.ref(`rooms/${session.code}`).once('value', snapshot => {
                 const room = snapshot.val();
 
                 // Room plus en vie sur Firebase
                 if (!room) {
-                    console.log('❌ Room introuvable, session effacée.');
                     clearSession();
                     return;
                 }
@@ -2672,20 +2661,17 @@
                 // Trouver le joueur par son nom
                 const idx = room.players.findIndex(p => p.name === session.name);
                 if (idx === -1) {
-                    console.log('❌ Joueur introuvable dans la room.');
                     clearSession();
                     return;
                 }
 
                 // Partie terminée
                 if (room.currentQ >= room.questions.length) {
-                    console.log('✅ Partie déjà terminée.');
                     clearSession();
                     return;
                 }
 
                 // Tout bon — on reconnecte
-                console.log('✅ Reconnexion réussie !');
                 gameState.room = room;
                 gameState.playerIndex = idx;
                 gameState.distanceMode = room.distanceMode || false;
@@ -2730,7 +2716,6 @@
         async function fetchWithProxy(url) {
             // Plus besoin de proxies ! On utilise TON serveur !
             try {
-                console.log('🔄 Chargement via ton serveur...');
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -2738,7 +2723,6 @@
                 }
                 
                 const data = await response.json();
-                console.log('✅ Données chargées !');
                 return data;
                 
             } catch (error) {
@@ -2760,7 +2744,6 @@
 
         async function getDeezerPlaylist(id) {
             try {
-                console.log('🎵 Chargement playlist via TON serveur:', id);
                 
                 // Utiliser TON backend au lieu de l'API Deezer directement
                 const data = await fetchWithProxy(`${BACKEND_URL}/api/deezer/playlist/${id}`);
@@ -2780,7 +2763,6 @@
                         year: t.album.release_date ? new Date(t.album.release_date).getFullYear() : null
                     }));
                 
-                console.log(`✅ ${tracks.length} morceaux chargés`);
                 return tracks;
                 
             } catch (error) {
@@ -2834,14 +2816,12 @@
             // Essayer de récupérer le code sauvegardé
             const savedCode = localStorage.getItem('quiz_party_room_code');
             if (savedCode) {
-                console.log('✅ Code sauvegardé trouvé:', savedCode);
                 return savedCode;
             }
             
             // Sinon, générer un nouveau code et le sauvegarder
             const newCode = Math.floor(100000 + Math.random() * 900000).toString();
             localStorage.setItem('quiz_party_room_code', newCode);
-            console.log('✅ Nouveau code généré et sauvegardé:', newCode);
             return newCode;
         }
         
@@ -2849,7 +2829,6 @@
             const newCode = Math.floor(100000 + Math.random() * 900000).toString();
             localStorage.setItem('quiz_party_room_code', newCode);
             alert(`✅ Nouveau code généré : ${newCode}\n\nCe code sera utilisé pour vos prochaines parties.`);
-            console.log('✅ Code changé:', newCode);
         }
 
         function showScreen(screenId) {
@@ -3390,7 +3369,6 @@
                     
                     // Si pas d'URL et qu'on a déjà une musicDB, la réutiliser
                     if (!url && gameState.musicDB && gameState.musicDB.length > 0) {
-                        console.log(`🔄 Réutilisation de la playlist précédente (${gameState.musicDB.length} tracks)`);
                         tracks = gameState.musicDB;
                     } else if (!url) {
                         alert('⚠️ Choisis une playlist Deezer !');
@@ -3471,7 +3449,6 @@
                 lvl2Count = numQuestions - lvl1Count;
             }
             
-            console.log(`📊 Répartition: ${lvl1Count} Lvl1 + ${lvl2Count} Lvl2`);
             
             let trackIndex = 0;
             
@@ -3521,7 +3498,6 @@
                 const writingLvl1 = Math.floor(writingTotal * 0.4);
                 const writingLvl2 = writingTotal - writingLvl1;
                 
-                console.log(`📊 Soirée: QCM(${qcmTotal}) + Écriture(${writingLvl1}+${writingLvl2})`);
                 
                 // === QCM (4 choix uniquement) ===
                 for (let i = 0; i < qcmTotal && trackIndex < shuffled.length; i++) {
@@ -3568,8 +3544,6 @@
                 const lvl2Count = Math.round(numQuestions * 0.20);
                 const lvl3Count = numQuestions - lvl1Count - lvl2Count;
 
-                console.log(`📊 Répartition: Lvl1(${lvl1Count}) Lvl2(${lvl2Count}) Lvl3(${lvl3Count})`);
-                console.log(`📊 Disponible: Normal(${normalTracks.length}) Reverse(${reverseTracks.length}) Dialogue(${dialogueTracks.length})`);
 
                 // Vérifier qu'on a assez de tracks par type
                 if (normalTracks.length < lvl1Count) {
@@ -3621,8 +3595,6 @@
                     });
                 }
 
-                console.log(`✅ Questions générées: ${questions.length} total`);
-
 
             } else if (mode === 'qcm-film') {
                 // MODE FILM : 40% QCM (trouve le film) + 60% Écriture (tape le film)
@@ -3630,7 +3602,6 @@
                 const qcmFilmCount = Math.floor(totalFilm * 0.4);
                 const writingFilmCount = totalFilm - qcmFilmCount;
 
-                console.log(`📊 Film: QCM(${qcmFilmCount}) + Écriture(${writingFilmCount})`);
 
                 // === QCM Film (4 choix) ===
                 for (let i = 0; i < qcmFilmCount && trackIndex < shuffled.length; i++) {
@@ -3661,7 +3632,6 @@
                 const qcmSerieCount = Math.floor(totalSerie * 0.4);
                 const writingSerieCount = totalSerie - qcmSerieCount;
 
-                console.log(`📊 Série: QCM(${qcmSerieCount}) + Écriture(${writingSerieCount})`);
 
                 for (let i = 0; i < qcmSerieCount && trackIndex < shuffled.length; i++) {
                     questions.push({
@@ -3704,7 +3674,6 @@
             const emoji = hostMode ? '🎬' : selectedEmoji.create;
             const teamMode = document.getElementById('team-mode')?.checked || false;
             
-            console.log(`🎮 Création de la room avec le code: ${code}`);
             
             gameState.musicDB = tracks;
             gameState.playlistName = playlistName || '';
@@ -3723,7 +3692,6 @@
             
             const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
             
-            console.log(`✅ Questions générées: ${questions.length}`);
 
             const room = {
                 code,
@@ -3741,10 +3709,8 @@
 
             // Supprimer l'ancienne room si elle existe, puis créer la nouvelle
             db.ref(`rooms/${code}`).remove().then(() => {
-                console.log(`🗑️ Ancienne room ${code} supprimée`);
                 return db.ref(`rooms/${code}`).set(room);
             }).then(() => {
-                console.log(`✅ Nouvelle room ${code} créée avec ${questions.length} questions`);
                 
                 gameState.room = room;
                 gameState.playerIndex = 0;
@@ -3803,7 +3769,6 @@
                 // Les joueurs qui rejoignent ne sont JAMAIS en mode display-only
                 gameState.hostDisplayOnly = false;
                 
-                console.log('👥 Joueur rejoint - hostDisplayOnly forcé à false:', gameState.hostDisplayOnly);
 
                 saveSession();
                 goToLobby();
@@ -3888,6 +3853,11 @@
             updatePlayersList();
             listenToRoom();
         }
+
+        // Debouncer pour éviter les re-renders trop rapides en lobby
+        const debouncedUpdatePlayersList = debounce(function() {
+            if (gameState.room?.players) updatePlayersList();
+        }, 150);
 
         function updatePlayersList() {
             const list = document.getElementById('players-list');
@@ -4004,12 +3974,10 @@
                         gameState._playersListenerRef.off();
                         gameState.roomListeners = gameState.roomListeners.filter(r => r !== gameState._playersListenerRef);
                         gameState._playersListenerRef = null;
-                        console.log('🔧 Players listener détaché (passage au jeu - économie de bande passante)');
                     }
 
                     // S'assurer que les questions sont chargées avant de démarrer
                     if (!gameState.room.questions || gameState.room.questions.length === 0) {
-                        console.log('📥 Chargement des questions avant démarrage...');
                         db.ref(`${roomBase}/questions`).once('value', s => {
                             gameState.room.questions = s.val();
                             goToGame();
@@ -4029,7 +3997,7 @@
                     const players = snapshot.val();
                     if (!players) return;
                     gameState.room.players = players;
-                    updatePlayersList();
+                    debouncedUpdatePlayersList(); // debounced pour éviter les re-renders trop rapides
                 });
             } else {
                 gameState._playersListenerRef = null;
@@ -4051,7 +4019,6 @@
                 // CAS 1 : Attente après rafraîchissement
                 if (gameState.waitingForNextQ) {
                     if (newCurrentQ !== gameState.lastSeenQ && newCurrentQ < gameState.room.questions.length) {
-                        console.log('✅ Nouvelle question détectée après rafraîchissement, on reprend !');
                         gameState.waitingForNextQ = false;
                         gameState.lastSeenQ = null;
                         const myVersion = ++loadQuestionVersion;
@@ -4073,7 +4040,6 @@
 
                 // CAS 3 : Nouvelle question
                 if (newCurrentQ !== oldCurrentQ && newCurrentQ < gameState.room.questions.length) {
-                    console.log('📢 Nouvelle question:', newCurrentQ);
                     // Tuer l'ancien timer immédiatement
                     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
                     
@@ -4088,7 +4054,6 @@
 
                 // CAS 4 : Fin du jeu
                 if (newCurrentQ >= gameState.room.questions.length) {
-                    console.log('🏁 Fin du jeu !');
                     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
                     db.ref(`${roomBase}/players`).once('value', s => {
                         gameState.room.players = s.val() || gameState.room.players;
@@ -4102,7 +4067,6 @@
                 const newGameCode = snapshot.val();
                 if (!newGameCode || gameState.isHost) return;
 
-                console.log('🔄 Redirection vers nouvelle partie:', newGameCode);
                 alert(`🎉 L'hôte a lancé une nouvelle partie !\nNouveau code : ${newGameCode}`);
 
                 db.ref(`rooms/${newGameCode}`).once('value', newSnapshot => {
@@ -4126,7 +4090,6 @@
                 }
             });
 
-            console.log(`🔧 Listeners optimisés activés pour room ${code} (5 listeners granulaires au lieu de 1 global)`);
         }
 
         function startGame() {
@@ -4340,7 +4303,6 @@
                     } else {
                         audio.play()
                             .then(() => {
-                                console.log('✅ Audio lancé');
                                 gameState.audioPlaying = true;
                             })
                             .catch(err => {
@@ -4360,10 +4322,8 @@
             }
 
             // MODE HÔTE : ne pas afficher les questions, mais on a déjà généré les options ci-dessus
-            console.log('🔍 loadQuestion - isHost:', gameState.isHost, 'hostDisplayOnly:', gameState.hostDisplayOnly);
             
             if (gameState.hostDisplayOnly) {
-                console.log('Mode Affichage Hôte activé - pas de questions affichées');
                 document.getElementById('question-text').textContent = '';
                 
                 // Image plus grande en mode hôte
@@ -4378,7 +4338,6 @@
                 return;
             }
 
-            console.log('✅ Affichage normal des questions pour ce joueur');
 
             // RÉVÉLER les réponses après 500ms (quand l'audio commence)
             setTimeout(() => {
@@ -4591,8 +4550,6 @@
             const shuffledWrong = shuffle(shuffle(wrongValues));
             const targetCount = q.optionsCount || 4;
             
-            console.log(`🎲 Fausses réponses disponibles: ${wrongValues.length}`);
-            console.log(`🎯 Besoin de ${targetCount - 1} fausses réponses`);
             
             // Si pas assez de fausses réponses, prendre ce qu'on a
             if (shuffledWrong.length < targetCount - 1) {
@@ -4604,12 +4561,10 @@
             const startIndex = Math.floor(Math.random() * Math.max(1, shuffledWrong.length - neededCount + 1));
             const selectedWrong = shuffledWrong.slice(startIndex, startIndex + neededCount);
             
-            console.log(`✅ Sélectionnées: ${selectedWrong.length} fausses réponses`);
             
             const options = [correct, ...selectedWrong];
             const shuffledOptions = shuffle(options);
             
-            console.log(`📋 Options finales:`, shuffledOptions);
 
             // Sauvegarder dans Firebase pour que tous voient les mêmes options
             db.ref(`rooms/${gameState.room.code}/currentOptions`).set({
@@ -4925,7 +4880,6 @@
                     
                     // GUARD : Vérifier que c'est toujours la bonne question
                     if (gameState.room.currentQ !== timerQuestionIndex) {
-                        console.log('⚠️ Timer obsolète, question déjà changée');
                         return;
                     }
                     
@@ -5295,7 +5249,6 @@
                 .map(a => a.trim())
                 .filter(a => a.length > 0);  // Enlever les éléments vides
             
-            console.log('🎤 Artistes détectés:', artists);
             
             // Vérifier si l'input correspond à UN des artistes
             const artistResult = artists.some(a => isAnswerSimilar(userInput, a).match) 
@@ -5347,11 +5300,9 @@
                     for (const part of parts) {
                         if (!titleOk && isAnswerSimilar(part, q.title).match) {
                             titleOk = true;
-                            console.log('🎵 Titre détecté dans:', part);
                         }
                         if (!artistOk && artists.some(a => isAnswerSimilar(part, a).match)) {
                             artistOk = true;
-                            console.log('🎤 Artiste détecté dans:', part);
                         }
                     }
                 }
@@ -5425,7 +5376,6 @@
                     }
                     gameState.currentQuestionPoints += titlePts;
                     
-                    console.log(`🎵 Titre trouvé ! +${titlePts}pts`);
                 }
                 
                 // Vérifier l'ARTISTE (seulement si pas déjà trouvé)
@@ -5445,7 +5395,6 @@
                     }
                     gameState.currentQuestionPoints += artistPts;
                     
-                    console.log(`🎤 Artiste trouvé ! +${artistPts}pts`);
                 }
                 
                 // Vider l'input AVANT de gérer les feedbacks
@@ -5723,7 +5672,6 @@
         // LEADERBOARD
         // ===========================================
         function goToLeaderboard() {
-            console.log('🏆 LEADERBOARD');
             
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
             if (gameState.roomRef) gameState.roomRef.off();
@@ -6091,7 +6039,6 @@
             showScreen('waiting-rejoin-screen');
             
             // Attendre que la room soit recréée par l'hôte
-            console.log(`🔄 ${savedName} attend que l'hôte recrée la partie (code: ${savedCode})`);
             
             // Variable pour éviter les rejoins multiples
             let hasRejoined = false;
@@ -6107,19 +6054,16 @@
                 const room = snapshot.val();
                 
                 if (!room) {
-                    console.log(`⏳ ${savedName}: Room pas encore recréée...`);
                     return;
                 }
                 
                 // Éviter les rejoins multiples
                 if (hasRejoined) {
-                    console.log(`⚠️ ${savedName}: Déjà rejoint, on ignore cet événement`);
                     return;
                 }
                 
                 // Si la room existe, n'a pas démarré, et a des questions (= nouvelle room créée)
                 if (!room.started && room.questions && room.questions.length > 0) {
-                    console.log(`✅ ${savedName}: Room détectée ! Questions: ${room.questions.length}`);
                     
                     // Marquer qu'on a rejoint pour éviter les doublons
                     hasRejoined = true;
@@ -6131,7 +6075,6 @@
                     const pseudoExists = room.players.some(p => p.name.toLowerCase() === savedName.toLowerCase());
                     
                     if (pseudoExists) {
-                        console.log(`✅ ${savedName}: Pseudo déjà dans la room, reconnexion...`);
                         
                         // Rejoindre directement
                         gameState.room = room;
@@ -6139,19 +6082,16 @@
                         gameState.isHost = false;
                         gameState.hostDisplayOnly = false;
                         
-                        console.log(`✅ ${savedName}: playerIndex = ${gameState.playerIndex}`);
                         
                         saveSession();
                         goToLobby();
                         
                     } else {
-                        console.log(`🔄 ${savedName}: Rejoindre comme nouveau joueur...`);
                         
                         // Utiliser une transaction pour éviter les conflits entre joueurs
                         db.ref(`rooms/${savedCode}/players`).transaction(currentPlayers => {
                             // Si pas de players, initialiser avec un array vide
                             if (!currentPlayers) {
-                                console.log(`⚠️ ${savedName}: Pas de players, on initialise`);
                                 return [{ name: savedName, score: 0, isHost: false, emoji: savedEmoji }];
                             }
                             
@@ -6159,15 +6099,12 @@
                             const exists = currentPlayers.some(p => p.name.toLowerCase() === savedName.toLowerCase());
                             
                             if (exists) {
-                                console.log(`⚠️ ${savedName}: Déjà dans la liste, on garde tel quel`);
                                 return currentPlayers; // Ne rien changer
                             }
                             
                             // Ajouter le nouveau joueur
-                            console.log(`➕ ${savedName}: Ajout à la liste (total: ${currentPlayers.length + 1})`);
                             return [...currentPlayers, { name: savedName, score: 0, isHost: false, emoji: savedEmoji }];
                         }).then(() => {
-                            console.log(`✅ ${savedName}: Transaction réussie, récupération de la room...`);
                             
                             // Récupérer la room mise à jour
                             return db.ref(`rooms/${savedCode}`).once('value');
@@ -6179,8 +6116,6 @@
                                 gameState.isHost = false;
                                 gameState.hostDisplayOnly = false;
                                 
-                                console.log(`✅ ${savedName}: playerIndex = ${gameState.playerIndex}, total joueurs = ${freshRoom.players.length}`);
-                                console.log(`👥 ${savedName}: Liste des joueurs:`, freshRoom.players.map(p => p.name));
                                 
                                 saveSession();
                                 goToLobby();
@@ -6192,7 +6127,6 @@
                         });
                     }
                 } else {
-                    console.log(`⏳ ${savedName}: Room existe mais pas prête (started: ${room.started}, questions: ${room.questions?.length || 0})`);
                 }
             });
         }
@@ -6471,6 +6405,31 @@
             }
         });
         
+        // =============================================
+        // 🛠 UTILITAIRES — debounce, safe Firebase
+        // =============================================
+
+        // Debounce générique
+        function debounce(fn, delay) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+        }
+
+        // Safe Firebase set — évite les crashes si gameState.room est null
+        function safeSet(path, value) {
+            if (!gameState.room?.code) return Promise.resolve();
+            return db.ref(path).set(value).catch(() => {});
+        }
+
+        // Safe player score update — évite les race conditions
+        function updatePlayerScore(playerIndex, newScore, lastAnswerTime) {
+            if (!gameState.room?.code) return;
+            db.ref(`rooms/${gameState.room.code}/players/${playerIndex}`).update({
+                score: newScore,
+                lastAnswerTime: lastAnswerTime || Date.now()
+            }).catch(() => {});
+        }
+
         function getPlayerEmoji(playerName) {
             const p = gameState.room?.players?.find(pl => pl.name === playerName);
             return p?.emoji || '😎';
@@ -6700,7 +6659,6 @@
                 preloadedAudio.src = nextQ.preview;
                 preloadedAudio.preload = 'auto';
                 preloadedAudio.volume = 0;
-                console.log('⚡ Préchargement audio question suivante');
             }
         }
 
@@ -6961,8 +6919,6 @@
         // 🎨 THÈMES VISUELS
         // =============================================
         let themePopupOpen = false;
-        const THEME_CLASSES = ['theme-80s','theme-hiphop','theme-electro','theme-chill'];
-
         // Mots-clés → thème suggéré
         const THEME_KEYWORDS = {
             'theme-80s':     ['80','disco','funk','eighties','daft','stranger','abba','queen','michael jackson','madonna'],
@@ -6976,9 +6932,6 @@
             'theme-chill':   ['chill','lofi','lo-fi','relax','jazz','acoustic','soft','calm','sleep','study','bossa'],
             'theme-world':   ['world','monde','latina','reggae','africain','arabic','flamenco','samba','bollywood','international']
         };
-
-        // (musiques par thème supprimées — une seule musique de fond)
-
         function detectThemeFromPlaylist(playlistName) {
             if (!playlistName) return '';
             const lower = playlistName.toLowerCase();
@@ -7095,10 +7048,8 @@
                     btn.style.borderColor = '#00ff64';
                     btn.style.animation = 'none';
                     btn.onclick = null;
-                    console.log('✅ Audio déverrouillé');
                 }).catch(err => {
                     URL.revokeObjectURL(url);
-                    console.log('⚠️ Audio unlock failed:', err);
                     btn.textContent = '🔊 Réessayer (appuie ici)';
                 });
                 
@@ -7107,7 +7058,6 @@
                     audioCtx.resume();
                 }
             } catch(e) {
-                console.log('⚠️ Audio unlock error:', e);
                 btn.textContent = '🔊 Réessayer (appuie ici)';
             }
         }
@@ -7479,8 +7429,6 @@
             animate();
         }
 
-
-        console.log('✅ Quiz Party V2 chargé !');
 
         // Plein écran (compatible Safari)
         function isIOS() {
