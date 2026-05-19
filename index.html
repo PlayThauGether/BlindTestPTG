@@ -4143,6 +4143,16 @@
             gameState.streakBonusGiven = { three: false, five: false };
             pauseState = false;
             lastRankSnapshot = {};
+            // Reset mode/level tracking pour que Q0 ait toujours son écran d'intro
+            gameState.lastMode = '';
+            gameState.lastLevel = 0;
+            gameState.lastType = '';
+            gameState.transitionInProgress = false;
+            gameState.pendingCurrentQ = null;
+            if (gameState.introTickerInterval) {
+                clearInterval(gameState.introTickerInterval);
+                gameState.introTickerInterval = null;
+            }
             
             requestWakeLock();
 
@@ -5964,18 +5974,13 @@
                     clearInterval(gameState.introTickerInterval);
                     gameState.introTickerInterval = null;
                     gameState.transitionInProgress = false;
-                    db.ref(`rooms/${gameState.room.code}`).once('value', snapshot => {
-                        const freshData = snapshot.val();
-                        if (freshData) {
-                            gameState.room = freshData;
-                            if (freshData.currentQ >= freshData.questions.length) {
-                                goToLeaderboard();
-                                return;
-                            }
-                        }
-                        showScreen('game-screen');
-                        loadQuestion();
-                    });
+                    // Ne pas refetch Firebase — utiliser le currentQ actuel pour éviter les sauts
+                    if (gameState.room.currentQ >= gameState.room.questions.length) {
+                        goToLeaderboard();
+                        return;
+                    }
+                    showScreen('game-screen');
+                    loadQuestion();
                 }
             }, 1000);
         }
