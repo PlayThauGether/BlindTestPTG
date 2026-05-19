@@ -2871,27 +2871,26 @@
             const stars = document.getElementById('stars-wrap');
             if (stars) stars.style.display = ['menu-screen','lobby-screen'].includes(screenId) ? 'block' : 'none';
 
-            // Musique d'ambiance : joue partout SAUF en jeu (Deezer) et sur le leaderboard
-            const gameScreens = ['game-screen'];
-            const noAmbient = ['game-screen', 'leaderboard-screen'];
+            // Musique d'ambiance : bloquée dès que la partie est lancée (gameInProgress)
+            // et jusqu'au retour au menu / leaderboard
+            const isGameScreen = gameState.gameInProgress && screenId !== 'leaderboard-screen';
             const amb = document.getElementById('ambient-audio');
             if (amb && amb.src && !amb.src.endsWith('/ambient-audio')) {
-                if (noAmbient.includes(screenId)) {
-                    // Couper l'ambiance
+                if (isGameScreen) {
+                    // Couper et garder coupée pendant toute la partie
                     if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
-                    if (gameScreens.includes(screenId)) {
-                        // Fade out progressif pour le jeu
+                    if (!amb.paused) {
                         window._ambFadeInterval = setInterval(() => {
                             if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
                             else { amb.pause(); amb.volume = 0.35; clearInterval(window._ambFadeInterval); }
                         }, 80);
-                    } else {
-                        // Leaderboard : couper direct (podium music prend le relai)
-                        amb.pause();
-                        amb.volume = 0.35;
                     }
+                } else if (screenId === 'leaderboard-screen') {
+                    // Leaderboard : couper direct, podium music prend le relai
+                    if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
+                    amb.pause(); amb.volume = 0.35;
                 } else {
-                    // Tous les autres écrans : reprendre l'ambiance, arrêter podium
+                    // Hors partie : reprendre l'ambiance, arrêter podium
                     if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
                     const pod = document.getElementById('podium-audio');
                     if (pod) { pod.pause(); pod.currentTime = 0; }
@@ -2940,9 +2939,9 @@
             if (gameState.roomRef) gameState.roomRef.off();
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
             clearSession();
-            
+            gameState.gameInProgress = false; // 🔊 Réactiver la musique de menu
             releaseWakeLock();
-            startAmbientSound(); // 🔊 Son d'ambiance menu
+            startAmbientSound();
             
             gameState = {
                 room: null,
@@ -4143,12 +4142,12 @@
             gameState.streakBonusGiven = { three: false, five: false };
             pauseState = false;
             lastRankSnapshot = {};
-            // Reset mode/level tracking pour que Q0 ait toujours son écran d'intro
             gameState.lastMode = '';
             gameState.lastLevel = 0;
             gameState.lastType = '';
             gameState.transitionInProgress = false;
             gameState.pendingCurrentQ = null;
+            gameState.gameInProgress = true; // 🔇 Bloquer la musique de menu pendant toute la partie
             if (gameState.introTickerInterval) {
                 clearInterval(gameState.introTickerInterval);
                 gameState.introTickerInterval = null;
@@ -5736,6 +5735,7 @@
             document.getElementById('pause-fab').classList.remove('visible', 'paused');
             const audioPlayer = document.getElementById('audio-player');
             if (audioPlayer) { audioPlayer.pause(); audioPlayer.src = ''; }
+            gameState.gameInProgress = false; // 🔊 Fin de partie
 
             const players = gameState.room.players || [];
             let sorted = [...players].sort((a, b) => {
