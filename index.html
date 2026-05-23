@@ -560,6 +560,17 @@
         .player-ready-dot.ready { background:#00ff64; box-shadow:0 0 8px #00ff64; }
         .kick-btn { margin-left:auto; background:rgba(255,0,0,0.12); border:1px solid rgba(255,0,0,0.35); color:#ff6666; padding:0.15rem 0.5rem; border-radius:6px; font-size:0.75rem; cursor:pointer; flex-shrink:0; }
         .kick-btn:hover { background:rgba(255,0,0,0.28); }
+
+        /* BOTS */
+        .bot-panel { background:rgba(131,56,236,0.12); border:2px solid rgba(131,56,236,0.4); border-radius:14px; padding:0.8rem 1rem; margin-bottom:0.8rem; }
+        .bot-panel h4 { color:#a855f7; font-size:0.9rem; font-weight:800; margin-bottom:0.7rem; }
+        .bot-controls { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; }
+        .bot-count-btns { display:flex; gap:0.3rem; }
+        .bot-count-btn { width:30px; height:30px; border-radius:8px; border:2px solid rgba(168,85,247,0.4); background:rgba(168,85,247,0.08); color:white; font-size:0.8rem; font-weight:700; cursor:pointer; }
+        .bot-count-btn.active { border-color:#a855f7; background:rgba(168,85,247,0.25); color:#a855f7; }
+        .bot-speed-select { background:#1a1f3a; border:1px solid rgba(168,85,247,0.4); color:white; padding:0.3rem 0.5rem; border-radius:8px; font-size:0.8rem; }
+        .bot-add-btn { background:linear-gradient(135deg,#a855f7,#7c3aed); border:none; color:white; padding:0.4rem 0.9rem; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer; }
+        .bot-indicator { display:inline-block; font-size:0.65rem; background:rgba(168,85,247,0.2); border:1px solid rgba(168,85,247,0.5); color:#a855f7; border-radius:4px; padding:0 0.3rem; margin-left:0.3rem; vertical-align:middle; }
         .player-item.kicking { animation:kickSlide 0.4s ease forwards; }
 
         /* GAME */
@@ -1205,16 +1216,49 @@
         .speed-time { color: #00f5ff; font-weight: 800; font-size: 0.95rem; }
 
         /* TEAMS */
-        .team-banner { display: flex; justify-content: center; gap: 2rem; margin: 1rem 0; flex-wrap: wrap; }
-        .team-card { padding: 1rem 1.5rem; border-radius: 15px; text-align: center; min-width: 150px; }
-        .team-card.red { background: rgba(239,68,68,0.15); border: 2px solid #ef4444; }
-        .team-card.blue { background: rgba(59,130,246,0.15); border: 2px solid #3b82f6; }
-        .team-card .team-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.3rem; }
-        .team-card.red .team-name { color: #ef4444; }
-        .team-card.blue .team-name { color: #3b82f6; }
-        .team-card .team-score { font-size: 1.5rem; font-weight: 800; color: #ffbe0b; }
-        .team-card .team-members { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.3rem; }
-        .team-tag { font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; margin-left: 0.3rem; }
+        /* ===== NOUVEAU MODE ÉQUIPES ===== */
+        /* Config création */
+        .team-config-section { display:none; margin-top:1rem; width:100%; max-width:520px; }
+        .team-config-section.visible { display:block; }
+        .team-count-btns { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.8rem; justify-content:center; }
+        .team-count-btn { padding:0.35rem 0.8rem; border-radius:20px; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; }
+        .team-count-btn.active { border-color:#ffbe0b; background:rgba(255,190,11,0.15); color:#ffbe0b; }
+        .teams-inputs { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; width:100%; }
+        .team-input-row { display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); border-radius:10px; padding:0.5rem 0.7rem; }
+        .team-color-dot { width:22px; height:22px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,0.3); cursor:pointer; }
+        .team-name-input { flex:1; background:none; border:none; color:white; font-size:0.9rem; font-weight:700; outline:none; }
+
+        /* Lobby équipes */
+        .teams-lobby { display:none; gap:0.8rem; flex-wrap:wrap; margin:0.8rem 0; }
+        .teams-lobby.visible { display:flex; }
+        .team-lobby-col { flex:1; min-width:130px; border-radius:12px; padding:0.6rem; border:2px solid; }
+        .team-lobby-col h4 { font-size:0.85rem; font-weight:800; margin-bottom:0.4rem; text-align:center; }
+        .team-lobby-members { min-height:36px; display:flex; flex-direction:column; gap:0.25rem; }
+        .team-lobby-player { font-size:0.78rem; background:rgba(255,255,255,0.08); border-radius:6px; padding:0.2rem 0.5rem; display:flex; align-items:center; gap:0.3rem; }
+        .unassigned-pool { background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.2); border-radius:12px; padding:0.6rem; margin-bottom:0.6rem; }
+        .unassigned-pool h4 { font-size:0.8rem; color:#aaa; margin-bottom:0.4rem; }
+        .assign-btn { margin-left:auto; font-size:0.65rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:4px; padding:0.1rem 0.35rem; cursor:pointer; }
+        .assign-select { font-size:0.7rem; background:#1a1f3a; border:1px solid rgba(255,255,255,0.3); color:white; border-radius:4px; padding:0.1rem; }
+
+        /* Badge équipe en jeu */
+        .team-badge { display:inline-block; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.75rem; font-weight:800; margin-bottom:0.3rem; }
+
+        /* Scoreboard équipes */
+        .team-score-row { display:flex; align-items:center; gap:0.6rem; padding:0.35rem 0.6rem; border-radius:8px; margin-bottom:0.3rem; }
+        .team-score-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .team-score-name { flex:1; font-weight:800; font-size:0.85rem; }
+        .team-score-pts { font-weight:800; font-size:0.85rem; color:#ffbe0b; }
+
+        /* Résultats équipes */
+        .team-results-grid { display:flex; gap:0.8rem; flex-wrap:wrap; justify-content:center; margin:1rem 0; }
+        .team-result-card { border-radius:16px; padding:1rem 1.3rem; text-align:center; min-width:140px; border:2px solid; }
+        .team-result-card .tr-name { font-size:1rem; font-weight:800; margin-bottom:0.3rem; }
+        .team-result-card .tr-score { font-size:1.6rem; font-weight:800; color:#ffbe0b; }
+        .team-result-card .tr-members { font-size:0.75rem; color:rgba(255,255,255,0.6); margin-top:0.4rem; }
+        .team-result-card .tr-mvp { font-size:0.8rem; margin-top:0.5rem; }
+
+        /* Ancien CSS gardé pour compat */
+        .team-tag { font-size:0.7rem; padding:0.15rem 0.4rem; border-radius:4px; font-weight:700; margin-left:0.3rem; }
         .team-tag.red { background: rgba(239,68,68,0.3); color: #ef4444; }
         .team-tag.blue { background: rgba(59,130,246,0.3); color: #3b82f6; }
 
@@ -1713,9 +1757,28 @@
                 </label>
 
                 <label class="checkbox-label">
-                    <input type="checkbox" id="team-mode">
-                    <span>👥 Mode Équipes (2 équipes auto)</span>
+                    <input type="checkbox" id="team-mode" onchange="toggleTeamConfigUI()">
+                    <span>👥 Mode Équipes</span>
                 </label>
+
+                <!-- Config équipes -->
+                <div class="team-config-section" id="team-config-section" style="margin:0 auto;">
+                    <div style="margin-bottom:0.6rem;text-align:center;">
+                        <span style="color:#aaa;font-size:0.85rem;">Nombre d'équipes :</span>
+                        <div class="team-count-btns" style="margin-top:0.4rem;">
+                            <button class="team-count-btn active" onclick="setTeamCount(2)">2</button>
+                            <button class="team-count-btn" onclick="setTeamCount(3)">3</button>
+                            <button class="team-count-btn" onclick="setTeamCount(4)">4</button>
+                            <button class="team-count-btn" onclick="setTeamCount(5)">5</button>
+                            <button class="team-count-btn" onclick="setTeamCount(6)">6</button>
+                            <button class="team-count-btn" onclick="setTeamCount(7)">7</button>
+                            <button class="team-count-btn" onclick="setTeamCount(8)">8</button>
+                            <button class="team-count-btn" onclick="setTeamCount(9)">9</button>
+                            <button class="team-count-btn" onclick="setTeamCount(10)">10</button>
+                        </div>
+                    </div>
+                    <div class="teams-inputs" id="teams-inputs"></div>
+                </div>
             </div>
 
             <div class="section">
@@ -1875,9 +1938,47 @@
 
             <div class="players-box">
                 <h3>👥 Joueurs (<span id="player-count">0</span>)</h3>
+                <!-- Zone d'assignation équipes (hôte en mode équipe) -->
+                <div id="teams-lobby-container" class="teams-lobby"></div>
+                <!-- Pool joueurs non assignés + liste standard -->
+                <div id="unassigned-pool-container" class="unassigned-pool" style="display:none;">
+                    <h4>🔄 Non assignés</h4>
+                    <div id="unassigned-players-list"></div>
+                </div>
                 <div id="players-list"></div>
             </div>
 
+            <button id="random-teams-btn" class="btn secondary hidden" onclick="randomAssignTeams()" style="margin-top:0.4rem;">🎲 Répartir aléatoirement</button>
+
+            <!-- BOTS : petit bouton discret qui ouvre une modale -->
+            <button id="bot-panel-toggle" class="hidden" onclick="toggleBotModal()" style="margin-top:0.5rem;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#a855f7;padding:0.3rem 0.8rem;border-radius:20px;font-size:0.78rem;font-weight:700;cursor:pointer;">🤖 Bots</button>
+
+            <!-- Modale bots -->
+            <div id="bot-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9998;background:#1a1f3a;border:2px solid rgba(168,85,247,0.5);border-radius:16px;padding:1.2rem 1.5rem;min-width:280px;box-shadow:0 0 40px rgba(168,85,247,0.3);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
+                    <h4 style="color:#a855f7;font-size:0.95rem;font-weight:800;margin:0;">🤖 Bots de test</h4>
+                    <button onclick="toggleBotModal()" style="background:none;border:none;color:#aaa;font-size:1.2rem;cursor:pointer;">✕</button>
+                </div>
+                <div class="bot-controls">
+                    <div class="bot-count-btns">
+                        <button class="bot-count-btn active" onclick="selectBotCount(1)">1</button>
+                        <button class="bot-count-btn" onclick="selectBotCount(3)">3</button>
+                        <button class="bot-count-btn" onclick="selectBotCount(5)">5</button>
+                        <button class="bot-count-btn" onclick="selectBotCount(10)">10</button>
+                    </div>
+                    <select class="bot-speed-select" id="bot-speed-select">
+                        <option value="mixed">🎲 Mixte</option>
+                        <option value="fast">⚡ Rapide (1-4s)</option>
+                        <option value="medium">🚶 Moyen (4-10s)</option>
+                        <option value="slow">🐢 Lent (10-18s)</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+                    <button class="bot-add-btn" style="flex:1;" onclick="addBots();toggleBotModal()">+ Ajouter</button>
+                    <button class="bot-add-btn" style="flex:1;background:rgba(255,0,0,0.25);" onclick="removeAllBots();toggleBotModal()">✕ Retirer tous</button>
+                </div>
+            </div>
+            <div id="bot-modal-bg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9997;" onclick="toggleBotModal()"></div>
             <button id="start-btn" class="btn large hidden" onclick="startGame()">▶️ Lancer la partie</button>
             <button id="host-ready-btn" class="btn large hidden" onclick="toggleHostReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
             <button id="ready-btn" class="btn large" onclick="toggleReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
@@ -1974,7 +2075,7 @@
                 <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — TITRE + ARTISTE</p>
                 <div class="intro-card" style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎵 TITRE ET ARTISTE À TROUVER</p>
-                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Deux champs : un pour le titre, un pour l'artiste. Tu peux répondre l'un, l'autre, ou les deux ! Chaque bonne réponse rapporte des points, et si tu trouves les <strong style="color:#00ff64;">deux ensemble tu gagnes un bonus</strong> supplémentaire !</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Deux champs : un pour le titre, un pour l'artiste. Tu peux répondre l'un, l'autre, ou les deux ! Chaque bonne réponse rapporte des points, et si tu trouves les <strong style="color:#00ff64;">deux tu gagnes un bonus</strong> supplémentaire !</p>
                 </div>
                 <div class="intro-scores-container" id="writing-lvl2-intro-scores"></div>
                 <div class="intro-countdown" style="margin: 1.2rem auto; font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.05em;">⏳ <span class="countdown-num">15</span>s</div>
@@ -2039,6 +2140,8 @@
         <!-- GAME -->
         <div id="game-screen" class="screen hidden">
             <div class="timer-bar-wrap"><div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar"></div></div></div>
+            <!-- Badge équipe affiché en haut si mode équipe -->
+            <div id="player-team-badge" style="text-align:center;display:none;margin-bottom:0.2rem;"></div>
             <div class="game-header">
                 <div class="timer">⏱️ <span id="timer">20</span>s <span id="level-badge" style="font-size:0.75rem; background:rgba(255,255,255,0.12); border-radius:6px; padding:2px 7px; margin-left:6px; color:#aaa;"></span></div>
                 <div>Q <span id="current-q">1</span>/<span id="total-q">10</span></div>
@@ -2948,6 +3051,7 @@
 
         function goToCreate() {
             stopAmbientSound();
+            renderTeamInputs(currentTeamCount); // Init les inputs équipe
             loadPlaylistsSelect();
             showScreen('create-screen');
             
@@ -3673,6 +3777,7 @@
             const code = genCode();
             const emoji = hostMode ? '🎬' : selectedEmoji.create;
             const teamMode = document.getElementById('team-mode')?.checked || false;
+            const teams = teamMode ? getTeamsFromUI() : [];
             
             
             gameState.musicDB = tracks;
@@ -3699,6 +3804,7 @@
                 hostMode: hostMode,
                 distanceMode: distanceMode,
                 teamMode: teamMode,
+                teams: teams,
                 playlistName: playlistName || '',
                 gameMode: mode,
                 players: [{ name, score: 0, isHost: true, emoji: emoji, team: teamMode ? 'red' : null }],
@@ -3805,6 +3911,11 @@
                 document.getElementById('host-ready-btn').classList.remove('hidden');
                 document.getElementById('ready-btn').classList.remove('visible');
                 document.getElementById('ready-btn').style.display = 'none';
+                // Bouton répartition aléatoire en mode équipe
+                const randomBtn = document.getElementById('random-teams-btn');
+                if (randomBtn) randomBtn.classList.toggle('hidden', !gameState.room.teamMode);
+                // Panel bots
+                document.getElementById('bot-panel-toggle')?.classList.remove('hidden');
                 document.getElementById('change-code-btn').classList.remove('hidden');
                 document.getElementById('waiting-div').classList.add('hidden');
                 
@@ -3883,10 +3994,11 @@
                 const kickBtn = (gameState.isHost && !isHost && currentScreen === 'lobby')
                     ? `<button class="kick-btn" onclick="kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕</button>`
                     : '';
+                const botBadge = p.isBot ? `<span class="bot-indicator">BOT</span>` : '';
                 div.innerHTML = `
                     ${readyDot}
                     <span>${p.emoji || '😎'}</span>
-                    <span style="font-weight:700;">${p.name}${isHost ? ' 👑' : ''}${teamTag}</span>
+                    <span style="font-weight:700;">${p.name}${isHost ? ' 👑' : ''}${teamTag}${botBadge}</span>
                     ${readyLabel}
                     ${kickBtn}
                 `;
@@ -3894,6 +4006,9 @@
             });
             
             checkAllReady(gameState.room.players);
+            
+            // Rendu équipes si mode équipe
+            renderTeamLobby();
             
             // Boutons selon le rôle
             const readyBtn = document.getElementById('ready-btn');
@@ -4134,6 +4249,12 @@
             const reactEl = document.getElementById('emoji-reactions');
             if (reactEl) reactEl.style.display = gameState.isHost ? 'none' : 'flex';
 
+            // Badge équipe du joueur
+            updateTeamBadge();
+
+            // Lancer les bots pour cette question (hôte uniquement)
+            if (gameState.isHost) runBotsForQuestion();
+
             // Arrêter le pendu de la question précédente
             stopHangman();
 
@@ -4355,7 +4476,6 @@
             const container = document.getElementById('live-scores');
             const scoreboard = document.getElementById('scoreboard-side');
             
-            // Scoreboard visible SEULEMENT pour l'hôte ET si pas en mode distance
             if (!gameState.isHost || gameState.distanceMode) {
                 scoreboard.style.display = 'none';
                 return;
@@ -4363,45 +4483,36 @@
             
             scoreboard.style.display = 'block';
             container.innerHTML = '';
-
-            const sorted = [...gameState.room.players].sort((a, b) => {
-                const scoreA = a.score || 0;
-                const scoreB = b.score || 0;
-                if (scoreB !== scoreA) return scoreB - scoreA;
-                return (a.lastAnswerTime || 0) - (b.lastAnswerTime || 0);
-            });
-
-            // 💬 Messages dynamiques classement (hôte uniquement)
             analyzeDynMessages(gameState.room.players);
 
-            sorted.forEach(p => {
-                // En mode hôte, ne pas afficher l'hôte dans le scoreboard
-                if (gameState.room.hostMode && p.name === gameState.room.host) return;
-                const div = document.createElement('div');
-                div.className = 'score-item';
-                if (p.name === gameState.room.players[gameState.playerIndex].name) {
-                    div.classList.add('me');
-                }
-                div.innerHTML = `
-                    <span class="score-name">${p.emoji || '😎'} ${p.name}</span>
-                    <span class="score-points">${p.score || 0}</span>
-                `;
-                container.appendChild(div);
-            });
-            
-            // Afficher scores d'équipes si mode team
-            if (gameState.room.teamMode) {
+            if (gameState.room.teamMode && gameState.room.teams?.length) {
+                // MODE ÉQUIPE : scores d'équipe uniquement
                 const teamScores = getTeamScores();
-                const teamDiv = document.createElement('div');
-                teamDiv.style.cssText = 'margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1);';
-                teamDiv.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:#ef4444; font-weight:800;">🔴 ${teamScores.red}</span>
-                        <span style="color:rgba(255,255,255,0.5); font-size:0.8rem;">ÉQUIPES</span>
-                        <span style="color:#3b82f6; font-weight:800;">${teamScores.blue} 🔵</span>
-                    </div>
-                `;
-                container.appendChild(teamDiv);
+                const sorted = [...gameState.room.teams].sort((a,b) => (teamScores[b.id]||0) - (teamScores[a.id]||0));
+                sorted.forEach(team => {
+                    const div = document.createElement('div');
+                    div.className = 'team-score-row';
+                    div.style.background = team.color + '20';
+                    div.innerHTML = `<div class="team-score-dot" style="background:${team.color}"></div>
+                        <span class="team-score-name" style="color:${team.color}">${team.name}</span>
+                        <span class="team-score-pts">${teamScores[team.id] || 0}</span>`;
+                    container.appendChild(div);
+                });
+            } else {
+                // MODE CLASSIQUE
+                const sorted = [...gameState.room.players].sort((a,b) => {
+                    if ((b.score||0) !== (a.score||0)) return (b.score||0)-(a.score||0);
+                    return (a.lastAnswerTime||0)-(b.lastAnswerTime||0);
+                });
+                sorted.forEach(p => {
+                    if (gameState.room.hostMode && p.name === gameState.room.host) return;
+                    const div = document.createElement('div');
+                    div.className = 'score-item';
+                    if (p.name === gameState.room.players[gameState.playerIndex]?.name) div.classList.add('me');
+                    div.innerHTML = `<span class="score-name">${p.emoji||'😎'} ${p.name}</span>
+                        <span class="score-points">${p.score||0}</span>`;
+                    container.appendChild(div);
+                });
             }
         }
 
@@ -4411,76 +4522,74 @@
 
             const side = document.getElementById('correct-players-side');
             const list = document.getElementById('correct-players-list');
+            const currentQ = gameState.room.currentQ;
+            const q = gameState.room.questions[currentQ];
+            side.classList.remove('hidden');
 
-            // Lire lastAnswers depuis Firebase (données fraîches)
-            db.ref(`rooms/${gameState.room.code}/lastAnswers`).once('value', snapshot => {
-                const lastAnswers = snapshot.val() || {};
-                const currentQ = gameState.room.currentQ;
-                const q = gameState.room.questions[currentQ];
-                
-                // ANSWER LOG : Accumuler les données pour les stats de fin
+            // Listener live pour que les bots (réponse async) apparaissent au fur et à mesure
+            if (gameState._correctPlayersRef) gameState._correctPlayersRef.off();
+            gameState._correctPlayersRef = db.ref(`rooms/${gameState.room.code}/lastAnswers`);
+            
+            const renderResults = (lastAnswers) => {
+                if (!lastAnswers) { list.innerHTML = '<div style="text-align:center;color:#aaa;padding:0.8rem 0;">😬 Personne cette fois !</div>'; return; }
+
+                // ANSWER LOG
                 if (!gameState.answerLog) gameState.answerLog = [];
                 const logEntry = { questionType: q?.type || 'qcm', answers: {} };
                 gameState.room.players.forEach(p => {
                     const safeName = p.name.replace(/[.#$[\]]/g, '_');
                     const a = lastAnswers[safeName];
-                    if (a && a.questionIndex === currentQ) {
+                    // Bots n'ont pas questionIndex — on accepte aussi les réponses sans questionIndex
+                    if (a && (a.questionIndex === currentQ || p.isBot)) {
                         logEntry.answers[p.name] = {
                             correct: a.correct || false,
-                            responseTime: a.responseTime || 999,
+                            responseTime: a.responseTime || a.time || 999,
                             bothFound: a.bothFound || false,
                             questionType: a.questionType || q?.type || 'qcm'
                         };
                     }
                 });
-                // Only add if we haven't logged this question yet
-                if (gameState.answerLog.length <= currentQ) {
-                    gameState.answerLog.push(logEntry);
-                }
-
-                // ✨ Vérifier si tout le monde a bon → animation dorée
+                if (gameState.answerLog.length <= currentQ) gameState.answerLog.push(logEntry);
                 checkAllCorrect(logEntry.answers, gameState.room.players);
 
-                // Collecter les joueurs avec leur temps de réponse
                 const results = [];
                 gameState.room.players.forEach(p => {
                     const safeName = p.name.replace(/[.#$[\]]/g, '_');
                     const answer = lastAnswers[safeName];
-                    if (answer && answer.questionIndex === currentQ && answer.correct) {
-                        const responseTime = answer.responseTime || 0;
-                        results.push({ name: p.name, time: responseTime, emoji: p.emoji || '😎' });
+                    if (answer && answer.correct && (answer.questionIndex === currentQ || p.isBot)) {
+                        results.push({ name: p.name, time: answer.responseTime || answer.time || 0, emoji: p.emoji || '😎', teamId: p.teamId || null });
                     }
                 });
-
-                // Trier par vitesse (le plus rapide en premier)
                 results.sort((a, b) => a.time - b.time);
-
                 list.innerHTML = '';
-
                 if (results.length === 0) {
-                    const msg = document.createElement('div');
-                    msg.style.cssText = 'text-align:center; color:#aaa; padding:0.8rem 0; font-size:0.95rem;';
-                    msg.textContent = '😬 Personne cette fois !';
-                    list.appendChild(msg);
+                    list.innerHTML = '<div style="text-align:center;color:#aaa;padding:0.8rem 0;font-size:0.95rem;">😬 Personne cette fois !</div>';
                 } else {
-                    const medals = ['🥇', '🥈', '🥉'];
+                    const medals = ['🥇','🥈','🥉'];
+                    const teams = gameState.room?.teams || [];
                     results.forEach((r, idx) => {
                         const div = document.createElement('div');
-                        const medal = medals[idx] || `${idx + 1}.`;
-                        const borderColor = idx === 0 ? '#ffbe0b' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : '#00c864';
-                        const bgOpacity = idx === 0 ? '0.3' : '0.15';
-                        div.style.cssText = `background:rgba(0,200,100,${bgOpacity}); border:2px solid ${borderColor}; border-radius:10px; padding:0.6rem 0.8rem; margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;`;
-                        div.innerHTML = `
-                            <span style="color:#fff; font-weight:700; font-size:0.95rem;">${medal} ${r.emoji || '😎'} ${r.name}</span>
-                            <span style="color:#00f5ff; font-weight:800; font-size:0.9rem;">${r.time.toFixed(0)}s</span>
-                        `;
+                        // Couleur équipe si mode équipe, sinon or/argent/bronze
+                        let borderColor, bgColor;
+                        if (teams.length && r.teamId) {
+                            const team = teams.find(t => t.id === r.teamId);
+                            borderColor = team?.color || '#00c864';
+                            bgColor = (team?.color || '#00c864') + '30';
+                        } else {
+                            borderColor = idx === 0 ? '#ffbe0b' : idx === 1 ? '#c0c0c0' : idx === 2 ? '#cd7f32' : '#00c864';
+                            bgColor = `rgba(0,200,100,${idx===0?'0.3':'0.15'})`;
+                        }
+                        div.style.cssText = `background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:0.6rem 0.8rem;margin-bottom:0.4rem;display:flex;justify-content:space-between;align-items:center;`;
+                        div.innerHTML = `<span style="color:#fff;font-weight:700;font-size:0.95rem;">${medals[idx]||idx+1+'.'} ${r.emoji} ${r.name}</span>
+                            <span style="color:#00f5ff;font-weight:800;font-size:0.9rem;">${parseFloat(r.time).toFixed(0)}s</span>`;
                         list.appendChild(div);
                     });
                 }
+            };
 
-                // Montrer le bloc
-                side.classList.remove('hidden');
-            });
+            gameState._correctPlayersRef.on('value', snap => renderResults(snap.val()));
+            // Couper le listener après 6 secondes (fin de la fenêtre de réponse)
+            setTimeout(() => { if (gameState._correctPlayersRef) { gameState._correctPlayersRef.off(); gameState._correctPlayersRef = null; } }, 6000);
         }
 
         function loadQCM(q) {
@@ -5683,7 +5792,8 @@
             document.getElementById('pause-fab').classList.remove('visible', 'paused');
             const audioPlayer = document.getElementById('audio-player');
             if (audioPlayer) { audioPlayer.pause(); audioPlayer.src = ''; }
-            gameState.gameInProgress = false; // 🔊 Fin de partie
+            gameState.gameInProgress = false;
+            stopAllBotTimers(); // Arrêter les timers bots // 🔊 Fin de partie
 
             const players = gameState.room.players || [];
             let sorted = [...players].sort((a, b) => {
@@ -5700,49 +5810,97 @@
             }
 
             // Montrer d'abord l'animation podium plein écran (5s)
-            showPodiumAnimation(sorted, () => {
-                showScreen('leaderboard-screen');
-                renderLeaderboard(sorted);
-            });
+            if (gameState.room?.teamMode && gameState.room?.teams?.length) {
+                // Podium équipes
+                const teamScores = getTeamScores();
+                const sortedTeams = [...gameState.room.teams]
+                    .sort((a,b) => (teamScores[b.id]||0) - (teamScores[a.id]||0))
+                    .map(t => ({ name: t.name, score: teamScores[t.id]||0, emoji: '🏆', color: t.color, isTeam: true }));
+                showPodiumAnimation(sortedTeams, () => {
+                    showScreen('leaderboard-screen');
+                    renderLeaderboard(sorted);
+                });
+            } else {
+                showPodiumAnimation(sorted, () => {
+                    showScreen('leaderboard-screen');
+                    renderLeaderboard(sorted);
+                });
+            }
         }
         
         function renderLeaderboard(sorted) {
-            // Podium classique
+            const isTeamMode = gameState.room?.teamMode && gameState.room?.teams?.length;
             const podium = document.getElementById('podium-container');
-            podium.innerHTML = '';
-            const podiumClasses = ['first', 'second', 'third'];
-            const medals = ['🥇','🥈','🥉'];
-            sorted.slice(0, 3).forEach((p, i) => {
-                const div = document.createElement('div');
-                div.className = `podium-item ${podiumClasses[i]}`;
-                div.innerHTML = `
-                    <div class="medal">${medals[i]}</div>
-                    <div class="p-name">${p.emoji || '😎'} ${p.name}</div>
-                    <div class="p-score">${p.score || 0} pts</div>
-                `;
-                podium.appendChild(div);
-            });
-
-            // Liste complète
             const list = document.getElementById('leaderboard-container');
-            list.innerHTML = '<h3 style="color: #00f5ff; margin-bottom: 0.8rem; text-align: center;">🎯 Cette partie</h3><div class="leaderboard-grid"></div>';
-            const grid = list.querySelector('.leaderboard-grid');
-            sorted.forEach((p, i) => {
-                const div = document.createElement('div');
-                const isLast = i === sorted.length - 1 && sorted.length > 1;
-                div.className = 'lb-row' + (isLast ? ' last-place-card' : '');
-                const teamTag = p.team ? `<span class="team-tag ${p.team}">${p.team === 'red' ? '🔴' : '🔵'}</span>` : '';
-                div.innerHTML = `
-                    <span class="rank">#${i + 1}</span>
-                    <span class="name">${p.emoji || '😎'} ${p.name}${teamTag}${isLast ? '<br><span class="last-place-label">🪦 Dernier... courage !</span>' : ''}</span>
-                    <span class="pts">${p.score || 0} pts</span>
-                `;
-                grid.appendChild(div);
-            });
+            const medals = ['🥇','🥈','🥉'];
 
-            // Animation dernier du classement
-            if (sorted.length > 1) {
-                setTimeout(() => triggerLastPlaceAnimation(sorted[sorted.length-1].name), 1500);
+            if (isTeamMode) {
+                // ===== MODE ÉQUIPE =====
+                // Podium : équipes
+                const teams = gameState.room.teams;
+                const teamScores = getTeamScores();
+                const sortedTeams = [...teams].sort((a,b) => (teamScores[b.id]||0) - (teamScores[a.id]||0));
+
+                podium.innerHTML = '';
+                const podiumClasses = ['first','second','third'];
+                sortedTeams.slice(0, 3).forEach((team, i) => {
+                    const div = document.createElement('div');
+                    div.className = `podium-item ${podiumClasses[i]}`;
+                    div.style.borderColor = team.color;
+                    div.innerHTML = `
+                        <div class="medal">${medals[i]}</div>
+                        <div class="p-name" style="color:${team.color}">${team.name}</div>
+                        <div class="p-score">${teamScores[team.id] || 0} pts</div>
+                    `;
+                    podium.appendChild(div);
+                });
+
+                // Liste : top 3 joueurs seulement
+                list.innerHTML = `<h3 style="color:#ffbe0b;margin-bottom:0.8rem;text-align:center;">🏅 Top joueurs</h3><div class="leaderboard-grid"></div>`;
+                const grid = list.querySelector('.leaderboard-grid');
+                sorted.slice(0, 3).forEach((p, i) => {
+                    const team = teams.find(t => t.id === p.teamId);
+                    const div = document.createElement('div');
+                    div.className = 'lb-row';
+                    div.style.borderLeft = `4px solid ${team?.color || '#555'}`;
+                    div.innerHTML = `
+                        <span class="rank">${medals[i]}</span>
+                        <span class="name">${p.emoji||'😎'} ${p.name}${team ? `<span style="color:${team.color};font-size:0.75rem;margin-left:0.3rem;">${team.name}</span>` : ''}</span>
+                        <span class="pts">${p.score||0} pts</span>
+                    `;
+                    grid.appendChild(div);
+                });
+
+            } else {
+                // ===== MODE CLASSIQUE =====
+                podium.innerHTML = '';
+                const podiumClasses = ['first','second','third'];
+                sorted.slice(0, 3).forEach((p, i) => {
+                    const div = document.createElement('div');
+                    div.className = `podium-item ${podiumClasses[i]}`;
+                    div.innerHTML = `
+                        <div class="medal">${medals[i]}</div>
+                        <div class="p-name">${p.emoji||'😎'} ${p.name}</div>
+                        <div class="p-score">${p.score||0} pts</div>
+                    `;
+                    podium.appendChild(div);
+                });
+
+                list.innerHTML = '<h3 style="color:#00f5ff;margin-bottom:0.8rem;text-align:center;">🎯 Cette partie</h3><div class="leaderboard-grid"></div>';
+                const grid = list.querySelector('.leaderboard-grid');
+                sorted.forEach((p, i) => {
+                    const div = document.createElement('div');
+                    const isLast = i === sorted.length - 1 && sorted.length > 1;
+                    div.className = 'lb-row' + (isLast ? ' last-place-card' : '');
+                    div.innerHTML = `
+                        <span class="rank">#${i+1}</span>
+                        <span class="name">${p.emoji||'😎'} ${p.name}${isLast ? '<br><span class="last-place-label">🪦 Dernier... courage !</span>' : ''}</span>
+                        <span class="pts">${p.score||0} pts</span>
+                    `;
+                    grid.appendChild(div);
+                });
+
+                if (sorted.length > 1) setTimeout(() => triggerLastPlaceAnimation(sorted[sorted.length-1].name), 1500);
             }
 
             generateFunStats();
@@ -5751,13 +5909,8 @@
 
             const hostBtn = document.getElementById('host-new-game-btn');
             const playerBtn = document.getElementById('player-rejoin-btn');
-            if (gameState.isHost) {
-                hostBtn.classList.remove('hidden');
-                playerBtn.classList.add('hidden');
-            } else {
-                hostBtn.classList.add('hidden');
-                playerBtn.classList.remove('hidden');
-            }
+            if (gameState.isHost) { hostBtn.classList.remove('hidden'); playerBtn.classList.add('hidden'); }
+            else { hostBtn.classList.add('hidden'); playerBtn.classList.remove('hidden'); }
         }
 
         // ===========================================
@@ -5830,12 +5983,14 @@
                 card.style.display = 'flex';
                 card.style.flexDirection = 'column';
                 card.style.alignItems = 'center';
+                const borderStyle = p.isTeam && p.color ? `border:3px solid ${p.color};border-radius:12px;padding:4px;` : '';
+                const nameColor = p.isTeam && p.color ? `color:${p.color}` : 'color:white';
                 card.innerHTML = `
                     <div class="po-medal">${medals[realRank]}</div>
-                    <div class="po-emoji">${p.emoji || '😎'}</div>
-                    <div class="po-name">${p.name}</div>
-                    <div class="po-score" style="color:${scoreColors[realRank]}">${p.score || 0} pts</div>
-                    <div class="podium-block ${rankClasses[realRank]}" style="width:110px; height:${blockHeights[realRank]};"></div>
+                    <div class="po-emoji" style="${borderStyle}">${p.isTeam ? '🏆' : (p.emoji || '😎')}</div>
+                    <div class="po-name" style="${nameColor}">${p.name}</div>
+                    <div class="po-score" style="color:${p.isTeam && p.color ? p.color : scoreColors[realRank]}">${p.score || 0} pts</div>
+                    <div class="podium-block ${rankClasses[realRank]}" style="width:110px;height:${blockHeights[realRank]};${p.isTeam && p.color ? `background:${p.color}40;border-color:${p.color};` : ''}"></div>
                 `;
                 container.appendChild(card);
             });
@@ -6249,47 +6404,52 @@
         // ===========================================
         function getTeamScores() {
             const players = gameState.room?.players || [];
-            const red = players.filter(p => p.team === 'red').reduce((sum, p) => sum + (p.score || 0), 0);
-            const blue = players.filter(p => p.team === 'blue').reduce((sum, p) => sum + (p.score || 0), 0);
-            return { red, blue };
+            const teams = gameState.room?.teams || [];
+            const scores = {};
+            teams.forEach(t => { scores[t.id] = 0; });
+            players.forEach(p => {
+                if (p.teamId && scores[p.teamId] !== undefined) {
+                    scores[p.teamId] += (p.score || 0);
+                }
+            });
+            return scores;
         }
         
         function displayTeamResults() {
             if (!gameState.room?.teamMode) return;
-            
             const container = document.getElementById('fun-stats-container');
+            const teams = gameState.room.teams || [];
+            const players = gameState.room.players || [];
             const teamScores = getTeamScores();
-            const winner = teamScores.red > teamScores.blue ? 'red' : teamScores.blue > teamScores.red ? 'blue' : 'draw';
             
-            const redPlayers = (gameState.room.players || []).filter(p => p.team === 'red');
-            const bluePlayers = (gameState.room.players || []).filter(p => p.team === 'blue');
+            // Trier les équipes par score
+            const sorted = [...teams].sort((a,b) => (teamScores[b.id]||0) - (teamScores[a.id]||0));
+            const winner = sorted[0];
             
-            let html = `<h3 style="color: #ff006e; text-align: center; margin: 1.5rem 0 1rem;">⚔️ Résultat Équipes</h3>`;
-            html += '<div class="team-banner">';
+            let html = `<h3 style="color:#ffbe0b;text-align:center;margin:1.5rem 0 1rem;">⚔️ Résultat Équipes</h3>
+                <div class="team-results-grid">`;
             
-            html += `<div class="team-card ${winner === 'red' ? 'red' : 'red'}" style="${winner === 'red' ? 'box-shadow: 0 0 20px rgba(239,68,68,0.5);' : ''}">
-                <div class="team-name">${winner === 'red' ? '👑 ' : ''}🔴 Équipe Rouge</div>
-                <div class="team-score">${teamScores.red} pts</div>
-                <div class="team-members">${redPlayers.map(p => (p.emoji || '😎') + ' ' + p.name).join(', ')}</div>
-            </div>`;
-            
-            html += `<div class="team-card ${winner === 'blue' ? 'blue' : 'blue'}" style="${winner === 'blue' ? 'box-shadow: 0 0 20px rgba(59,130,246,0.5);' : ''}">
-                <div class="team-name">${winner === 'blue' ? '👑 ' : ''}🔵 Équipe Bleue</div>
-                <div class="team-score">${teamScores.blue} pts</div>
-                <div class="team-members">${bluePlayers.map(p => (p.emoji || '😎') + ' ' + p.name).join(', ')}</div>
-            </div>`;
+            sorted.forEach((team, i) => {
+                const score = teamScores[team.id] || 0;
+                const teamPlayers = players.filter(p => p.teamId === team.id);
+                const mvp = [...teamPlayers].sort((a,b)=>(b.score||0)-(a.score||0))[0];
+                const isWinner = i === 0 && sorted.length > 1;
+                html += `<div class="team-result-card" style="border-color:${team.color};background:${team.color}15;">
+                    <div class="tr-name" style="color:${team.color}">${isWinner ? '👑 ' : ''}${team.name}</div>
+                    <div class="tr-score">${score} pts</div>
+                    <div class="tr-members">${teamPlayers.map(p=>(p.emoji||'😎')+' '+p.name).join(', ') || '—'}</div>
+                    ${mvp ? `<div class="tr-mvp">⭐ MVP : ${mvp.emoji||'😎'} ${mvp.name}</div>` : ''}
+                </div>`;
+            });
             
             html += '</div>';
-            
-            if (winner !== 'draw') {
-                html += `<p style="text-align: center; color: ${winner === 'red' ? '#ef4444' : '#3b82f6'}; font-size: 1.3rem; font-weight: 800; margin-top: 0.5rem;">
-                    🏆 ${winner === 'red' ? 'Équipe Rouge' : 'Équipe Bleue'} GAGNE !
-                </p>`;
-            } else {
-                html += `<p style="text-align: center; color: #ffbe0b; font-size: 1.3rem; font-weight: 800; margin-top: 0.5rem;">🤝 ÉGALITÉ !</p>`;
+            if (sorted.length > 1) {
+                const isDraw = (teamScores[sorted[0].id]||0) === (teamScores[sorted[1].id]||0);
+                html += isDraw
+                    ? `<p style="text-align:center;color:#ffbe0b;font-size:1.2rem;font-weight:800;">🤝 ÉGALITÉ !</p>`
+                    : `<p style="text-align:center;color:${winner.color};font-size:1.2rem;font-weight:800;">🏆 ${winner.name} GAGNE !</p>`;
             }
             
-            // Insérer AVANT les stats fun
             container.insertAdjacentHTML('afterbegin', html);
         }
 
@@ -6433,6 +6593,291 @@
         function getPlayerEmoji(playerName) {
             const p = gameState.room?.players?.find(pl => pl.name === playerName);
             return p?.emoji || '😎';
+        }
+
+        // =============================================
+        // 🤖 SYSTÈME DE BOTS
+        // =============================================
+        const BOT_NAMES = ['Alice_Bot','Bob_Bot','Charlie_Bot','Diana_Bot','Eddie_Bot',
+            'Fiona_Bot','Greg_Bot','Hana_Bot','Ivan_Bot','Julia_Bot',
+            'Kévin_Bot','Luna_Bot','Maxime_Bot','Nina_Bot','Oscar_Bot'];
+        const BOT_EMOJIS = ['🤖','👾','🦾','🎮','🕹️','💻','🧠','⚡','🔮','🎯'];
+
+        let selectedBotCount = 1;
+        let botTimeouts = [];
+        gameState.botIndices = [];
+
+        function selectBotCount(n) {
+            selectedBotCount = n;
+            document.querySelectorAll('.bot-count-btn').forEach(b =>
+                b.classList.toggle('active', parseInt(b.textContent) === n));
+        }
+
+        function addBots() {
+            if (!gameState.isHost || !gameState.room?.code) return;
+            const existingBots = (gameState.room.players || []).filter(p => p.isBot);
+            const newCount = Math.min(selectedBotCount, 15 - existingBots.length);
+            if (newCount <= 0) return;
+
+            const usedNames = (gameState.room.players || []).map(p => p.name);
+            const availableNames = BOT_NAMES.filter(n => !usedNames.includes(n));
+            const players = [...(gameState.room.players || [])];
+
+            for (let i = 0; i < newCount; i++) {
+                const name = availableNames[i] || `Bot_${Date.now()}_${i}`;
+                const emoji = BOT_EMOJIS[Math.floor(Math.random() * BOT_EMOJIS.length)];
+                players.push({ name, emoji, score: 0, isBot: true, ready: true });
+            }
+            db.ref(`rooms/${gameState.room.code}/players`).set(players);
+        }
+
+        function removeAllBots() {
+            if (!gameState.isHost || !gameState.room?.code) return;
+            stopAllBotTimers();
+            const players = (gameState.room.players || []).filter(p => !p.isBot);
+            db.ref(`rooms/${gameState.room.code}/players`).set(players);
+        }
+
+        function stopAllBotTimers() {
+            botTimeouts.forEach(t => clearTimeout(t));
+            botTimeouts = [];
+        }
+
+        function getBotDelay(speed) {
+            switch(speed) {
+                case 'fast':   return Math.random() * 3000 + 1000;    // 1-4s
+                case 'medium': return Math.random() * 6000 + 4000;    // 4-10s
+                case 'slow':   return Math.random() * 8000 + 10000;   // 10-18s
+                default:       return Math.random() * 17000 + 1000;   // 1-18s mixte
+            }
+        }
+
+        function runBotsForQuestion() {
+            if (!gameState.isHost) return;
+            stopAllBotTimers();
+
+            const q = gameState.room.questions?.[gameState.room.currentQ];
+            if (!q) return;
+
+            const bots = (gameState.room.players || [])
+                .map((p, i) => ({ ...p, idx: i }))
+                .filter(p => p.isBot);
+            if (bots.length === 0) return;
+
+            const speed = document.getElementById('bot-speed-select')?.value || 'mixed';
+            const timerDuration = q.type === 'writing' ? 30 : 20;
+
+            bots.forEach(bot => {
+                const delay = getBotDelay(speed);
+                if (delay >= timerDuration * 1000 - 500) return; // trop lent, pas le temps
+
+                const t = setTimeout(() => {
+                    if (gameState.room.currentQ !== q.questionIndex && gameState.room.questions[gameState.room.currentQ] !== q) return;
+
+                    // Décider si le bot répond correctement (70% de chance)
+                    const isCorrect = Math.random() < 0.70;
+                    const timeLeft = Math.max(0, timerDuration - Math.floor(delay / 1000));
+
+                    let pts = 0;
+                    if (isCorrect) {
+                        pts = q.type === 'qcm' ? (50 + timeLeft * 10) : (100 + timeLeft * 5);
+                    }
+
+                    const newScore = (bot.score || 0) + pts;
+                    const answer = isCorrect ? (q.answer || q.title || '') : 'mauvaise_réponse';
+
+                    // Écrire la réponse du bot
+                    const safeName = bot.name.replace(/[.#$[\]]/g, '_');
+                    db.ref(`rooms/${gameState.room.code}/lastAnswers/${safeName}`).set({
+                        answer, correct: isCorrect, score: pts,
+                        time: timeLeft, responseTime: timeLeft,
+                        questionIndex: gameState.room.currentQ
+                    });
+                    // Mettre à jour le score du bot
+                    db.ref(`rooms/${gameState.room.code}/players/${bot.idx}`).update({
+                        score: newScore, lastAnswerTime: Date.now()
+                    });
+                }, delay);
+
+                botTimeouts.push(t);
+            });
+        }
+
+        // Indicateur visuel bot dans la liste des joueurs (déjà géré dans updatePlayersList)
+
+        function toggleBotModal() {
+            const modal = document.getElementById('bot-modal');
+            const bg = document.getElementById('bot-modal-bg');
+            const open = modal.style.display === 'none' || !modal.style.display;
+            modal.style.display = open ? 'block' : 'none';
+            bg.style.display = open ? 'block' : 'none';
+        }
+
+        // =============================================
+        // 👥 NOUVEAU MODE ÉQUIPES
+        // =============================================
+
+        const TEAM_PRESETS = [
+            { name: 'Équipe Rouge',    color: '#ef4444' },
+            { name: 'Équipe Bleue',    color: '#3b82f6' },
+            { name: 'Équipe Verte',    color: '#22c55e' },
+            { name: 'Équipe Orange',   color: '#f97316' },
+            { name: 'Équipe Violette', color: '#a855f7' },
+            { name: 'Équipe Jaune',    color: '#eab308' },
+            { name: 'Équipe Rose',     color: '#ec4899' },
+            { name: 'Équipe Cyan',     color: '#06b6d4' },
+            { name: 'Équipe Blanc',    color: '#e2e8f0' },
+            { name: 'Équipe Or',       color: '#f59e0b' },
+        ];
+
+        let currentTeamCount = 2;
+
+        function toggleTeamConfigUI() {
+            const checked = document.getElementById('team-mode').checked;
+            const section = document.getElementById('team-config-section');
+            section.classList.toggle('visible', checked);
+            if (checked) renderTeamInputs(currentTeamCount);
+        }
+
+        function setTeamCount(n) {
+            currentTeamCount = n;
+            document.querySelectorAll('.team-count-btn').forEach(b => {
+                b.classList.toggle('active', parseInt(b.textContent) === n);
+            });
+            renderTeamInputs(n);
+        }
+
+        function renderTeamInputs(n) {
+            const container = document.getElementById('teams-inputs');
+            container.innerHTML = '';
+            for (let i = 0; i < n; i++) {
+                const preset = TEAM_PRESETS[i] || { name: `Équipe ${i+1}`, color: '#ffffff' };
+                container.innerHTML += `
+                    <div class="team-input-row">
+                        <div class="team-color-dot" id="team-color-dot-${i}" style="background:${preset.color};" onclick="cycleTeamColor(${i})"></div>
+                        <input class="team-name-input" id="team-name-input-${i}" value="${preset.name}" maxlength="20" placeholder="Nom équipe">
+                        <input type="hidden" id="team-color-val-${i}" value="${preset.color}">
+                    </div>`;
+            }
+        }
+
+        function cycleTeamColor(i) {
+            const colors = ['#ef4444','#3b82f6','#22c55e','#f97316','#a855f7','#eab308','#ec4899','#06b6d4','#f59e0b','#10b981'];
+            const valEl = document.getElementById(`team-color-val-${i}`);
+            const dotEl = document.getElementById(`team-color-dot-${i}`);
+            const idx = (colors.indexOf(valEl.value) + 1) % colors.length;
+            valEl.value = colors[idx];
+            dotEl.style.background = colors[idx];
+        }
+
+        function getTeamsFromUI() {
+            const teams = [];
+            for (let i = 0; i < currentTeamCount; i++) {
+                const name = document.getElementById(`team-name-input-${i}`)?.value || TEAM_PRESETS[i]?.name || `Équipe ${i+1}`;
+                const color = document.getElementById(`team-color-val-${i}`)?.value || TEAM_PRESETS[i]?.color || '#ffffff';
+                teams.push({ id: `t${i}`, name: name.trim(), color });
+            }
+            return teams;
+        }
+
+        // LOBBY : afficher les colonnes équipes + pool non assignés
+        function renderTeamLobby() {
+            if (!gameState.room?.teamMode || !gameState.room?.teams?.length) {
+                document.getElementById('teams-lobby-container').classList.remove('visible');
+                document.getElementById('unassigned-pool-container').style.display = 'none';
+                return;
+            }
+
+            const teams = gameState.room.teams;
+            const players = (gameState.room.players || []).filter(p =>
+                !gameState.room.hostMode || p.name !== gameState.room.host
+            );
+            const unassigned = players.filter(p => !p.teamId || !teams.find(t => t.id === p.teamId));
+            const lobbyContainer = document.getElementById('teams-lobby-container');
+            const unassignedContainer = document.getElementById('unassigned-pool-container');
+            const unassignedList = document.getElementById('unassigned-players-list');
+
+            // Pool non assignés (hôte seulement)
+            if (gameState.isHost && unassigned.length > 0) {
+                unassignedContainer.style.display = 'block';
+                unassignedList.innerHTML = '';
+                unassigned.forEach(p => {
+                    const row = document.createElement('div');
+                    row.className = 'team-lobby-player';
+                    row.innerHTML = `<span>${p.emoji||'😎'} ${p.name}</span>
+                        <select class="assign-select" onchange="assignPlayerToTeam('${p.name.replace(/'/g,"\\'")}', this.value)">
+                            <option value="">→ équipe</option>
+                            ${teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+                        </select>`;
+                    unassignedList.appendChild(row);
+                });
+            } else {
+                unassignedContainer.style.display = 'none';
+            }
+
+            // Colonnes équipes
+            lobbyContainer.classList.add('visible');
+            lobbyContainer.innerHTML = '';
+            teams.forEach(team => {
+                const teamPlayers = players.filter(p => p.teamId === team.id);
+                const col = document.createElement('div');
+                col.className = 'team-lobby-col';
+                col.style.cssText = `border-color:${team.color};background:${team.color}10;`;
+                col.innerHTML = `<h4 style="color:${team.color}">${team.name} (${teamPlayers.length})</h4>
+                    <div class="team-lobby-members">
+                        ${teamPlayers.length === 0
+                            ? '<span style="color:#555;font-size:0.75rem;">vide</span>'
+                            : teamPlayers.map(p => `
+                                <div class="team-lobby-player">
+                                    <span>${p.emoji||'😎'} ${p.name}</span>
+                                    ${gameState.isHost ? `<button class="assign-btn" onclick="removePlayerFromTeam('${p.name.replace(/'/g,"\\'")}')">✕</button>` : ''}
+                                </div>`).join('')}
+                    </div>`;
+                lobbyContainer.appendChild(col);
+            });
+        }
+
+        function assignPlayerToTeam(playerName, teamId) {
+            if (!gameState.isHost || !gameState.room?.code) return;
+            const idx = gameState.room.players.findIndex(p => p.name === playerName);
+            if (idx === -1) return;
+            db.ref(`rooms/${gameState.room.code}/players/${idx}/teamId`).set(teamId || null);
+        }
+
+        function removePlayerFromTeam(playerName) {
+            assignPlayerToTeam(playerName, null);
+        }
+
+        function randomAssignTeams() {
+            if (!gameState.isHost || !gameState.room?.teams?.length) return;
+            const teams = gameState.room.teams;
+            const players = (gameState.room.players || []).filter(p =>
+                !gameState.room.hostMode || p.name !== gameState.room.host
+            );
+            // Mélanger les joueurs
+            const shuffled = [...players].sort(() => Math.random() - 0.5);
+            const updates = {};
+            shuffled.forEach((p, i) => {
+                const teamId = teams[i % teams.length].id;
+                const idx = gameState.room.players.findIndex(pl => pl.name === p.name);
+                if (idx !== -1) updates[`players/${idx}/teamId`] = teamId;
+            });
+            db.ref(`rooms/${gameState.room.code}`).update(updates);
+        }
+
+        // Afficher badge équipe sur l'écran du joueur pendant le jeu
+        function updateTeamBadge() {
+            const badgeEl = document.getElementById('player-team-badge');
+            if (!badgeEl || !gameState.room?.teamMode || !gameState.room?.teams) {
+                if (badgeEl) badgeEl.style.display = 'none';
+                return;
+            }
+            const player = gameState.room.players?.[gameState.playerIndex];
+            if (!player?.teamId) { badgeEl.style.display = 'none'; return; }
+            const team = gameState.room.teams.find(t => t.id === player.teamId);
+            if (!team) { badgeEl.style.display = 'none'; return; }
+            badgeEl.style.display = 'block';
+            badgeEl.innerHTML = `<span class="team-badge" style="background:${team.color}20;border:1px solid ${team.color};color:${team.color};">${team.name}</span>`;
         }
 
         // =============================================
@@ -7341,7 +7786,7 @@
                     speedHtml += `<div class="speed-row">
                         <span class="speed-rank">${medals[i]}</span>
                         <span class="speed-name">${getPlayerEmoji(p.name)} ${p.name}</span>
-                        <span class="speed-time">${p.avgTime.toFixed(1)}s en moyenne</span>
+                        <span class="speed-time">⌀ ${p.avgTime.toFixed(1)}s / question</span>
                     </div>`;
                 });
                 speedHtml += '</div>';
