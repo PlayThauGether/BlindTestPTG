@@ -2961,12 +2961,18 @@
             // Musique d'ambiance : bloquée dès que la partie est lancée (gameInProgress)
             // et jusqu'au retour au menu / leaderboard
             const isGameScreen = gameState.gameInProgress && screenId !== 'leaderboard-screen';
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             const amb = document.getElementById('ambient-audio');
             if (amb && amb.src && !amb.src.endsWith('/ambient-audio')) {
                 if (isGameScreen) {
                     // Couper et garder coupée pendant toute la partie
                     if (window._ambFadeInterval) { clearInterval(window._ambFadeInterval); window._ambFadeInterval = null; }
-                    if (!amb.paused) {
+                    // iOS ignore les changements de volume JS → pause directe obligatoire
+                    if (isIOS || !amb.paused) {
+                        amb.pause();
+                        amb.volume = 0.35;
+                    }
+                    if (!isIOS && !amb.paused) {
                         window._ambFadeInterval = setInterval(() => {
                             if (amb.volume > 0.05) amb.volume = Math.max(0, amb.volume - 0.05);
                             else { amb.pause(); amb.volume = 0.35; clearInterval(window._ambFadeInterval); }
