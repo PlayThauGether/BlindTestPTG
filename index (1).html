@@ -1,0 +1,3107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- Anti-cache : toujours la dernière version -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="app-version" content="7.0">
+<title>BuzzQuiz ⚡</title>
+<link rel="manifest" href="./manifest.webmanifest" />
+<meta name="theme-color" content="#0d0b1f">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   BuzzQuiz v7 — DA conservée : nuit électrique + corail
+   Inspiré de l'architecture du Blind Test PTG
+   ============================================================ */
+:root {
+  --bg:        #0d0b1f;
+  --bg-soft:   #181432;
+  --panel:     #211b45;
+  --panel-2:   #2c2458;
+  --ink:       #f4f1ff;
+  --ink-dim:   #a59fce;
+  --accent:    #ff5c7a;
+  --accent-2:  #ffd166;
+  --mint:      #4be3b0;
+  --gold:      #ffd700;
+  --silver:    #c0c0c0;
+  --bronze:    #cd7f32;
+  --line:      rgba(255,255,255,.10);
+  --radius:    20px;
+
+  --q1: #5b8dff;
+  --q2: #ff5c7a;
+  --q3: #ffd166;
+  --q4: #4be3b0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow-x: hidden;
+}
+.app { min-height: 100vh; position: relative; }
+.bg {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; z-index: -1;
+  background:
+    radial-gradient(900px 600px at 80% -10%, rgba(255,92,122,.18), transparent 60%),
+    radial-gradient(700px 500px at -10% 100%, rgba(75,227,176,.14), transparent 55%),
+    var(--bg);
+}
+
+/* Étoiles flottantes (sur menu et lobby) */
+.stars { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.star {
+  position: absolute; font-size: 18px; opacity: 0;
+  animation: starFloat 6s linear infinite;
+}
+@keyframes starFloat {
+  0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.7; }
+  100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+}
+
+/* ============================================================
+   ÉCRANS
+   ============================================================ */
+.screen { display: none; min-height: 100dvh; padding: 24px; }
+.screen.active { display: block; animation: screenIn .3s ease; }
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.wrap { max-width: 540px; margin: 0 auto; }
+.wrap-wide { max-width: 1280px; margin: 0 auto; }
+
+h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 900; line-height: 1.05; }
+.logo { font-family: 'Fraunces', serif; font-weight: 900; font-size: 30px; letter-spacing: -.5px; }
+.logo .spark { color: var(--accent); }
+.tagline { color: var(--ink-dim); margin-top: 6px; font-size: 15px; }
+
+/* ============================================================
+   COMPOSANTS
+   ============================================================ */
+.card {
+  background: linear-gradient(180deg, var(--panel), var(--bg-soft));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+
+.btn {
+  font-family: 'Outfit'; font-weight: 700; font-size: 16px;
+  border: none; border-radius: 14px; padding: 16px 20px;
+  width: 100%; cursor: pointer; color: var(--bg);
+  background: var(--accent-2);
+  transition: transform .08s ease, filter .15s ease;
+}
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.mint { background: var(--mint); color: #06281d; }
+.btn:disabled { filter: grayscale(.7) brightness(.7); cursor: not-allowed; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-row .btn { width: auto; flex: 1; min-width: 120px; }
+.btn-xl { font-size: 19px; padding: 20px 22px; }
+
+label, .lbl-text {
+  display: block; font-size: 13px; color: var(--ink-dim);
+  margin: 16px 0 7px; font-weight: 500;
+}
+input, select {
+  width: 100%; font-family: 'Outfit'; font-size: 17px;
+  color: var(--ink); background: var(--bg-soft);
+  border: 1px solid var(--line); border-radius: 13px; padding: 14px 16px;
+}
+input:focus, select:focus { outline: 2px solid var(--accent); }
+input.code-input {
+  text-transform: uppercase; letter-spacing: 8px; text-align: center;
+  font-family: 'Fraunces'; font-weight: 900; font-size: 30px;
+}
+
+.link-btn {
+  background: none; border: none; color: var(--ink-dim);
+  font-family: 'Outfit'; font-size: 14px; cursor: pointer;
+  text-decoration: underline; padding: 6px;
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
+}
+
+.section-title {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--ink-dim); margin: 22px 0 8px; font-weight: 700;
+}
+
+.muted { color: var(--ink-dim); font-size: 14px; }
+
+/* Pastilles d'état */
+.status-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 700; padding: 6px 12px;
+  border-radius: 999px;
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; }
+.status-idle     { background: rgba(165,159,206,.15); color: var(--ink-dim); }
+.status-idle     .dot { background: var(--ink-dim); }
+.status-armed    { background: rgba(75,227,176,.15); color: var(--mint); }
+.status-armed    .dot { background: var(--mint); animation: pulse 1.1s infinite; }
+.status-locked   { background: rgba(255,92,122,.15); color: var(--accent); }
+.status-locked   .dot { background: var(--accent); }
+.status-revealed { background: rgba(255,209,102,.18); color: var(--accent-2); }
+.status-revealed .dot { background: var(--accent-2); }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* ============================================================
+   MENU
+   ============================================================ */
+#screen-menu .hero { text-align: center; padding: 56px 0 32px; }
+#screen-menu .hero .logo { font-size: 54px; }
+.menu-buttons { display: grid; gap: 14px; }
+.menu-btn {
+  text-align: left; border: 1px solid var(--line);
+  background: linear-gradient(140deg, var(--panel-2), var(--panel));
+  border-radius: var(--radius); padding: 22px; cursor: pointer;
+  display: flex; gap: 16px; align-items: center;
+  transition: transform .1s ease, border-color .15s;
+  color: var(--ink); font-family: 'Outfit'; font-size: 16px;
+  width: 100%;
+}
+.menu-btn:hover { border-color: var(--accent); }
+.menu-btn:active { transform: scale(.98); }
+.menu-btn .emoji {
+  font-size: 30px; width: 56px; height: 56px; flex: none;
+  display: grid; place-items: center; border-radius: 16px;
+  background: var(--bg-soft);
+}
+.menu-btn h3 { font-size: 19px; }
+.menu-btn p { color: var(--ink-dim); font-size: 14px; margin-top: 3px; }
+
+.menu-foot { text-align: center; color: var(--ink-dim);
+  font-size: 12px; margin-top: 32px; }
+
+/* ============================================================
+   ÉCRAN CRÉER UNE PARTIE
+   ============================================================ */
+.option-group {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 6px;
+}
+.option-btn {
+  background: var(--bg-soft); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: 13px 18px; font-family: 'Outfit'; font-weight: 700; font-size: 15px;
+  cursor: pointer; transition: border-color .15s, transform .08s;
+  flex: 1; min-width: 65px;
+}
+.option-btn:hover { border-color: var(--accent); }
+.option-btn:active { transform: scale(.96); }
+.option-btn.active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+
+.playlist-list { display: grid; gap: 10px; margin-top: 10px; max-height: 320px; overflow-y: auto; }
+.playlist-item {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 16px; cursor: pointer;
+  transition: border-color .15s;
+}
+.playlist-item:hover { border-color: var(--accent); }
+.playlist-item.selected { border-color: var(--accent); background: rgba(255,92,122,.08); }
+.playlist-item.disabled { opacity: 0.42; cursor: not-allowed; }
+.playlist-item .pl-name { font-family: 'Fraunces'; font-weight: 900; font-size: 17px; }
+.playlist-item .pl-meta { color: var(--ink-dim); font-size: 12px; margin-top: 3px; }
+.playlist-item .pl-badge {
+  display: inline-block; background: var(--accent-2); color: var(--bg);
+  font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  margin-right: 6px;
+}
+.playlist-item .pl-incompat {
+  font-size: 11px; color: var(--accent); margin-top: 5px; font-style: italic;
+}
+
+.import-zone {
+  margin-top: 10px; border: 2px dashed var(--line); border-radius: 12px;
+  padding: 12px; text-align: center;
+}
+.import-zone input[type=file] { display: none; }
+.import-zone label {
+  cursor: pointer; color: var(--accent); font-weight: 700;
+  margin: 0; display: inline-block; font-size: 14px;
+}
+
+/* Toggle (mode équipes) */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 12px; padding: 14px 16px; margin-top: 10px;
+}
+.toggle-row .toggle-label { font-weight: 700; }
+.toggle-row .toggle-desc { color: var(--ink-dim); font-size: 12px; margin-top: 2px; }
+.toggle-switch {
+  position: relative; width: 50px; height: 28px;
+  background: var(--panel-2); border-radius: 999px;
+  cursor: pointer; transition: background .2s;
+  flex: none; margin-left: 12px;
+}
+.toggle-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; background: #fff; border-radius: 50%;
+  transition: left .2s;
+}
+.toggle-switch.on { background: var(--accent); }
+.toggle-switch.on::after { left: 25px; }
+
+/* ============================================================
+   ÉQUIPES — couleurs et composants
+   ============================================================ */
+.team-color-0 { --team-c: #ff5c7a; --team-cd: #3a0810; }   /* rouge */
+.team-color-1 { --team-c: #5b8dff; --team-cd: #0a1840; }   /* bleu */
+.team-color-2 { --team-c: #4be3b0; --team-cd: #053023; }   /* vert */
+.team-color-3 { --team-c: #ffd166; --team-cd: #3a2b06; }   /* jaune */
+.team-color-4 { --team-c: #b58dff; --team-cd: #1b0e3a; }   /* violet */
+.team-color-5 { --team-c: #ff9f4a; --team-cd: #3a1d05; }   /* orange */
+
+/* Badges d'équipe dans les listes */
+.team-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; padding: 3px 9px; border-radius: 999px;
+  font-weight: 700; color: var(--team-cd);
+  background: var(--team-c);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Cartes de sélection d'équipe (côté joueur) */
+.team-picker { display: grid; gap: 10px; margin-top: 6px; }
+.team-pick-card {
+  background: var(--bg-soft); border: 2px solid var(--line);
+  border-radius: 14px; padding: 14px 16px; cursor: pointer;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color .15s, transform .08s;
+}
+.team-pick-card:hover { border-color: var(--team-c); }
+.team-pick-card:active { transform: scale(.98); }
+.team-pick-card.selected {
+  border-color: var(--team-c);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--team-c) 18%, var(--bg-soft)), var(--bg-soft));
+}
+.team-pick-card .team-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--team-c); flex: none;
+}
+.team-pick-card .team-info { flex: 1; }
+.team-pick-card .team-name {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 18px;
+}
+.team-pick-card .team-count {
+  color: var(--ink-dim); font-size: 12px; margin-top: 2px;
+}
+
+/* Inputs pour nommer les équipes côté création */
+.team-name-input-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 6px;
+}
+.team-name-input-row .team-color-chip {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--team-c); flex: none;
+}
+.team-name-input-row input { flex: 1; padding: 10px 14px; font-size: 15px; }
+
+/* Scoreboard / podium en mode équipes */
+.team-score-row {
+  display: flex; align-items: center; gap: 12px;
+  border-radius: 12px; padding: 12px 14px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  animation: slideIn .25s ease;
+}
+.team-score-row .ts-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--team-c); flex: none;
+}
+.team-score-row .ts-rank {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 18px;
+  width: 28px; text-align: center; color: var(--ink);
+}
+.team-score-row .ts-name {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 17px; flex: 1;
+}
+.team-score-row .ts-members {
+  color: var(--ink-dim); font-size: 12px; font-weight: 500;
+  margin-left: 6px;
+}
+.team-score-row .ts-pts {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 22px; color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
+.team-score-row.rank-1 { background: linear-gradient(120deg, color-mix(in srgb, var(--team-c) 28%, var(--bg-soft)), var(--bg-soft)); border-color: var(--team-c); }
+
+/* Podium équipes — barres colorées */
+.team-podium-bar {
+  margin-top: 12px; border-radius: 12px 12px 0 0;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 14px;
+  font-family: 'Fraunces'; font-weight: 900; font-size: 36px;
+  background: var(--team-c); color: var(--team-cd);
+}
+.podium-spot.podium-1 .team-podium-bar { height: 180px; }
+.podium-spot.podium-2 .team-podium-bar { height: 130px; }
+.podium-spot.podium-3 .team-podium-bar { height: 100px; }
+
+/* ============================================================
+   LOBBY
+   ============================================================ */
+.lobby-grid {
+  display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;
+}
+@media (max-width: 860px) { .lobby-grid { grid-template-columns: 1fr; } }
+
+.room-pill {
+  display: flex; align-items: baseline; gap: 8px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  padding: 8px 14px; border-radius: 999px;
+}
+.room-pill .lbl { font-size: 11px; color: var(--ink-dim);
+  text-transform: uppercase; letter-spacing: 1px; }
+.room-pill .code {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 20px; letter-spacing: 3px; color: var(--accent-2);
+}
+
+.big-code-box {
+  background: var(--bg-soft); border: 2px dashed var(--accent-2);
+  border-radius: 18px; padding: 22px; text-align: center;
+}
+.big-code-box .big-code-lbl {
+  font-size: 12px; color: var(--accent-2); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+}
+.big-code-box .big-code {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 64px; color: var(--ink); letter-spacing: 12px;
+  margin: 6px 0 4px;
+}
+@media (max-width: 600px) {
+  .big-code-box .big-code { font-size: 44px; letter-spacing: 8px; }
+}
+
+.qr-holder {
+  background: #fff; padding: 14px; border-radius: 16px;
+  display: inline-block;
+}
+.qr-holder canvas { display: block; width: 200px; height: 200px; }
+
+.players-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 360px; overflow-y: auto; }
+.player-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 14px;
+  animation: slideIn .25s ease;
+}
+@keyframes slideIn { from{opacity:0; transform:translateY(6px);} to{opacity:1;} }
+.player-row .p-emoji { font-size: 22px; width: 32px; text-align: center; }
+.player-row .p-name { font-weight: 700; flex: 1; }
+.player-row .p-ready {
+  font-size: 12px; color: var(--mint); font-weight: 700;
+}
+.player-row .p-ready.not-ready { color: var(--ink-dim); }
+.player-row .p-team-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px; color: #fff;
+  font-weight: 700;
+}
+.player-row .p-kick {
+  background: rgba(255,92,122,.18); color: var(--accent);
+  border: none; width: 26px; height: 26px; border-radius: 50%;
+  cursor: pointer; font-size: 14px; line-height: 1;
+}
+
+.ready-pulse {
+  background: var(--mint); color: #06281d;
+  animation: readyPulse 1.5s infinite;
+}
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(75,227,176,.5); }
+  50%      { box-shadow: 0 0 0 12px rgba(75,227,176,0); }
+}
+
+/* ============================================================
+   ÉCRAN JOIN
+   ============================================================ */
+.emoji-picker {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px;
+  max-height: 200px; overflow-y: auto;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px; margin-top: 6px;
+}
+.emoji-pick {
+  background: transparent; border: 2px solid transparent;
+  font-size: 22px; padding: 6px; border-radius: 10px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.emoji-pick:hover { background: var(--panel-2); }
+.emoji-pick.selected {
+  border-color: var(--accent); background: rgba(255,92,122,.15);
+}
+@media (max-width: 480px) {
+  .emoji-picker { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* ============================================================
+   COMPTE À REBOURS DE DÉPART (10s)
+   ============================================================ */
+#screen-countdown {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: var(--bg); align-items: center; justify-content: center;
+  flex-direction: column;
+}
+#screen-countdown.active { display: flex; }
+.countdown-title {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(22px, 4vw, 36px);
+  color: var(--accent); margin-bottom: 4px;
+}
+.countdown-subtitle { color: var(--ink-dim); font-size: 18px; margin-bottom: 30px; }
+.countdown-num {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(120px, 30vw, 240px);
+  color: var(--ink); line-height: 1;
+  animation: cdBounce .8s ease;
+}
+.countdown-num.danger { color: var(--accent); animation: cdBounceDanger .6s ease; }
+@keyframes cdBounce {
+  0% { transform: scale(.3); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes cdBounceDanger {
+  0% { transform: scale(.4); opacity: 0; }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================
+   ÉCRAN PROJECTION (hôte écran principal pendant le jeu)
+   ============================================================ */
+.proj-grid {
+  display: grid; grid-template-columns: 1fr 320px; gap: 20px;
+}
+@media (max-width: 980px) { .proj-grid { grid-template-columns: 1fr; } }
+
+.proj-question {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(28px, 4.5vw, 52px); line-height: 1.12;
+  margin: 16px 0 14px; min-height: 1.2em;
+}
+.proj-question.empty { color: var(--ink-dim); font-family: 'Outfit'; font-weight: 400; font-style: italic; font-size: 22px; }
+
+.q-number {
+  font-family: 'Outfit'; font-size: 13px; color: var(--ink-dim);
+  letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700;
+}
+
+.progress {
+  background: var(--bg-soft); border-radius: 999px; height: 6px;
+  overflow: hidden; margin-top: 10px;
+}
+.progress .fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width .3s ease;
+}
+
+/* Timer en barre + chiffre */
+.timer-bar {
+  height: 10px; background: var(--bg-soft); border-radius: 999px;
+  overflow: hidden; margin: 12px 0;
+}
+.timer-bar .timer-fill {
+  height: 100%; background: linear-gradient(90deg, var(--mint), var(--accent-2), var(--accent));
+  transition: width 0.5s linear;
+}
+.qcm-countdown {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 18px;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.qcm-countdown .cd-num { font-size: 24px; color: var(--mint); }
+.qcm-countdown.warn .cd-num { color: var(--accent-2); }
+.qcm-countdown.danger .cd-num { color: var(--accent); animation: pulse 0.6s infinite; }
+.qcm-countdown .cd-lbl {
+  font-family: 'Outfit'; font-size: 12px; color: var(--ink-dim);
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+}
+
+/* QCM — 4 choix sur l'écran projection */
+.qcm-choices {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px;
+}
+.qcm-choice {
+  border: none; padding: 22px 18px; border-radius: 16px;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(18px, 2.2vw, 24px); color: #fff;
+  text-align: left;
+  display: flex; align-items: center; gap: 14px;
+  min-height: 86px;
+  transition: transform .15s ease, opacity .15s ease, outline .15s;
+  position: relative;
+}
+.qcm-choice .qcm-letter { font-size: clamp(22px, 2.6vw, 30px); width: 40px; flex: none; opacity: .85; }
+.qcm-choice.c0 { background: var(--q1); color: #0a1840; }
+.qcm-choice.c1 { background: var(--q2); color: #3a0810; }
+.qcm-choice.c2 { background: var(--q3); color: #3a2b06; }
+.qcm-choice.c3 { background: var(--q4); color: #053023; }
+.qcm-choice.correct { outline: 5px solid #fff; transform: scale(1.03); }
+.qcm-choice.wrong { opacity: .3; }
+.qcm-votes {
+  position: absolute; top: 8px; right: 12px;
+  font-family: 'Outfit'; font-weight: 700; font-size: 14px;
+  background: rgba(0,0,0,.3); color: #fff; padding: 2px 9px; border-radius: 999px;
+}
+
+/* Classement / scoreboard */
+.score-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 480px; overflow-y: auto; }
+.score-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 14px;
+  animation: slideIn .25s ease;
+}
+.score-row.rank-1 {
+  background: linear-gradient(120deg, rgba(255,215,0,.22), var(--bg-soft));
+  border-color: rgba(255,215,0,.5);
+}
+.score-row.rank-2 { background: linear-gradient(120deg, rgba(192,192,192,.16), var(--bg-soft)); border-color: rgba(192,192,192,.4); }
+.score-row.rank-3 { background: linear-gradient(120deg, rgba(205,127,50,.18), var(--bg-soft)); border-color: rgba(205,127,50,.4); }
+.score-row .s-rank {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 20px;
+  width: 32px; flex: none; text-align: center;
+}
+.score-row .s-emoji { font-size: 22px; }
+.score-row .s-name { font-weight: 700; flex: 1; }
+.score-row .s-pts {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 20px;
+  color: var(--accent-2); font-variant-numeric: tabular-nums;
+}
+.score-row .s-gap { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+
+/* ============================================================
+   JOUEUR (téléphone)
+   ============================================================ */
+#screen-player .player-wrap { display: flex; flex-direction: column; min-height: 100dvh; }
+
+.player-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 10px;
+}
+.player-info {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: var(--ink-dim);
+}
+.player-info .me-emoji { font-size: 24px; }
+.player-info .me-score {
+  font-family: 'Fraunces'; font-weight: 900; color: var(--accent-2);
+  font-size: 18px;
+}
+.player-mode-hint {
+  font-family: 'Fraunces'; font-weight: 600;
+  font-size: 17px; color: var(--ink-dim);
+  text-align: center; margin: 14px 8px 0;
+}
+
+.buzzer-zone { flex: 1; display: grid; place-items: center; padding: 16px 0; }
+
+.buzzer {
+  width: min(78vw, 340px); aspect-ratio: 1;
+  border-radius: 50%; border: none; cursor: pointer;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(32px, 9vw, 52px); color: #fff;
+  position: relative; transition: transform .06s ease;
+  background: radial-gradient(circle at 38% 32%, #ff8aa0, var(--accent) 55%, #c8324f);
+  box-shadow:
+    0 0 0 10px rgba(255,92,122,.16),
+    0 22px 50px rgba(255,92,122,.45),
+    inset 0 -14px 28px rgba(0,0,0,.32),
+    inset 0 10px 22px rgba(255,255,255,.30);
+}
+.buzzer::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(255,92,122,.5);
+}
+.buzzer.armed::after { animation: ring 1.4s infinite; }
+@keyframes ring {
+  0% { box-shadow: 0 0 0 0 rgba(255,92,122,.55); }
+  100% { box-shadow: 0 0 0 40px rgba(255,92,122,0); }
+}
+.buzzer:active { transform: scale(.93); }
+.buzzer:disabled { cursor: not-allowed; }
+.buzzer.waiting {
+  background: radial-gradient(circle at 38% 32%, #4a4470, #2c2458 60%, #1d1840);
+  color: var(--ink-dim);
+}
+.buzzer.done {
+  background: radial-gradient(circle at 38% 32%, #7ff0c8, var(--mint) 55%, #2bbf8e);
+  color: #06281d;
+}
+
+.qcm-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  padding: 12px; flex: 1;
+}
+.qcm-btn {
+  border: none; border-radius: 18px; color: #fff;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(17px, 4.5vw, 24px); cursor: pointer;
+  padding: 18px 14px; min-height: 130px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 8px; transition: transform .08s ease, opacity .15s ease, outline .15s;
+  text-align: left;
+}
+.qcm-btn .qcm-letter { font-size: clamp(22px, 5.5vw, 28px); opacity: .85; }
+.qcm-btn.c0 { background: var(--q1); color: #0a1840; }
+.qcm-btn.c1 { background: var(--q2); color: #3a0810; }
+.qcm-btn.c2 { background: var(--q3); color: #3a2b06; }
+.qcm-btn.c3 { background: var(--q4); color: #053023; }
+.qcm-btn:active { transform: scale(.96); }
+.qcm-btn:disabled { cursor: not-allowed; }
+.qcm-btn.chosen { outline: 4px solid #fff; }
+.qcm-btn.not-chosen { opacity: .35; }
+
+.player-question-screen {
+  font-family: 'Fraunces'; font-weight: 600;
+  font-size: clamp(17px, 4.5vw, 22px); line-height: 1.25;
+  text-align: center; margin: 10px 14px 4px;
+}
+
+.player-result { text-align: center; margin: 14px 0; min-height: 60px; }
+.result-rank { font-family: 'Fraunces'; font-weight: 900; font-size: 44px; }
+.result-rank.r1 { color: var(--mint); }
+.result-rank.wrong { color: var(--accent); font-size: 32px; }
+.result-msg { color: var(--ink-dim); font-size: 15px; margin-top: 2px; }
+.result-pts {
+  font-family: 'Fraunces'; font-weight: 900;
+  color: var(--accent-2); font-size: 28px; margin-top: 4px;
+}
+
+.player-foot { text-align: center; padding: 12px 0; }
+
+/* ============================================================
+   PODIUM
+   ============================================================ */
+.podium-stage {
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 12px; margin: 36px auto;
+  max-width: 600px;
+}
+.podium-spot {
+  flex: 1; max-width: 180px; text-align: center;
+  animation: podiumRise .8s ease-out;
+}
+@keyframes podiumRise {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.podium-spot .p-emoji { font-size: 44px; }
+.podium-spot .p-name {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 18px; margin: 6px 0 4px;
+}
+.podium-spot .p-score {
+  font-family: 'Fraunces'; font-weight: 900;
+  color: var(--accent-2); font-size: 22px;
+}
+.podium-bar {
+  margin-top: 12px; border-radius: 12px 12px 0 0;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 14px;
+  font-family: 'Fraunces'; font-weight: 900; font-size: 36px;
+}
+.podium-1 .podium-bar { height: 180px; background: linear-gradient(180deg, var(--gold), #b8860b); color: #3a2b06; }
+.podium-2 .podium-bar { height: 130px; background: linear-gradient(180deg, var(--silver), #808080); color: #2a2a2a; }
+.podium-3 .podium-bar { height: 100px; background: linear-gradient(180deg, var(--bronze), #8b4513); color: #fff; }
+
+.confetti {
+  position: fixed; top: -20px; pointer-events: none;
+  font-size: 24px; animation: confettiFall 4s linear forwards;
+  z-index: 50;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(110vh) rotate(720deg); }
+}
+
+/* ============================================================
+   COMPTROLE DISTANT (téléphone hôte)
+   ============================================================ */
+.ctrl-question {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(20px, 5vw, 26px); line-height: 1.2;
+  margin: 14px 0 8px;
+}
+.ctrl-answer {
+  margin-top: 12px; padding: 16px 18px; border-radius: 14px;
+  border: 1px dashed var(--accent-2); background: rgba(255,209,102,.10);
+}
+.ctrl-answer.revealed { border-style: solid; background: rgba(255,209,102,.22); }
+.ctrl-answer .a-lbl {
+  font-size: 11px; color: var(--accent-2); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+}
+.ctrl-answer .a-txt {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 22px;
+  margin-top: 4px; color: var(--ink);
+}
+.ctrl-answer .a-note { font-size: 12px; color: var(--ink-dim); margin-top: 6px; }
+
+/* PIN box pour le contrôle distant */
+.pin-box {
+  margin-top: 12px; padding: 14px; border: 1px dashed var(--accent-2);
+  border-radius: 12px; background: rgba(255,209,102,.08); text-align: center;
+}
+.pin-box .pin-lbl {
+  font-size: 11px; color: var(--accent-2); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+}
+.pin-box .pin {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 32px;
+  color: var(--ink); letter-spacing: 6px; margin-top: 4px;
+}
+.pin-box .pin-tip { font-size: 12px; color: var(--ink-dim); margin-top: 4px; }
+
+/* ============================================================
+   TOAST + LOADING
+   ============================================================ */
+.toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+  background: var(--accent); color: #fff; font-weight: 700;
+  padding: 13px 20px; border-radius: 12px; font-size: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.4); z-index: 200;
+  max-width: 90vw; text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s ease;
+}
+.toast.show { opacity: 1; }
+
+.spinner {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid var(--line); border-top-color: var(--accent);
+  animation: spin .8s linear infinite; margin: 20px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   RÉACTIONS EMOJI VOLANTES
+   ============================================================ */
+.reactions-bar {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 10px; margin: 12px 0 6px;
+  flex-wrap: wrap;
+}
+.reaction-btn {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  font-size: 26px; width: 48px; height: 48px;
+  border-radius: 50%; cursor: pointer;
+  transition: transform .1s ease, background .15s;
+  display: grid; place-items: center;
+}
+.reaction-btn:active { transform: scale(.85); background: var(--panel-2); }
+
+.floating-emoji {
+  position: fixed; bottom: 80px;
+  font-size: 40px; pointer-events: none;
+  z-index: 150;
+  animation: floatUp 3s ease-out forwards;
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0) scale(.5); opacity: 0; }
+  10%  { transform: translateY(-20px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-60vh) scale(1) rotate(360deg); opacity: 0; }
+}
+
+/* Bandeau de message dynamique */
+.dyn-msg {
+  position: fixed; left: 50%; top: 14%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(18px, 3.5vw, 28px);
+  padding: 14px 26px; border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.5);
+  z-index: 180; max-width: 92vw; text-align: center;
+  opacity: 0; pointer-events: none;
+  transform: translate(-50%, 0);
+  transition: opacity .3s;
+}
+.dyn-msg.show {
+  opacity: 1;
+  animation: dynMsgPop .5s ease;
+}
+@keyframes dynMsgPop {
+  0%   { transform: translate(-50%, 20px) scale(.7); opacity: 0; }
+  50%  { transform: translate(-50%, 0) scale(1.1); }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+
+/* Modale */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0,0,0,.7); display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.active { display: flex; }
+.modal {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 24px;
+  max-width: 480px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal h3 { margin-bottom: 12px; font-size: 22px; }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="stars" id="stars"></div>
+<div class="app">
+
+<!-- ============================ MENU ============================ -->
+<section id="screen-menu" class="screen active">
+  <div class="wrap">
+    <div class="hero">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <p class="tagline">Quiz interactif pour vos soirées</p>
+    </div>
+
+    <p class="section-title" style="margin-top:0;">Animer une partie</p>
+    <div class="menu-buttons">
+      <button class="menu-btn" id="menu-buzzer">
+        <div class="emoji">🔔</div>
+        <div>
+          <h3>Mode Buzzer</h3>
+          <p>Question affichée, le 1er à buzzer répond.</p>
+        </div>
+      </button>
+      <button class="menu-btn" id="menu-qcm">
+        <div class="emoji">🎯</div>
+        <div>
+          <h3>Mode QCM</h3>
+          <p>4 choix, automatique avec timer et score.</p>
+        </div>
+      </button>
+    </div>
+
+    <p class="section-title">Rejoindre</p>
+    <div class="menu-buttons">
+      <button class="menu-btn" id="menu-control">
+        <div class="emoji">📱</div>
+        <div>
+          <h3>Contrôle distant (animateur)</h3>
+          <p>Pilote la partie depuis ton téléphone.</p>
+        </div>
+      </button>
+      <button class="menu-btn" id="menu-join">
+        <div class="emoji">⚡</div>
+        <div>
+          <h3>Rejoindre comme joueur</h3>
+          <p>Tape le code, choisis ton pseudo et ton emoji.</p>
+        </div>
+      </button>
+    </div>
+
+    <p class="menu-foot" id="menu-status">Connexion au service…</p>
+  </div>
+</section>
+
+<!-- ===================== CRÉER UNE PARTIE ===================== -->
+<section id="screen-create" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;" id="create-title">Créer une partie</h2>
+      <p class="muted" style="margin-top:6px;" id="create-subtitle">Configure ta partie.</p>
+
+      <label>Nombre de questions</label>
+      <div class="option-group" id="opt-nb-questions">
+        <button class="option-btn" data-val="5">5</button>
+        <button class="option-btn active" data-val="10">10</button>
+        <button class="option-btn" data-val="15">15</button>
+        <button class="option-btn" data-val="20">20</button>
+        <button class="option-btn" data-val="0">Toutes</button>
+      </div>
+
+      <!-- Section QCM uniquement -->
+      <div id="opt-qcm-only">
+        <label>Durée par question</label>
+        <div class="option-group" id="opt-timer">
+          <button class="option-btn" data-val="15">15 s</button>
+          <button class="option-btn active" data-val="30">30 s</button>
+          <button class="option-btn" data-val="45">45 s</button>
+          <button class="option-btn" data-val="60">60 s</button>
+        </div>
+        <label>Affichage de la réponse entre questions</label>
+        <div class="option-group" id="opt-reveal">
+          <button class="option-btn" data-val="3">3 s</button>
+          <button class="option-btn active" data-val="5">5 s</button>
+          <button class="option-btn" data-val="8">8 s</button>
+        </div>
+      </div>
+
+      <label>Choisir une playlist</label>
+      <div class="playlist-list" id="playlist-list">
+        <div class="spinner"></div>
+      </div>
+      <div class="import-zone">
+        <input type="file" id="import-file" accept=".json,application/json" />
+        <label for="import-file">📂 Importer un fichier .json</label>
+      </div>
+
+      <!-- Mode équipes -->
+      <div class="toggle-row" style="margin-top:18px;">
+        <div>
+          <div class="toggle-label">🚩 Mode équipes</div>
+          <div class="toggle-desc">Les joueurs choisissent leur équipe au lobby</div>
+        </div>
+        <div class="toggle-switch" id="opt-teams-toggle"></div>
+      </div>
+      <div id="teams-config" style="display:none; margin-top:14px;">
+        <label>Nombre d'équipes</label>
+        <div class="option-group" id="opt-nb-teams">
+          <button class="option-btn active" data-val="2">2</button>
+          <button class="option-btn" data-val="3">3</button>
+          <button class="option-btn" data-val="4">4</button>
+          <button class="option-btn" data-val="5">5</button>
+          <button class="option-btn" data-val="6">6</button>
+        </div>
+        <label>Noms des équipes (optionnel)</label>
+        <div id="teams-names"></div>
+      </div>
+
+      <div style="height:24px;"></div>
+      <button class="btn primary btn-xl" id="create-launch" disabled>▶ Créer la partie</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== REJOINDRE (joueur) ===================== -->
+<section id="screen-join" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;">Rejoindre une partie</h2>
+      <label>Code de la salle</label>
+      <input id="join-code" class="code-input" maxlength="4" autocomplete="off" placeholder="ABCD" />
+      <label>Pseudo</label>
+      <input id="join-name" maxlength="20" autocomplete="off" placeholder="Ex : Camille" />
+      <label>Choisis ton emoji</label>
+      <div class="emoji-picker" id="emoji-picker"></div>
+      <div style="height:18px;"></div>
+      <button class="btn primary btn-xl" id="join-btn">Entrer dans la partie</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== REJOINDRE (contrôle distant) ===================== -->
+<section id="screen-control-join" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;">Contrôle distant</h2>
+      <p class="muted" style="margin-top:6px;">Tape le code de la salle et le PIN à 4 chiffres affiché sur l'écran de projection.</p>
+      <label>Code de la salle</label>
+      <input id="cj-code" class="code-input" maxlength="4" autocomplete="off" placeholder="ABCD" />
+      <label>PIN à 4 chiffres</label>
+      <input id="cj-pin" class="code-input" maxlength="4" autocomplete="off" placeholder="0000" inputmode="numeric" style="letter-spacing:8px;" />
+      <div style="height:18px;"></div>
+      <button class="btn primary btn-xl" id="cj-btn">Prendre le contrôle</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LOBBY ===================== -->
+<section id="screen-lobby" class="screen">
+  <div class="wrap-wide">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span id="lobby-mode-tag" class="status-tag status-idle"><span class="dot"></span>Buzzer</span>
+        <button class="link-btn" data-close-room>Fermer la salle</button>
+      </div>
+    </div>
+
+    <div class="lobby-grid">
+      <!-- GAUCHE : code + QR + récap -->
+      <div>
+        <div class="card">
+          <div class="big-code-box">
+            <div class="big-code-lbl">Code de la partie</div>
+            <div class="big-code" id="lobby-code">----</div>
+          </div>
+          <div style="text-align:center; margin-top:18px;">
+            <div class="qr-holder"><canvas id="lobby-qr"></canvas></div>
+          </div>
+          <p class="muted" style="text-align:center; margin-top:10px; font-size:13px;">
+            Scanner le QR code pour rejoindre directement
+          </p>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="section-title" style="margin-top:0;">Récap de la partie</div>
+          <p class="muted" id="lobby-recap">…</p>
+        </div>
+
+        <div class="card" style="margin-top:14px;" id="lobby-pin-card">
+          <div class="pin-box" style="margin-top:0;">
+            <div class="pin-lbl">🔒 PIN pour le contrôle distant</div>
+            <div class="pin" id="lobby-pin">----</div>
+            <div class="pin-tip">À taper sur le téléphone de l'animateur</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DROITE : joueurs + bouton démarrer -->
+      <div>
+        <div class="card">
+          <div class="section-title" style="margin-top:0;">
+            Joueurs connectés — <span id="lobby-count">0</span>
+          </div>
+          <div class="players-list" id="lobby-players">
+            <p class="muted">En attente de joueurs…</p>
+          </div>
+
+          <div style="margin-top:16px; display:grid; gap:10px;">
+            <button class="btn mint btn-xl ready-pulse" id="lobby-host-ready">✅ Je suis prêt à animer</button>
+            <button class="btn primary btn-xl" id="lobby-start" disabled>▶ Démarrer manuellement</button>
+            <p class="muted" id="lobby-start-hint" style="text-align:center; margin-top:4px; font-size:13px;">
+              Au moins 1 joueur doit être connecté.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LOBBY JOUEUR ===================== -->
+<section id="screen-player-lobby" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="room-pill">
+        <span class="lbl">Salle</span>
+        <span class="code" id="pl-code">----</span>
+      </div>
+      <button class="link-btn" data-leave>Quitter</button>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size: 64px; margin: 14px 0;" id="pl-emoji">⚡</div>
+      <h2 style="font-size: 22px;" id="pl-name">…</h2>
+
+      <!-- Picker d'équipe (visible si mode équipes) -->
+      <div id="pl-team-picker-wrap" style="display:none; text-align:left; margin-top:18px;">
+        <div class="section-title" style="margin-top:0;">🚩 Choisis ton équipe</div>
+        <div class="team-picker" id="pl-team-picker"></div>
+      </div>
+
+      <p class="muted" id="pl-attente-msg" style="margin-top:14px;">En attente du démarrage par l'animateur…</p>
+      <div class="spinner"></div>
+      <button class="btn ready-pulse btn-xl" id="pl-ready" style="margin-top:18px;">✅ Je suis prêt !</button>
+      <p class="muted" id="pl-ready-status" style="margin-top:10px; font-size:13px;">0 / 0 joueurs prêts</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COMPTE À REBOURS ===================== -->
+<div id="screen-countdown">
+  <div class="countdown-title" id="cd-title">🎯 MODE QCM</div>
+  <div class="countdown-subtitle" id="cd-subtitle">Marvel</div>
+  <div class="countdown-num" id="cd-num">10</div>
+</div>
+
+<!-- ===================== PROJECTION (en jeu) ===================== -->
+<section id="screen-projection" class="screen">
+  <div class="wrap-wide">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="room-pill">
+          <span class="lbl">Salle</span>
+          <span class="code" id="proj-code">----</span>
+        </div>
+        <span id="proj-status" class="status-tag status-idle">
+          <span class="dot"></span><span id="proj-status-txt">Prêt</span>
+        </span>
+        <button class="link-btn" data-close-room>Fermer la salle</button>
+      </div>
+    </div>
+
+    <div class="proj-grid">
+      <!-- Centre : question + choix QCM -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <span class="q-number" id="proj-qnumber">— / —</span>
+          <span class="qcm-countdown" id="proj-countdown" style="display:none;">
+            <span class="cd-num" id="proj-cd-num">30</span>
+            <span class="cd-lbl">secondes</span>
+          </span>
+        </div>
+        <div class="progress"><div class="fill" id="proj-progress" style="width:0%"></div></div>
+        <div class="timer-bar" id="proj-timer-bar" style="display:none;">
+          <div class="timer-fill" id="proj-timer-fill" style="width:100%"></div>
+        </div>
+
+        <div class="proj-question empty" id="proj-question">
+          En attente…
+        </div>
+
+        <div class="qcm-choices" id="proj-qcm-choices" style="display:none;"></div>
+      </div>
+
+      <!-- Droite : scoreboard -->
+      <div class="card">
+        <div class="section-title" style="margin-top:0;">🏆 Classement</div>
+        <div class="score-list" id="proj-scores">
+          <p class="muted">En attente…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTRÔLE DISTANT (en jeu) ===================== -->
+<section id="screen-control" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="room-pill">
+        <span class="lbl">Salle</span>
+        <span class="code" id="c-code">----</span>
+      </div>
+      <span class="status-tag status-idle" id="c-status">
+        <span class="dot"></span><span id="c-status-txt">En attente</span>
+      </span>
+    </div>
+    <div class="card">
+      <div class="q-number" id="c-qnumber">— / —</div>
+      <div class="progress"><div class="fill" id="c-progress" style="width:0%"></div></div>
+
+      <div class="ctrl-question" id="c-question">
+        <span style="color:var(--ink-dim); font-family:'Outfit'; font-weight:400; font-style:italic;">Cliquez « Question suivante »</span>
+      </div>
+
+      <div id="c-answer" class="ctrl-answer" style="display:none;">
+        <div class="a-lbl">Réponse</div>
+        <div class="a-txt" id="c-answer-text">—</div>
+        <div class="a-note" id="c-answer-note">🔒 Visible uniquement par toi.</div>
+      </div>
+
+      <div style="margin-top:16px; display:grid; gap:10px;">
+        <button class="btn primary btn-xl" id="c-next">▶ Question suivante</button>
+        <div class="btn-row">
+          <button class="btn mint" id="c-reveal" disabled>Révéler</button>
+          <button class="btn ghost" id="c-replay" disabled>Rejouer</button>
+        </div>
+      </div>
+
+      <div class="section-title">⚡ Classement</div>
+      <div class="score-list" id="c-scores"><p class="muted">En attente…</p></div>
+
+      <div style="text-align:center; margin-top:16px;">
+        <button class="link-btn" data-leave>Quitter le contrôle</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== JOUEUR (en jeu) ===================== -->
+<section id="screen-player" class="screen">
+  <div class="wrap player-wrap">
+    <div class="player-head">
+      <div class="player-info">
+        <span class="me-emoji" id="me-emoji">⚡</span>
+        <span id="me-name">…</span>
+        <span id="me-team-badge"></span>
+      </div>
+      <div class="player-info">
+        <span>Score</span>
+        <span class="me-score" id="me-score">0</span>
+      </div>
+    </div>
+
+    <!-- Buzzer view -->
+    <div id="p-buzzer-view">
+      <p class="player-mode-hint">Regardez l'écran principal pour la question</p>
+      <div class="buzzer-zone">
+        <button class="buzzer waiting" id="buzzer" disabled>…</button>
+      </div>
+    </div>
+
+    <!-- QCM view -->
+    <div id="p-qcm-view" style="display:none;">
+      <div class="player-question-screen" id="p-qcm-question">…</div>
+      <div class="qcm-grid" id="p-qcm-grid"></div>
+    </div>
+
+    <div class="player-result" id="p-result"></div>
+
+    <!-- Barre de réactions emoji -->
+    <div class="reactions-bar" id="reactions-bar">
+      <button class="reaction-btn" data-emoji="👏">👏</button>
+      <button class="reaction-btn" data-emoji="😂">😂</button>
+      <button class="reaction-btn" data-emoji="🔥">🔥</button>
+      <button class="reaction-btn" data-emoji="❤️">❤️</button>
+      <button class="reaction-btn" data-emoji="😱">😱</button>
+      <button class="reaction-btn" data-emoji="🎉">🎉</button>
+    </div>
+
+    <div class="player-foot">
+      <button class="link-btn" data-leave>Quitter la partie</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PODIUM FINAL ===================== -->
+<section id="screen-podium" class="screen">
+  <div class="wrap-wide">
+    <div style="text-align:center; padding: 20px 0;">
+      <h1 style="font-size: 48px; color: var(--accent-2);">🏆 PODIUM 🏆</h1>
+      <p class="muted" style="margin-top:6px; font-size: 16px;" id="podium-subtitle">Fin de la partie</p>
+    </div>
+
+    <div class="podium-stage" id="podium-stage"></div>
+
+    <div class="card" style="max-width: 600px; margin: 20px auto;">
+      <div class="section-title" style="margin-top:0;">Classement complet</div>
+      <div class="score-list" id="podium-fullrank"></div>
+    </div>
+
+    <div style="text-align:center; padding: 20px 0;">
+      <div class="btn-row" style="max-width:400px; margin:0 auto;">
+        <button class="btn ghost" id="podium-home">🏠 Menu</button>
+        <button class="btn primary" id="podium-replay">🎮 Nouvelle partie</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.app -->
+
+<div class="toast" id="toast"></div>
+<div class="dyn-msg" id="dyn-msg"></div>
+
+<!-- QRCode lib (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<!-- ============================================================
+     SCRIPT PRINCIPAL — tout dans un module
+     ============================================================ -->
+<script type="module">
+// ============================================================
+//  CONFIG FIREBASE — REMPLIR ICI
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBChD21JJPw_ZRM650G5nqdp408SO8itaQ",
+  authDomain: "buzzquizz-a407f.firebaseapp.com",
+  databaseURL: "https://buzzquizz-a407f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "buzzquizz-a407f",
+  storageBucket: "buzzquizz-a407f.firebasestorage.app",
+  messagingSenderId: "60888755428",
+  appId: "1:60888755428:web:9e53ebc25995dedc2e50f1",
+  measurementId: "G-Z4BMMHRXKL"
+};
+
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+  getDatabase, ref, set, update, remove, get,
+  onValue, onDisconnect, serverTimestamp, child
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+// ============================================================
+//  ÉTAT GLOBAL
+// ============================================================
+const State = {
+  ready: false,
+  uid: null,
+  clockOffset: 0,
+  role: null,           // 'projection' | 'control' | 'player'
+  mode: null,           // 'buzzer' | 'qcm'
+  roomCode: null,
+
+  // Côté projection
+  playlist: null,
+  selectedPlaylistFile: null,
+  usedIndexes: new Set(),
+  currentQuestionIndex: -1,
+  controlPin: null,
+  qcmConfig: { nbQuestions: 10, timerSec: 30, revealSec: 5 },
+  teamsConfig: { enabled: false, list: [] },
+
+  // Pour boucle QCM
+  qcmLoop: {
+    running: false, countdownInterval: null, nextStateTimeout: null, startedAt: 0,
+  },
+
+  // Côté joueur
+  myEmoji: '⚡',
+  myName: '',
+
+  // État courant reçu de Firebase
+  lastState: null,
+  lastStatus: null,
+  lastQuestion: null,
+  unsubRoom: null,
+  unsubPrivate: null,
+  latestPrivateView: null,
+};
+
+// ============================================================
+//  HELPERS DOM
+// ============================================================
+const $ = (id) => document.getElementById(id);
+
+const SCREENS = ['menu', 'create', 'join', 'control-join', 'lobby', 'player-lobby', 'projection', 'control', 'player', 'podium'];
+
+function showScreen(name) {
+  SCREENS.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
+  // Étoiles uniquement sur menu et lobby
+  const stars = $('stars');
+  if (stars) stars.style.display = (name === 'menu' || name === 'lobby' || name === 'player-lobby') ? '' : 'none';
+  window.scrollTo(0, 0);
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3600);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+// Étoiles flottantes en arrière-plan
+function spawnStars() {
+  const wrap = $('stars');
+  if (!wrap) return;
+  const emojis = ['⭐', '✨', '🌟', '💫'];
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = emojis[i % emojis.length];
+    s.style.left = (Math.random() * 100) + 'vw';
+    s.style.animationDelay = (Math.random() * 6) + 's';
+    s.style.animationDuration = (4 + Math.random() * 4) + 's';
+    wrap.appendChild(s);
+  }
+}
+spawnStars();
+
+// ============================================================
+//  FIREBASE INIT
+// ============================================================
+let app, auth, db;
+function initFirebase() {
+  if (firebaseConfig.apiKey === 'COLLE_TA_CLE_ICI') {
+    $('menu-status').textContent = '⚠ Firebase non configuré. Édite la config en haut du script.';
+    return;
+  }
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getDatabase(app);
+  } catch (e) {
+    $('menu-status').textContent = '⚠ Erreur Firebase : ' + e.message;
+    return;
+  }
+
+  signInAnonymously(auth).catch((e) =>
+    toast("Échec de connexion : " + e.message));
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) return;
+    State.uid = user.uid;
+    onValue(ref(db, '.info/serverTimeOffset'), (snap) => {
+      const v = snap.val();
+      if (typeof v === 'number') State.clockOffset = v;
+    });
+    State.ready = true;
+    $('menu-status').textContent = 'Service prêt.';
+
+    // Si l'URL contient ?join=XXXX, on pré-remplit et on va sur join
+    const params = new URLSearchParams(location.search);
+    const j = params.get('join');
+    if (j && /^[A-Z]{4}$/i.test(j)) {
+      $('join-code').value = j.toUpperCase();
+      showScreen('join');
+      setTimeout(() => $('join-name').focus(), 100);
+    }
+  });
+}
+
+function serverNow() { return Date.now() + State.clockOffset; }
+
+initFirebase();
+
+// ============================================================
+//  CODES & PIN
+// ============================================================
+function makeRoomCode() {
+  const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+  let c = '';
+  for (let i = 0; i < 4; i++) c += letters[Math.floor(Math.random() * letters.length)];
+  return c;
+}
+function makePin() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+// ============================================================
+//  PLAYLISTS
+// ============================================================
+function analyzePlaylist(data) {
+  if (!data || !Array.isArray(data.questions) || !data.questions.length) {
+    return { ok: false, reason: "Playlist vide" };
+  }
+  const qs = data.questions.filter((it) => it && typeof it.q === 'string' && it.q.trim());
+  if (!qs.length) return { ok: false, reason: "Aucune question" };
+  const buzzerOk = qs.every((it) => typeof it.a === 'string' && it.a.trim().length > 0);
+  const qcmOk = qs.every((it) =>
+    Array.isArray(it.choices) && it.choices.length === 4
+    && Number.isInteger(it.correct) && it.correct >= 0 && it.correct <= 3);
+  return {
+    ok: true, name: data.name || 'Playlist',
+    description: data.description || '',
+    count: qs.length, buzzerOk, qcmOk,
+    questions: qs,
+  };
+}
+
+async function listPlaylists() {
+  try {
+    const res = await fetch('./playlists/index.json?_=' + Date.now());
+    if (!res.ok) throw new Error('Index introuvable');
+    const data = await res.json();
+    const items = [];
+    for (const file of data.playlists || []) {
+      try {
+        const p = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
+        const info = analyzePlaylist(p);
+        if (!info.ok) continue;
+        items.push({ file, ...info });
+      } catch (_) {}
+    }
+    return items;
+  } catch (e) {
+    toast("Erreur lecture playlists : " + e.message);
+    return [];
+  }
+}
+
+function loadPlaylistForMode(data, mode) {
+  const info = analyzePlaylist(data);
+  if (!info.ok) throw new Error(info.reason);
+  if (mode === 'buzzer' && !info.buzzerOk) throw new Error("Playlist sans réponse 'a' pour le mode Buzzer");
+  if (mode === 'qcm' && !info.qcmOk) throw new Error("Playlist sans 'choices'+'correct' pour le mode QCM");
+
+  let questions;
+  if (mode === 'buzzer') {
+    questions = info.questions.map((it) => ({ q: it.q.trim(), a: (it.a || '').toString().trim() }));
+  } else {
+    questions = info.questions.map((it) => ({
+      q: it.q.trim(),
+      choices: it.choices.map((c) => String(c).trim()),
+      correct: it.correct,
+    }));
+  }
+  State.playlist = { name: info.name, mode, questions };
+  State.usedIndexes = new Set();
+  State.currentQuestionIndex = -1;
+}
+
+// ============================================================
+//  NAVIGATION ACCUEIL
+// ============================================================
+$('menu-buzzer').addEventListener('click', () => startCreate('buzzer'));
+$('menu-qcm').addEventListener('click', () => startCreate('qcm'));
+$('menu-control').addEventListener('click', () => {
+  if (!State.ready) return toast('Service pas encore prêt');
+  showScreen('control-join'); $('cj-code').focus();
+});
+$('menu-join').addEventListener('click', () => {
+  if (!State.ready) return toast('Service pas encore prêt');
+  showScreen('join'); $('join-code').focus();
+});
+
+document.querySelectorAll('[data-home]').forEach((b) =>
+  b.addEventListener('click', () => showScreen('menu')));
+document.querySelectorAll('[data-leave]').forEach((b) =>
+  b.addEventListener('click', () => { leaveAll(); showScreen('menu'); }));
+document.querySelectorAll('[data-close-room]').forEach((b) =>
+  b.addEventListener('click', async () => {
+    if (!confirm('Fermer la salle et déconnecter tous les joueurs ?')) return;
+    stopQcmLoop();
+    await closeRoom();
+    showScreen('menu');
+  }));
+
+// ============================================================
+//  ÉCRAN CRÉER UNE PARTIE
+// ============================================================
+function startCreate(mode) {
+  if (!State.ready) return toast('Service pas encore prêt');
+  State.mode = mode;
+  State.selectedPlaylistFile = null;
+  $('create-launch').disabled = true;
+  $('create-title').textContent = mode === 'qcm' ? 'Créer une partie QCM' : 'Créer une partie Buzzer';
+  $('create-subtitle').textContent = mode === 'qcm'
+    ? 'Configure les options puis lance.'
+    : 'Choisis ta playlist puis lance.';
+  $('opt-qcm-only').style.display = mode === 'qcm' ? '' : 'none';
+
+  // Reset équipes
+  $('opt-teams-toggle').classList.remove('on');
+  $('teams-config').style.display = 'none';
+  renderTeamNameInputs(2);
+
+  showScreen('create');
+  refreshPlaylistList();
+}
+
+// Groupes de boutons d'option (un seul actif par groupe)
+function setupOptionGroup(groupId, onChange) {
+  const grp = $(groupId);
+  if (!grp) return;
+  grp.addEventListener('click', (e) => {
+    const btn = e.target.closest('.option-btn');
+    if (!btn) return;
+    grp.querySelectorAll('.option-btn').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (onChange) onChange(btn.dataset.val);
+  });
+}
+setupOptionGroup('opt-nb-questions');
+setupOptionGroup('opt-timer');
+setupOptionGroup('opt-reveal');
+setupOptionGroup('opt-nb-teams', (val) => renderTeamNameInputs(parseInt(val, 10)));
+
+// Toggle équipes
+$('opt-teams-toggle').addEventListener('click', () => {
+  const tog = $('opt-teams-toggle');
+  tog.classList.toggle('on');
+  $('teams-config').style.display = tog.classList.contains('on') ? '' : 'none';
+});
+
+// Génère les inputs de nom d'équipe
+function renderTeamNameInputs(nb) {
+  const wrap = $('teams-names');
+  let html = '';
+  for (let i = 0; i < nb; i++) {
+    html += `<div class="team-name-input-row team-color-${i}">
+      <div class="team-color-chip"></div>
+      <input type="text" maxlength="20" placeholder="${TEAM_DEFAULT_NAMES[i]}" data-team-idx="${i}" />
+    </div>`;
+  }
+  wrap.innerHTML = html;
+}
+renderTeamNameInputs(2);
+
+function getActiveOption(groupId, fallback) {
+  const a = document.querySelector('#' + groupId + ' .option-btn.active');
+  return a ? parseInt(a.dataset.val, 10) : fallback;
+}
+
+async function refreshPlaylistList() {
+  const list = $('playlist-list');
+  list.innerHTML = '<div class="spinner"></div>';
+  const items = await listPlaylists();
+  if (!items.length) {
+    list.innerHTML = '<p class="muted">Aucune playlist trouvée. Importe un fichier .json ci-dessous.</p>';
+    return;
+  }
+  list.innerHTML = items.map((it) => {
+    const compat = State.mode === 'qcm' ? it.qcmOk : it.buzzerOk;
+    const incompat = !compat
+      ? (State.mode === 'qcm'
+          ? '<div class="pl-incompat">Pas compatible QCM (manque les 4 choix)</div>'
+          : '<div class="pl-incompat">Pas compatible Buzzer (manque la réponse \'a\')</div>')
+      : '';
+    return `<div class="playlist-item ${compat ? '' : 'disabled'}"
+                 data-file="${it.file}" data-ok="${compat ? '1' : '0'}">
+      <div class="pl-name">${escapeHtml(it.name)}</div>
+      <div class="pl-meta">
+        <span class="pl-badge">${it.count} questions</span>
+        ${it.description ? escapeHtml(it.description) : ''}
+      </div>
+      ${incompat}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.playlist-item').forEach((card) => {
+    if (card.dataset.ok !== '1') return;
+    card.addEventListener('click', () => {
+      list.querySelectorAll('.playlist-item').forEach((c) => c.classList.remove('selected'));
+      card.classList.add('selected');
+      State.selectedPlaylistFile = card.dataset.file;
+      $('create-launch').disabled = false;
+    });
+  });
+}
+
+// Import fichier
+$('import-file').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    loadPlaylistForMode(data, State.mode);
+    State.selectedPlaylistFile = '__imported__';
+    State.importedPlaylistData = data;
+    $('create-launch').disabled = false;
+    toast('Playlist importée : ' + (data.name || 'Sans nom'));
+  } catch (e) {
+    toast("Fichier invalide : " + e.message);
+  }
+});
+
+// Bouton créer
+$('create-launch').addEventListener('click', async () => {
+  if (!State.selectedPlaylistFile) return toast('Choisis une playlist');
+
+  // Charge la playlist
+  try {
+    if (State.selectedPlaylistFile === '__imported__') {
+      loadPlaylistForMode(State.importedPlaylistData, State.mode);
+    } else {
+      const res = await fetch('./playlists/' + State.selectedPlaylistFile + '?_=' + Date.now());
+      const data = await res.json();
+      loadPlaylistForMode(data, State.mode);
+    }
+  } catch (e) {
+    toast("Erreur playlist : " + e.message);
+    return;
+  }
+
+  // Configuration
+  const nbQ = getActiveOption('opt-nb-questions', 10);
+  const realNb = nbQ === 0 ? State.playlist.questions.length
+                            : Math.min(nbQ, State.playlist.questions.length);
+  State.qcmConfig.nbQuestions = realNb;
+  if (State.mode === 'qcm') {
+    State.qcmConfig.timerSec = getActiveOption('opt-timer', 30);
+    State.qcmConfig.revealSec = getActiveOption('opt-reveal', 5);
+  }
+
+  // Config équipes
+  const teamsOn = $('opt-teams-toggle').classList.contains('on');
+  if (teamsOn) {
+    const nbTeams = getActiveOption('opt-nb-teams', 2);
+    const teams = [];
+    for (let i = 0; i < nbTeams; i++) {
+      const input = document.querySelector('#teams-names input[data-team-idx="' + i + '"]');
+      const name = (input?.value || '').trim() || TEAM_DEFAULT_NAMES[i];
+      teams.push({ id: i, name, colorIdx: i });
+    }
+    State.teamsConfig = { enabled: true, list: teams };
+  } else {
+    State.teamsConfig = { enabled: false, list: [] };
+  }
+
+  // Crée la salle
+  try {
+    await createRoom();
+    showScreen('lobby');
+  } catch (e) {
+    toast("Impossible de créer la salle : " + e.message);
+  }
+});
+
+// ============================================================
+//  CRÉATION DE LA SALLE (côté projection)
+// ============================================================
+async function createRoom() {
+  // Reset état lobby (utile si on relance une partie)
+  autoLaunchTriggered = false;
+  if (autoLaunchTimer) { clearTimeout(autoLaunchTimer); autoLaunchTimer = null; }
+  const hostBtn = $('lobby-host-ready');
+  hostBtn.disabled = false;
+  hostBtn.classList.add('ready-pulse');
+  hostBtn.textContent = '✅ Je suis prêt à animer';
+
+  let code, tries = 0, exists = true;
+  do {
+    code = makeRoomCode();
+    const snap = await get(ref(db, 'rooms/' + code));
+    exists = snap.exists();
+  } while (exists && ++tries < 10);
+
+  State.controlPin = makePin();
+  State.roomCode = code;
+  State.role = 'projection';
+
+  await set(ref(db, 'rooms/' + code), {
+    host: State.uid,
+    createdAt: serverTimestamp(),
+    controlPin: State.controlPin,
+    controllerUid: null,
+    hostReady: false,
+    playlistName: State.playlist.name,
+    mode: State.mode,
+    nbQuestions: State.qcmConfig.nbQuestions,
+    timer: State.qcmConfig.timerSec,
+    revealDuration: State.qcmConfig.revealSec,
+    teamsEnabled: State.teamsConfig.enabled,
+    teams: State.teamsConfig.enabled
+      ? State.teamsConfig.list.reduce((acc, t) => { acc[t.id] = t; return acc; }, {})
+      : null,
+    phase: 'lobby',
+    round: {
+      status: 'idle', question: '', choices: null, correct: -1, answer: '', number: 0,
+    },
+    players: {},
+    buzzes: {},
+    answers: {},
+  });
+
+  onDisconnect(ref(db, 'rooms/' + code + '/closed')).set(true);
+
+  // Démarrer le nettoyage périodique des vieilles réactions
+  startReactionsCleanup();
+
+  // Setup UI lobby
+  $('lobby-code').textContent = code;
+  $('proj-code').textContent = code;
+  $('lobby-pin').textContent = State.controlPin;
+  $('lobby-mode-tag').className = 'status-tag ' + (State.mode === 'qcm' ? 'status-armed' : 'status-locked');
+  $('lobby-mode-tag').innerHTML = '<span class="dot"></span>Mode ' + (State.mode === 'qcm' ? 'QCM' : 'Buzzer') + (State.teamsConfig.enabled ? ' · 🚩 équipes' : '');
+  const teamRecap = State.teamsConfig.enabled
+    ? `<br>🚩 ${State.teamsConfig.list.length} équipes : ${State.teamsConfig.list.map(t => t.name).join(', ')}`
+    : '';
+  const recap = State.mode === 'qcm'
+    ? `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions · ${State.qcmConfig.timerSec}s par question · révélation ${State.qcmConfig.revealSec}s${teamRecap}`
+    : `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions · pilotage depuis ton téléphone (PIN ci-dessous)${teamRecap}`;
+  $('lobby-recap').innerHTML = recap;
+
+  // QR code avec ?join=CODE
+  const url = location.origin + location.pathname + '?join=' + code;
+  if (window.QRCode) {
+    QRCode.toCanvas($('lobby-qr'), url, { width: 200, margin: 1 }, () => {});
+  }
+
+  // PIN visible uniquement en buzzer
+  $('lobby-pin-card').style.display = State.mode === 'buzzer' ? '' : 'none';
+
+  // Listen room
+  listenRoom(code);
+}
+
+// ============================================================
+//  ÉCOUTE DE LA SALLE (commune à tous les rôles)
+// ============================================================
+function listenRoom(code) {
+  stopListening();
+  if (State.role === 'projection' || State.role === 'control') {
+    State.unsubPrivate = onValue(ref(db, 'private_views/' + code), (snap) => {
+      State.latestPrivateView = snap.exists() ? snap.val() : null;
+      render();   // re-render pour màj de la réponse côté contrôle
+    }, () => { /* erreur d'autorisation : OK */ });
+  }
+  State.unsubRoom = onValue(ref(db, 'rooms/' + code), (snap) => {
+    if (!snap.exists()) {
+      toast("La partie a été fermée");
+      leaveAll(); showScreen('menu'); return;
+    }
+    const data = snap.val();
+    if (data.closed && State.role !== 'projection') {
+      toast("La partie a été fermée par l'animateur");
+      leaveAll(); showScreen('menu'); return;
+    }
+    State.lastState = data;
+    render();
+  }, (err) => toast("Perte de connexion : " + err.message));
+}
+
+function stopListening() {
+  if (State.unsubRoom)    { try { State.unsubRoom(); } catch (_) {} State.unsubRoom = null; }
+  if (State.unsubPrivate) { try { State.unsubPrivate(); } catch (_) {} State.unsubPrivate = null; }
+  State.latestPrivateView = null;
+}
+
+async function closeRoom() {
+  if (State.role === 'projection' && State.roomCode) {
+    await remove(ref(db, 'rooms/' + State.roomCode)).catch(() => {});
+    await remove(ref(db, 'private_views/' + State.roomCode)).catch(() => {});
+  }
+  leaveAll();
+}
+
+function leaveAll() {
+  stopQcmLoop();
+  stopReactionsCleanup();
+  seenReactions.clear();
+  reactionsFirstScan = true;
+  prevLeader = null; prevPhase = null; prevStatus = null; prevFirstBuzzer = null;
+  if (State.role === 'player' && State.roomCode && State.uid) {
+    remove(ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid)).catch(() => {});
+    remove(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + State.uid)).catch(() => {});
+    remove(ref(db, 'rooms/' + State.roomCode + '/answers/' + State.uid)).catch(() => {});
+  }
+  stopListening();
+  State.role = null; State.roomCode = null; State.lastState = null;
+  State.playlist = null; State.usedIndexes = new Set(); State.currentQuestionIndex = -1;
+}
+
+// ============================================================
+//  REJOINDRE — JOUEUR
+// ============================================================
+const EMOJIS = ['😀','😎','🤩','🥳','🤠','🧙','🧛','🦸','🦹','🤖','👽','🐱','🐶','🦊','🦁','🐯','🐼','🐨','🐰','🐻','🦄','🐵','🐔','🦉','🦋','🐝','🐢','🐙','🦑','🐬','🦈','🐳','🌵','🌸','🌺','🌻','🌷','🍀','🍕','🍔','🌮','🍩','🍪','🍰','🧁','🍦','🍫','🎂','⚡','🔥','💥','🌟','✨','💎','🎯','🏆','🎮','🎲','🎸','🎤','🎧','🎬','📚','✏️','🚀','🛸','⚽','🏀','🎨','🎭','💪','👑','💀','😈','👻','🎃','🦴'];
+
+// Couleurs et noms par défaut des équipes (max 6)
+const TEAM_DEFAULT_NAMES = ['Rouge', 'Bleu', 'Vert', 'Jaune', 'Violet', 'Orange'];
+const TEAM_COUNT_MAX = 6;
+
+function setupEmojiPicker() {
+  const wrap = $('emoji-picker');
+  wrap.innerHTML = EMOJIS.map((e) =>
+    `<button class="emoji-pick" data-emoji="${e}">${e}</button>`).join('');
+  // Sélection par défaut : éclair
+  State.myEmoji = '⚡';
+  wrap.querySelector('[data-emoji="⚡"]')?.classList.add('selected');
+  wrap.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('.emoji-pick');
+    if (!btn) return;
+    wrap.querySelectorAll('.emoji-pick').forEach((b) => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    State.myEmoji = btn.dataset.emoji;
+  });
+}
+setupEmojiPicker();
+
+$('join-code').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+});
+
+$('join-btn').addEventListener('click', joinAsPlayer);
+$('join-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinAsPlayer(); });
+
+async function joinAsPlayer() {
+  const code = $('join-code').value.trim();
+  const name = $('join-name').value.trim();
+  if (code.length !== 4) return toast('Code = 4 lettres');
+  if (!name) return toast('Entre ton pseudo');
+
+  $('join-btn').disabled = true;
+  try {
+    const snap = await get(ref(db, 'rooms/' + code));
+    if (!snap.exists()) throw new Error('Salle introuvable');
+    const data = snap.val();
+    if (data.closed) throw new Error('Partie fermée');
+
+    State.myName = name.slice(0, 20);
+    State.roomCode = code;
+    State.role = 'player';
+
+    const pRef = ref(db, 'rooms/' + code + '/players/' + State.uid);
+    await set(pRef, {
+      name: State.myName, emoji: State.myEmoji,
+      score: 0, ready: false, joinedAt: serverTimestamp(),
+      connected: true,
+    });
+    onDisconnect(child(pRef, 'connected')).set(false);
+
+    $('pl-code').textContent = code;
+    $('pl-emoji').textContent = State.myEmoji;
+    $('pl-name').textContent = State.myName;
+    // Reset du bouton "prêt" au cas où on rejoint après avoir quitté
+    const rb = $('pl-ready');
+    rb.disabled = false;
+    rb.classList.add('ready-pulse');
+    rb.textContent = '✅ Je suis prêt !';
+
+    listenRoom(code);
+    showScreen('player-lobby');
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    $('join-btn').disabled = false;
+  }
+}
+
+// Bouton "Je suis prêt"
+$('pl-ready').addEventListener('click', async () => {
+  if (!State.roomCode || !State.uid) return;
+  try {
+    await update(ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid), { ready: true });
+    $('pl-ready').disabled = true;
+    $('pl-ready').classList.remove('ready-pulse');
+    $('pl-ready').textContent = '✓ Tu es prêt !';
+  } catch (e) {
+    toast("Erreur : " + e.message);
+  }
+});
+
+// ============================================================
+//  REJOINDRE — CONTRÔLE DISTANT
+// ============================================================
+$('cj-code').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+});
+$('cj-pin').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/[^0-9]/g, '');
+});
+$('cj-btn').addEventListener('click', joinAsControl);
+
+async function joinAsControl() {
+  const code = $('cj-code').value.trim();
+  const pin = $('cj-pin').value.trim();
+  if (code.length !== 4) return toast('Code = 4 lettres');
+  if (pin.length !== 4) return toast('PIN = 4 chiffres');
+
+  $('cj-btn').disabled = true;
+  try {
+    const snap = await get(ref(db, 'rooms/' + code));
+    if (!snap.exists()) throw new Error('Salle introuvable');
+    const data = snap.val();
+    if (data.closed) throw new Error('Partie fermée');
+    if (String(data.controlPin) !== pin) throw new Error('PIN incorrect');
+
+    await update(ref(db, 'rooms/' + code), { controllerUid: State.uid });
+    State.roomCode = code;
+    State.role = 'control';
+    $('c-code').textContent = code;
+    listenRoom(code);
+    showScreen('control');
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    $('cj-btn').disabled = false;
+  }
+}
+
+// ============================================================
+//  DÉMARRAGE DE LA PARTIE
+// ============================================================
+$('lobby-start').addEventListener('click', startGame);
+
+// Bouton "Je suis prêt à animer" (hôte)
+$('lobby-host-ready').addEventListener('click', async () => {
+  if (!State.roomCode || State.role !== 'projection') return;
+  try {
+    await update(ref(db, 'rooms/' + State.roomCode), { hostReady: true });
+    const btn = $('lobby-host-ready');
+    btn.disabled = true;
+    btn.classList.remove('ready-pulse');
+    btn.textContent = '✓ Tu es prêt';
+    // Note : on ne lance pas la partie ici ; c'est tryAutoLaunch() qui le fait
+    //        quand le rendu détecte que tout le monde est prêt.
+  } catch (e) {
+    toast("Erreur : " + e.message);
+  }
+});
+
+async function startGame() {
+  if (!State.roomCode || State.role !== 'projection') return;
+  if (!State.lastState || !State.lastState.players) return toast('Pas de joueurs');
+  const nb = Object.keys(State.lastState.players).length;
+  if (nb < 1) return toast('Au moins 1 joueur doit être connecté');
+
+  // Phase = countdown
+  await update(ref(db, 'rooms/' + State.roomCode), { phase: 'countdown' });
+}
+
+// Auto-launch : appelé depuis renderLobby quand tous les joueurs ET l'hôte sont prêts.
+// Garde-fou pour ne déclencher qu'une seule fois.
+let autoLaunchTriggered = false;
+let autoLaunchTimer = null;
+function tryAutoLaunch(data) {
+  if (autoLaunchTriggered) return;
+  if (State.role !== 'projection') return;
+  if (!data || data.phase !== 'lobby') return;
+  if (!data.hostReady) return;
+
+  const players = Object.entries(data.players || {});
+  if (players.length < 1) return;
+  const allReady = players.every(([_, p]) => p.ready);
+  if (!allReady) return;
+
+  // En mode équipes : tout le monde doit avoir choisi
+  if (data.teamsEnabled) {
+    const allHaveTeam = players.every(([_, p]) => typeof p.teamId === 'number');
+    if (!allHaveTeam) return;
+  }
+
+  // Tout le monde prêt → on lance dans 1.5 s pour laisser le temps de voir l'état "tous prêts"
+  autoLaunchTriggered = true;
+  if (autoLaunchTimer) clearTimeout(autoLaunchTimer);
+  $('lobby-start-hint').innerHTML = '🚀 <b style="color:var(--mint);">Tout le monde est prêt — lancement…</b>';
+  autoLaunchTimer = setTimeout(() => { startGame(); }, 1500);
+}
+
+// Si quelqu'un quitte le lobby pendant le compte à rebours auto, on annule
+function cancelAutoLaunch() {
+  if (autoLaunchTimer) { clearTimeout(autoLaunchTimer); autoLaunchTimer = null; }
+  autoLaunchTriggered = false;
+}
+
+// Compte à rebours visuel (10s) - déclenché par le passage phase=countdown
+let countdownTimer = null;
+function startCountdownAnimation() {
+  if (countdownTimer) return;
+  $('cd-title').textContent = State.mode === 'qcm' ? '🎯 MODE QCM' : '🔔 MODE BUZZER';
+  $('cd-subtitle').textContent = State.lastState?.playlistName || '';
+  let n = 10;
+  $('cd-num').textContent = n;
+  $('cd-num').classList.remove('danger');
+  $('screen-countdown').classList.add('active');
+
+  countdownTimer = setInterval(() => {
+    n -= 1;
+    if (n <= 0) {
+      clearInterval(countdownTimer); countdownTimer = null;
+      $('screen-countdown').classList.remove('active');
+      // Côté projection : on lance la phase 'playing'
+      if (State.role === 'projection') startPlayingPhase();
+      return;
+    }
+    $('cd-num').textContent = n;
+    $('cd-num').classList.toggle('danger', n <= 3);
+    // Force la ré-animation
+    $('cd-num').style.animation = 'none';
+    void $('cd-num').offsetWidth;
+    $('cd-num').style.animation = '';
+  }, 1000);
+}
+
+async function startPlayingPhase() {
+  await update(ref(db, 'rooms/' + State.roomCode), { phase: 'playing' });
+  if (State.mode === 'qcm') {
+    // Lance la boucle QCM
+    await startQcmLoop();
+  } else {
+    // Buzzer : on attend que le contrôleur appuie sur "Question suivante"
+    // Mais d'abord pioche la première question automatiquement
+    await nextQuestion();
+  }
+}
+
+// ============================================================
+//  LOGIQUE DU JEU (côté projection)
+// ============================================================
+async function nextQuestion() {
+  if (State.role !== 'projection' || !State.playlist) return;
+
+  const remaining = State.playlist.questions
+    .map((_, i) => i)
+    .filter((i) => !State.usedIndexes.has(i));
+
+  // Fin si plus de questions OU on a atteint le quota
+  if (!remaining.length || State.usedIndexes.size >= State.qcmConfig.nbQuestions) {
+    await finishGame();
+    return;
+  }
+
+  const idx = remaining[Math.floor(Math.random() * remaining.length)];
+  State.usedIndexes.add(idx);
+  State.currentQuestionIndex = idx;
+  const q = State.playlist.questions[idx];
+
+  // Set round entier (plus simple à valider par les règles)
+  await set(ref(db, 'rooms/' + State.roomCode + '/round'), {
+    status: 'armed',
+    question: q.q,
+    choices: State.mode === 'qcm' ? q.choices : null,
+    correct: -1,
+    answer: '',
+    number: State.usedIndexes.size,
+    openedAt: serverTimestamp(),
+  });
+  await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {});
+  await remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {});
+
+  // Vue privée pour le contrôleur (mode buzzer)
+  const privateView = State.mode === 'qcm'
+    ? { answer: q.choices[q.correct], correctIndex: q.correct, question: q.q }
+    : { answer: q.a || '', question: q.q };
+  await set(ref(db, 'private_views/' + State.roomCode), privateView).catch(() => {});
+}
+
+async function revealAnswer() {
+  if (State.role !== 'projection' || State.currentQuestionIndex < 0) return;
+  const q = State.playlist.questions[State.currentQuestionIndex];
+
+  const upd = { status: 'revealed' };
+  if (State.mode === 'qcm') upd.correct = q.correct;
+  else upd.answer = q.a || '';
+  await update(ref(db, 'rooms/' + State.roomCode + '/round'), upd);
+
+  // Distribution des scores
+  await distributeScores();
+}
+
+async function distributeScores() {
+  const data = State.lastState;
+  if (!data) return;
+
+  if (State.mode === 'qcm') {
+    const correctIdx = State.playlist.questions[State.currentQuestionIndex].correct;
+    const answers = Object.entries(data.answers || {})
+      .filter(([_, a]) => a.choice === correctIdx)
+      .sort((a, b) => a[1].tapTime - b[1].tapTime);
+    const timerMs = State.qcmConfig.timerSec * 1000;
+    const openedAt = data.round.openedAt;
+    answers.forEach(async ([uid, ans]) => {
+      // Calcul du score : 50 + (temps_restant * 10) en secondes
+      const responseTime = (ans.tapTime - openedAt) / 1000;
+      const remaining = Math.max(0, State.qcmConfig.timerSec - responseTime);
+      const pts = Math.round(50 + remaining * 10);
+      // On lit le score actuel et on ajoute
+      const player = data.players?.[uid];
+      if (player) {
+        const newScore = (player.score || 0) + pts;
+        await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore }).catch(() => {});
+      }
+    });
+  } else {
+    // Mode buzzer : seul le 1er gagne (l'animateur valide à l'oral)
+    // Ici on attribue +100pts au premier qui a buzzé
+    const buzzes = Object.entries(data.buzzes || {})
+      .sort((a, b) => a[1].tapTime - b[1].tapTime);
+    if (buzzes.length > 0) {
+      const [uid, _] = buzzes[0];
+      const player = data.players?.[uid];
+      if (player) {
+        const newScore = (player.score || 0) + 100;
+        await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore }).catch(() => {});
+      }
+    }
+  }
+}
+
+async function replayCurrentQuestion() {
+  if (State.role !== 'projection') return;
+  await update(ref(db, 'rooms/' + State.roomCode + '/round'), { status: 'armed', correct: -1, answer: '' });
+  await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {});
+  await remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {});
+}
+
+async function finishGame() {
+  if (State.role !== 'projection') return;
+  await update(ref(db, 'rooms/' + State.roomCode), { phase: 'finished' });
+}
+
+// ============================================================
+//  BOUCLE QCM AUTOMATIQUE
+// ============================================================
+function clearQcmTimers() {
+  if (State.qcmLoop.countdownInterval) { clearInterval(State.qcmLoop.countdownInterval); State.qcmLoop.countdownInterval = null; }
+  if (State.qcmLoop.nextStateTimeout) { clearTimeout(State.qcmLoop.nextStateTimeout); State.qcmLoop.nextStateTimeout = null; }
+}
+
+function stopQcmLoop() {
+  State.qcmLoop.running = false;
+  clearQcmTimers();
+  $('proj-countdown').style.display = 'none';
+  $('proj-timer-bar').style.display = 'none';
+}
+
+async function startQcmLoop() {
+  if (State.role !== 'projection' || State.mode !== 'qcm') return;
+  State.qcmLoop.running = true;
+  $('proj-countdown').style.display = '';
+  $('proj-timer-bar').style.display = '';
+  await nextQcmRound();
+}
+
+async function nextQcmRound() {
+  if (!State.qcmLoop.running) return;
+  clearQcmTimers();
+
+  try {
+    await nextQuestion();
+    // Si la partie est finie (phase=finished posé par nextQuestion → finishGame), on s'arrête
+    if (State.usedIndexes.size > State.qcmConfig.nbQuestions) return;
+  } catch (e) {
+    console.error('[nextQcmRound]', e);
+    toast('Erreur : ' + e.message);
+    stopQcmLoop();
+    return;
+  }
+
+  // Démarre le compte à rebours
+  const total = State.qcmConfig.timerSec;
+  State.qcmLoop.startedAt = Date.now();
+  updateProjCountdown(total, total);
+  State.qcmLoop.countdownInterval = setInterval(() => {
+    const elapsed = (Date.now() - State.qcmLoop.startedAt) / 1000;
+    const remaining = total - elapsed;
+    updateProjCountdown(remaining, total);
+    if (remaining <= 0) {
+      clearInterval(State.qcmLoop.countdownInterval);
+      State.qcmLoop.countdownInterval = null;
+    }
+  }, 200);
+
+  // Au bout du timer : révéler + attendre revealSec + next
+  State.qcmLoop.nextStateTimeout = setTimeout(async () => {
+    if (!State.qcmLoop.running) return;
+    try { await revealAnswer(); } catch (e) { console.error(e); }
+    State.qcmLoop.nextStateTimeout = setTimeout(() => {
+      if (!State.qcmLoop.running) return;
+      nextQcmRound();
+    }, State.qcmConfig.revealSec * 1000);
+  }, total * 1000);
+}
+
+function updateProjCountdown(remaining, total) {
+  $('proj-cd-num').textContent = Math.max(0, Math.ceil(remaining));
+  const pct = Math.max(0, Math.min(100, (remaining / total) * 100));
+  $('proj-timer-fill').style.width = pct + '%';
+  const el = $('proj-countdown');
+  el.classList.remove('warn', 'danger');
+  if (remaining <= 5) el.classList.add('danger');
+  else if (remaining <= 10) el.classList.add('warn');
+}
+
+// ============================================================
+//  COTÉ JOUEUR (en jeu)
+// ============================================================
+$('buzzer').addEventListener('click', async () => {
+  if (!State.roomCode || State.role !== 'player') return;
+  const tapTime = serverNow();
+  try {
+    await set(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + State.uid), {
+      name: State.myName, emoji: State.myEmoji, tapTime,
+      serverArrival: serverTimestamp(),
+    });
+    if (navigator.vibrate) navigator.vibrate(30);
+  } catch (e) {
+    console.error('[buzz]', e);
+    toast("Impossible de buzzer");
+  }
+});
+
+function setupQcmPlayerGrid() {
+  const grid = $('p-qcm-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'qcm-btn c' + i;
+    btn.disabled = true;
+    btn.dataset.idx = i;
+    btn.innerHTML = `<span class="qcm-letter">${['A','B','C','D'][i]}</span><span class="qcm-text">…</span>`;
+    btn.addEventListener('click', async () => {
+      if (!State.roomCode || State.role !== 'player') return;
+      const tapTime = serverNow();
+      try {
+        await set(ref(db, 'rooms/' + State.roomCode + '/answers/' + State.uid), {
+          name: State.myName, emoji: State.myEmoji, choice: i, tapTime,
+          serverArrival: serverTimestamp(),
+        });
+        if (navigator.vibrate) navigator.vibrate(30);
+      } catch (e) {
+        console.error('[answer]', e);
+        toast("Impossible d'envoyer la réponse");
+      }
+    });
+    grid.appendChild(btn);
+  }
+}
+setupQcmPlayerGrid();
+
+// ============================================================
+//  RÉACTIONS EMOJI VOLANTES
+// ============================================================
+// Envoi : un joueur clique → on push une réaction dans Firebase
+// (avec un ID unique pour éviter les collisions).
+$('reactions-bar').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.reaction-btn');
+  if (!btn) return;
+  if (State.role !== 'player' || !State.roomCode || !State.uid) return;
+  // Throttle : pas plus d'une réaction toutes les 500 ms par utilisateur
+  const now = Date.now();
+  if (State.lastReactionAt && now - State.lastReactionAt < 500) return;
+  State.lastReactionAt = now;
+
+  const emoji = btn.dataset.emoji;
+  const reactionId = State.uid + '_' + now;
+  try {
+    await set(ref(db, 'rooms/' + State.roomCode + '/reactions/' + reactionId), {
+      emoji, name: State.myName, ts: serverTimestamp(),
+    });
+    if (navigator.vibrate) navigator.vibrate(15);
+  } catch (err) { console.error('[reaction]', err); }
+});
+
+// Réception : écoute des nouvelles réactions et affichage volant.
+// On garde un timestamp de référence pour ne pas rejouer l'historique.
+const seenReactions = new Set();
+let reactionsFirstScan = true;
+function onReactionsUpdate(data) {
+  if (!data || !data.reactions) {
+    seenReactions.clear();
+    reactionsFirstScan = true;
+    return;
+  }
+  Object.entries(data.reactions).forEach(([id, r]) => {
+    if (seenReactions.has(id)) return;
+    seenReactions.add(id);
+    // À la première écoute, on ne rejoue pas l'historique
+    if (reactionsFirstScan) return;
+    showFloatingEmoji(r.emoji);
+  });
+  reactionsFirstScan = false;
+}
+
+function showFloatingEmoji(emoji) {
+  const el = document.createElement('div');
+  el.className = 'floating-emoji';
+  el.textContent = emoji;
+  el.style.left = (Math.random() * 80 + 10) + 'vw';
+  el.style.animationDuration = (2.5 + Math.random() * 1.5) + 's';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// Nettoyage périodique des vieilles réactions (côté projection uniquement,
+// pour ne pas saturer Firebase).
+let reactionsCleanupTimer = null;
+function startReactionsCleanup() {
+  if (reactionsCleanupTimer) return;
+  reactionsCleanupTimer = setInterval(async () => {
+    if (State.role !== 'projection' || !State.roomCode || !State.lastState) return;
+    const reactions = State.lastState.reactions || {};
+    const cutoff = Date.now() - 8000;   // garder 8s de réactions
+    const toDelete = [];
+    Object.entries(reactions).forEach(([id, r]) => {
+      if (r.ts && r.ts < cutoff) toDelete.push(id);
+    });
+    for (const id of toDelete) {
+      remove(ref(db, 'rooms/' + State.roomCode + '/reactions/' + id)).catch(() => {});
+    }
+  }, 5000);
+}
+function stopReactionsCleanup() {
+  if (reactionsCleanupTimer) { clearInterval(reactionsCleanupTimer); reactionsCleanupTimer = null; }
+}
+
+// ============================================================
+//  MESSAGES DYNAMIQUES (sur l'écran de projection)
+// ============================================================
+// Bandeau qui affiche des messages de moments-clés ("X prend la tête !", etc.)
+let dynMsgTimer = null;
+function showDynMsg(text, durationMs = 2500) {
+  const el = $('dyn-msg');
+  el.innerHTML = text;
+  el.classList.remove('show');
+  void el.offsetWidth;  // force reflow pour rejouer l'anim
+  el.classList.add('show');
+  if (dynMsgTimer) clearTimeout(dynMsgTimer);
+  dynMsgTimer = setTimeout(() => el.classList.remove('show'), durationMs);
+}
+
+// Détection des moments-clés : on observe les changements d'état
+let prevLeader = null;
+let prevPhase = null;
+let prevStatus = null;
+let prevFirstBuzzer = null;
+
+function detectDynEvents(data) {
+  if (!data || State.role !== 'projection') return;
+
+  // Évènement : quelqu'un buzze en premier (mode buzzer)
+  if (data.mode === 'buzzer' && data.round?.status === 'armed') {
+    const buzzes = Object.entries(data.buzzes || {}).sort((a, b) => a[1].tapTime - b[1].tapTime);
+    if (buzzes.length > 0) {
+      const [uid, b] = buzzes[0];
+      if (uid !== prevFirstBuzzer) {
+        prevFirstBuzzer = uid;
+        const p = data.players?.[uid];
+        if (p) showDynMsg(`⚡ ${escapeHtml(p.name || 'Joueur')} a buzzé en premier !`, 2000);
+      }
+    } else { prevFirstBuzzer = null; }
+  } else { prevFirstBuzzer = null; }
+
+  // Évènement : nouveau leader au classement
+  // (uniquement après une révélation, pour ne pas spammer)
+  if (data.round?.status === 'revealed' && data.round?.status !== prevStatus) {
+    if (data.teamsEnabled && data.teams) {
+      const teams = computeTeamScores(data);
+      if (teams.length > 0 && teams[0].score > 0) {
+        const top = teams[0];
+        if (prevLeader !== 'T_' + top.id) {
+          prevLeader = 'T_' + top.id;
+          showDynMsg(`🚩 <b>${escapeHtml(top.name)}</b> prend la tête !`, 2200);
+        }
+      }
+    } else {
+      const players = Object.entries(data.players || {})
+        .map(([id, p]) => ({ id, ...p }))
+        .sort((a, b) => (b.score || 0) - (a.score || 0));
+      if (players.length > 0 && players[0].score > 0) {
+        const top = players[0];
+        if (prevLeader !== 'P_' + top.id) {
+          prevLeader = 'P_' + top.id;
+          showDynMsg(`👑 <b>${escapeHtml(top.name || 'Joueur')}</b> prend la tête !`, 2200);
+        }
+      }
+    }
+  }
+  prevStatus = data.round?.status;
+
+  // Évènement : début de la partie
+  if (data.phase === 'playing' && prevPhase !== 'playing') {
+    showDynMsg('🚀 C\'est parti !', 1500);
+  }
+  prevPhase = data.phase;
+}
+
+// ============================================================
+//  CONTRÔLE DISTANT (boutons)
+// ============================================================
+$('c-next').addEventListener('click', () => sendControlCmd('next'));
+$('c-reveal').addEventListener('click', () => sendControlCmd('reveal'));
+$('c-replay').addEventListener('click', () => sendControlCmd('replay'));
+
+async function sendControlCmd(name) {
+  if (State.role !== 'control' || !State.roomCode) return;
+  await set(ref(db, 'rooms/' + State.roomCode + '/cmd'), {
+    name, ts: serverTimestamp(),
+  }).catch((e) => toast("Erreur : " + e.message));
+}
+
+// Le projecteur écoute les commandes
+let lastCmdTs = 0;
+async function handleControlCommand(name, ts) {
+  if (!ts || ts <= lastCmdTs) return;
+  lastCmdTs = ts;
+  try {
+    if (name === 'next') await nextQuestion();
+    if (name === 'reveal') await revealAnswer();
+    if (name === 'replay') await replayCurrentQuestion();
+  } catch (e) { console.error(e); }
+}
+
+// ============================================================
+//  RENDU GÉNÉRAL — appelé à chaque màj Firebase
+// ============================================================
+function render() {
+  const data = State.lastState;
+  if (!data) return;
+
+  // 1) Gestion des transitions de phase
+  handlePhaseTransition(data);
+
+  // 2) Côté projection : écoute les cmd du contrôleur
+  if (State.role === 'projection' && data.cmd && data.cmd.ts) {
+    handleControlCommand(data.cmd.name, data.cmd.ts);
+  }
+
+  // 3) Réactions emoji (tous les rôles voient les emojis flotter)
+  onReactionsUpdate(data);
+  // 4) Messages dynamiques (uniquement projection)
+  detectDynEvents(data);
+
+  // 5) Rendu selon le rôle
+  if (State.role === 'projection') {
+    if ($('screen-lobby').classList.contains('active')) renderLobby(data);
+    else renderProjection(data);
+  }
+  if (State.role === 'control') renderControl(data);
+  if (State.role === 'player') {
+    if ($('screen-player-lobby').classList.contains('active')) renderPlayerLobby(data);
+    else renderPlayer(data);
+  }
+}
+
+function handlePhaseTransition(data) {
+  const phase = data.phase || 'lobby';
+  // Tous les rôles : si phase=countdown et on n'est pas déjà dessus, démarrer l'anim
+  if (phase === 'countdown' && !$('screen-countdown').classList.contains('active')) {
+    startCountdownAnimation();
+  }
+  // Si phase=playing, basculer chaque rôle sur son écran de jeu
+  if (phase === 'playing') {
+    if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
+      showScreen('projection');
+    }
+    if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
+      showScreen('control');
+    }
+    if (State.role === 'player' && !$('screen-player').classList.contains('active')) {
+      showScreen('player');
+    }
+  }
+  // Si phase=finished, podium pour tous
+  if (phase === 'finished' && !$('screen-podium').classList.contains('active')) {
+    showPodium(data);
+  }
+  // Si phase=lobby (retour), montrer le lobby (utile pour le contrôleur qui rejoint)
+  if (phase === 'lobby') {
+    if (State.role === 'control' && $('screen-control').classList.contains('active')) {
+      // Le contrôleur attend dans son écran, c'est OK
+    }
+  }
+}
+
+// ---- RENDU LOBBY (côté projection) ----
+function renderLobby(data) {
+  const players = Object.entries(data.players || {});
+  $('lobby-count').textContent = players.length;
+  const ready = players.filter(([_, p]) => p.ready).length;
+  const hostReady = !!data.hostReady;
+
+  // Compteur global incluant l'hôte
+  const totalReady = ready + (hostReady ? 1 : 0);
+  const totalNeeded = players.length + 1;   // joueurs + hôte
+  const hintParts = [];
+  hintParts.push(`${totalReady} / ${totalNeeded} prêts (joueurs + animateur)`);
+  if (!hostReady) hintParts.push('Clique "Je suis prêt à animer" pour pouvoir lancer.');
+  $('lobby-start-hint').innerHTML = players.length
+    ? hintParts.join('<br>')
+    : 'Au moins 1 joueur doit être connecté.';
+
+  const list = $('lobby-players');
+  if (!players.length) {
+    list.innerHTML = '<p class="muted">En attente de joueurs…</p>';
+  } else {
+    list.innerHTML = players.map(([id, p]) => {
+      let teamBadge = '';
+      if (data.teamsEnabled && data.teams) {
+        if (typeof p.teamId === 'number' && data.teams[p.teamId]) {
+          const t = data.teams[p.teamId];
+          teamBadge = `<span class="team-badge team-color-${t.colorIdx}">${escapeHtml(t.name)}</span>`;
+        } else {
+          teamBadge = `<span class="muted" style="font-size:11px;">sans équipe</span>`;
+        }
+      }
+      return `
+      <div class="player-row">
+        <span class="p-emoji">${p.emoji || '⚡'}</span>
+        <span class="p-name">${escapeHtml(p.name || 'Joueur')}</span>
+        ${teamBadge}
+        <span class="p-ready ${p.ready ? '' : 'not-ready'}">${p.ready ? '✓ Prêt' : '…'}</span>
+        <button class="p-kick" data-kick="${id}">✕</button>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-kick]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        await remove(ref(db, 'rooms/' + State.roomCode + '/players/' + btn.dataset.kick)).catch(() => {});
+      }));
+  }
+
+  $('lobby-start').disabled = players.length === 0;
+
+  // En mode équipes : tous les joueurs doivent avoir choisi une équipe
+  if (data.teamsEnabled) {
+    const everyoneHasTeam = players.every(([_, p]) => typeof p.teamId === 'number');
+    if (!everyoneHasTeam) {
+      cancelAutoLaunch();
+    }
+  }
+  // Si quelqu'un n'est plus prêt, on annule l'auto-launch en cours.
+  if (players.length === 0 || !hostReady || !players.every(([_, p]) => p.ready)) {
+    cancelAutoLaunch();
+  }
+  // Tente l'auto-launch (idempotent grâce au flag)
+  tryAutoLaunch(data);
+}
+
+// ---- RENDU PROJECTION (en jeu) ----
+function renderProjection(data) {
+  // En phase lobby, on rend le lobby (oui l'écran lobby est séparé mais l'état doit suivre)
+  if (data.phase === 'lobby') {
+    renderLobby(data);
+    return;
+  }
+
+  const round = data.round || { status: 'idle' };
+  const total = data.nbQuestions || State.qcmConfig.nbQuestions;
+  const played = State.usedIndexes.size;
+
+  // Status
+  const st = $('proj-status'), txt = $('proj-status-txt');
+  st.className = 'status-tag status-' + round.status;
+  txt.textContent = {
+    idle: 'Prêt',
+    armed: data.mode === 'qcm' ? 'À leurs réponses !' : 'BUZZER ARMÉ',
+    locked: 'Verrouillé',
+    revealed: 'Révélé',
+  }[round.status] || 'Prêt';
+
+  $('proj-qnumber').textContent = `Question ${played} / ${total}`;
+  $('proj-progress').style.width = (total ? (100 * played / total) : 0) + '%';
+
+  if (round.question) $('proj-question').classList.remove('empty'), $('proj-question').textContent = round.question;
+  else $('proj-question').classList.add('empty'), $('proj-question').textContent = 'En attente…';
+
+  // Choix QCM
+  const qcmBox = $('proj-qcm-choices');
+  if (data.mode === 'qcm' && round.question && Array.isArray(round.choices)) {
+    qcmBox.style.display = '';
+    const voteCounts = [0,0,0,0];
+    Object.values(data.answers || {}).forEach((a) => {
+      if (a.choice >= 0 && a.choice <= 3) voteCounts[a.choice]++;
+    });
+    qcmBox.innerHTML = round.choices.map((c, i) => {
+      let cls = 'qcm-choice c' + i;
+      if (round.status === 'revealed') {
+        if (i === round.correct) cls += ' correct';
+        else cls += ' wrong';
+      }
+      const votes = voteCounts[i];
+      return `<div class="${cls}">
+        <span class="qcm-letter">${['A','B','C','D'][i]}</span>
+        <span class="qcm-text">${escapeHtml(c)}</span>
+        ${votes > 0 ? `<span class="qcm-votes">${votes}</span>` : ''}
+      </div>`;
+    }).join('');
+  } else {
+    qcmBox.style.display = 'none';
+  }
+
+  // Scoreboard
+  renderScoreboard('proj-scores', data);
+}
+
+// ---- RENDU CONTRÔLE DISTANT ----
+function renderControl(data) {
+  const round = data.round || { status: 'idle' };
+  const total = data.nbQuestions || 10;
+  const played = round.number || 0;
+
+  const st = $('c-status'), txt = $('c-status-txt');
+  st.className = 'status-tag status-' + round.status;
+  txt.textContent = {
+    idle: 'Prêt', armed: 'Manche en cours', locked: 'Verrouillé', revealed: 'Révélé',
+  }[round.status] || 'En attente';
+
+  $('c-qnumber').textContent = `Question ${played} / ${total}`;
+  $('c-progress').style.width = (total ? (100 * played / total) : 0) + '%';
+
+  if (round.question) $('c-question').textContent = round.question;
+  else $('c-question').innerHTML = '<span style="color:var(--ink-dim); font-family:Outfit; font-weight:400; font-style:italic;">En attente du démarrage</span>';
+
+  // Réponse (privateView)
+  const pv = State.latestPrivateView;
+  if (round.question && pv && pv.answer) {
+    $('c-answer').style.display = '';
+    $('c-answer-text').textContent = pv.answer;
+    if (round.status === 'revealed') {
+      $('c-answer').classList.add('revealed');
+      $('c-answer-note').textContent = '✅ Visible par tous.';
+    } else {
+      $('c-answer').classList.remove('revealed');
+      $('c-answer-note').textContent = '🔒 Visible uniquement par toi.';
+    }
+  } else {
+    $('c-answer').style.display = 'none';
+  }
+
+  const hasQ = !!round.question;
+  $('c-reveal').disabled = !hasQ || round.status === 'revealed';
+  $('c-replay').disabled = !hasQ;
+  $('c-next').textContent = played === 0 ? '▶ Démarrer la 1ère question'
+                          : (played >= total ? '↻ Terminer' : '▶ Question suivante');
+
+  renderScoreboard('c-scores', data);
+}
+
+// ---- RENDU JOUEUR (en jeu) ----
+function renderPlayer(data) {
+  const round = data.round || { status: 'idle' };
+  const mePlayer = data.players?.[State.uid];
+  $('me-emoji').textContent = mePlayer?.emoji || State.myEmoji;
+  $('me-name').textContent = mePlayer?.name || State.myName;
+  $('me-score').textContent = mePlayer?.score || 0;
+  // Badge équipe (si applicable)
+  const meBadge = $('me-team-badge');
+  if (data.teamsEnabled && data.teams && typeof mePlayer?.teamId === 'number') {
+    const t = data.teams[mePlayer.teamId];
+    if (t) {
+      meBadge.innerHTML = `<span class="team-badge team-color-${t.colorIdx}">${escapeHtml(t.name)}</span>`;
+    } else { meBadge.innerHTML = ''; }
+  } else { meBadge.innerHTML = ''; }
+
+  if (data.mode === 'qcm') {
+    $('p-buzzer-view').style.display = 'none';
+    $('p-qcm-view').style.display = '';
+    renderPlayerQcm(data);
+  } else {
+    $('p-buzzer-view').style.display = '';
+    $('p-qcm-view').style.display = 'none';
+    renderPlayerBuzzer(data);
+  }
+
+  // Vibration à l'armement
+  const myInter = data.mode === 'qcm'
+    ? data.answers?.[State.uid]
+    : data.buzzes?.[State.uid];
+  const newQ = round.question && round.question !== State.lastQuestion;
+  if (round.status === 'armed' && (State.lastStatus !== 'armed' || newQ) && !myInter) {
+    if (navigator.vibrate) navigator.vibrate([20,40,20]);
+  }
+  State.lastStatus = round.status;
+  State.lastQuestion = round.question;
+
+  renderPlayerResult(data);
+}
+
+function renderPlayerBuzzer(data) {
+  const round = data.round;
+  const buzzer = $('buzzer');
+  const mine = data.buzzes?.[State.uid];
+  buzzer.className = 'buzzer';
+  if (mine) {
+    // Calcule mon rang
+    const all = Object.entries(data.buzzes || {}).sort((a,b) => a[1].tapTime - b[1].tapTime);
+    const myRank = all.findIndex(([id]) => id === State.uid) + 1;
+    buzzer.classList.add('done'); buzzer.disabled = true;
+    buzzer.textContent = myRank === 1 ? '1er !' : '#' + myRank;
+  } else if (round.status === 'armed') {
+    buzzer.classList.add('armed'); buzzer.disabled = false;
+    buzzer.textContent = 'BUZZ';
+  } else {
+    buzzer.classList.add('waiting'); buzzer.disabled = true;
+    buzzer.textContent = round.status === 'locked' ? 'Trop tard'
+                       : round.status === 'revealed' ? '—' : '…';
+  }
+}
+
+function renderPlayerQcm(data) {
+  const round = data.round;
+  const grid = $('p-qcm-grid');
+  const myAnswer = data.answers?.[State.uid];
+  $('p-qcm-question').textContent = round.question || 'En attente…';
+
+  const buttons = grid.querySelectorAll('.qcm-btn');
+  if (Array.isArray(round.choices) && round.choices.length === 4) {
+    round.choices.forEach((c, i) => {
+      const btn = buttons[i];
+      btn.querySelector('.qcm-text').textContent = c;
+      btn.classList.remove('chosen', 'not-chosen');
+      if (myAnswer) {
+        btn.disabled = true;
+        if (i === myAnswer.choice) btn.classList.add('chosen');
+        else btn.classList.add('not-chosen');
+      } else {
+        btn.disabled = round.status !== 'armed';
+      }
+    });
+  }
+}
+
+function renderPlayerResult(data) {
+  const round = data.round;
+  const res = $('p-result');
+  if (data.mode === 'qcm') {
+    const myAnswer = data.answers?.[State.uid];
+    if (round.status === 'revealed' && myAnswer) {
+      const right = myAnswer.choice === round.correct;
+      if (right) {
+        // Trouve mon rang parmi les bonnes réponses
+        const correct = Object.entries(data.answers || {})
+          .filter(([_, a]) => a.choice === round.correct)
+          .sort((a,b) => a[1].tapTime - b[1].tapTime);
+        const myIdx = correct.findIndex(([id]) => id === State.uid) + 1;
+        // Score gagné = même calcul que dans distributeScores
+        const total = data.timer || 30;
+        const responseTime = (myAnswer.tapTime - round.openedAt) / 1000;
+        const remaining = Math.max(0, total - responseTime);
+        const pts = Math.round(50 + remaining * 10);
+        res.innerHTML = `
+          <div class="result-rank ${myIdx === 1 ? 'r1' : ''}">✅ ${myIdx === 1 ? '1er à trouver !' : myIdx + 'e à trouver'}</div>
+          <div class="result-pts">+${pts} pts</div>`;
+      } else {
+        res.innerHTML = `<div class="result-rank wrong">❌ Mauvaise réponse</div>
+          <div class="result-msg">Réponse : <b>${escapeHtml(round.choices[round.correct] || '')}</b></div>`;
+      }
+    } else if (myAnswer) {
+      res.innerHTML = '<div class="result-msg">Réponse envoyée…</div>';
+    } else {
+      res.innerHTML = '';
+    }
+  } else {
+    const mine = data.buzzes?.[State.uid];
+    if (mine) {
+      const all = Object.entries(data.buzzes || {}).sort((a,b) => a[1].tapTime - b[1].tapTime);
+      const myRank = all.findIndex(([id]) => id === State.uid) + 1;
+      const first = all[0][1].tapTime;
+      const gap = (mine.tapTime - first) / 1000;
+      res.innerHTML = `
+        <div class="result-rank ${myRank === 1 ? 'r1' : ''}">${myRank === 1 ? '🏆 1er' : myRank + 'e'}</div>
+        <div class="result-msg">${myRank === 1 ? 'Tu as buzzé en premier !' : '+' + gap.toFixed(3) + ' s'}</div>`;
+    } else if (round.status === 'locked' || round.status === 'revealed') {
+      res.innerHTML = '<div class="result-msg">Manche terminée.</div>';
+    } else { res.innerHTML = ''; }
+  }
+}
+
+// ---- SCOREBOARD (commun projection + contrôle) ----
+function renderScoreboard(elementId, data) {
+  const list = $(elementId);
+  const players = Object.entries(data.players || {})
+    .map(([id, p]) => ({ id, ...p }));
+
+  if (!players.length) {
+    list.innerHTML = '<p class="muted">Aucun joueur.</p>';
+    return;
+  }
+
+  // Mode équipes : agrégation par équipe
+  if (data.teamsEnabled && data.teams) {
+    const teamsAgg = computeTeamScores(data);
+    list.innerHTML = teamsAgg.map((t, i) => `
+      <div class="team-score-row team-color-${t.colorIdx} ${i === 0 ? 'rank-1' : ''}">
+        <span class="ts-rank">${i + 1}</span>
+        <span class="ts-dot"></span>
+        <span class="ts-name">${escapeHtml(t.name)}<span class="ts-members">(${t.members} joueur${t.members > 1 ? 's' : ''})</span></span>
+        <span class="ts-pts">${t.score}</span>
+      </div>`).join('');
+    return;
+  }
+
+  // Mode normal : classement par joueur
+  players.sort((a, b) => (b.score || 0) - (a.score || 0));
+  list.innerHTML = players.map((p, i) => `
+    <div class="score-row rank-${i + 1}">
+      <span class="s-rank">${i + 1}</span>
+      <span class="s-emoji">${p.emoji || '⚡'}</span>
+      <span class="s-name">${escapeHtml(p.name || 'Joueur')}</span>
+      <span class="s-pts">${p.score || 0}</span>
+    </div>`).join('');
+}
+
+// Calcule scores par équipe (helper)
+function computeTeamScores(data) {
+  const teams = Object.values(data.teams || {}).map((t) => ({
+    ...t, score: 0, members: 0,
+  }));
+  const teamsById = {};
+  teams.forEach((t) => { teamsById[t.id] = t; });
+  Object.values(data.players || {}).forEach((p) => {
+    if (typeof p.teamId === 'number' && teamsById[p.teamId]) {
+      teamsById[p.teamId].score += (p.score || 0);
+      teamsById[p.teamId].members += 1;
+    }
+  });
+  return teams.sort((a, b) => b.score - a.score);
+}
+
+// ============================================================
+//  PODIUM FINAL
+// ============================================================
+function showPodium(data) {
+  stopQcmLoop();
+  showScreen('podium');
+
+  if (data.teamsEnabled && data.teams) {
+    showPodiumTeams(data);
+  } else {
+    showPodiumPlayers(data);
+  }
+
+  spawnConfetti();
+  $('podium-subtitle').textContent = data.playlistName || 'Bravo à tous !';
+}
+
+function showPodiumPlayers(data) {
+  const players = Object.entries(data.players || {})
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  const top3 = players.slice(0, 3);
+  const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+  const positions = top3[1] ? [2, 1, 3] : [1];
+  $('podium-stage').innerHTML = order.map((p, idx) => {
+    const pos = positions[idx];
+    return `<div class="podium-spot podium-${pos}">
+      <div class="p-emoji">${p.emoji || '⚡'}</div>
+      <div class="p-name">${escapeHtml(p.name || 'Joueur')}</div>
+      <div class="p-score">${p.score || 0} pts</div>
+      <div class="podium-bar">${pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉'}</div>
+    </div>`;
+  }).join('');
+
+  $('podium-fullrank').innerHTML = players.map((p, i) => `
+    <div class="score-row ${i < 3 ? 'rank-' + (i+1) : ''}">
+      <span class="s-rank">${i + 1}</span>
+      <span class="s-emoji">${p.emoji || '⚡'}</span>
+      <span class="s-name">${escapeHtml(p.name || 'Joueur')}</span>
+      <span class="s-pts">${p.score || 0}</span>
+    </div>`).join('');
+}
+
+function showPodiumTeams(data) {
+  const teams = computeTeamScores(data);
+  const top3 = teams.slice(0, 3);
+  const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+  const positions = top3[1] ? [2, 1, 3] : [1];
+
+  $('podium-stage').innerHTML = order.map((t, idx) => {
+    const pos = positions[idx];
+    return `<div class="podium-spot podium-${pos} team-color-${t.colorIdx}">
+      <div class="p-emoji">${pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉'}</div>
+      <div class="p-name">${escapeHtml(t.name)}</div>
+      <div class="p-score">${t.score} pts</div>
+      <div class="team-podium-bar">${t.members} 👥</div>
+    </div>`;
+  }).join('');
+
+  // Classement complet : équipes d'abord, puis détail des joueurs
+  let html = teams.map((t, i) => `
+    <div class="team-score-row team-color-${t.colorIdx} ${i === 0 ? 'rank-1' : ''}">
+      <span class="ts-rank">${i + 1}</span>
+      <span class="ts-dot"></span>
+      <span class="ts-name">${escapeHtml(t.name)}<span class="ts-members">(${t.members} joueur${t.members > 1 ? 's' : ''})</span></span>
+      <span class="ts-pts">${t.score}</span>
+    </div>`).join('');
+  // Détail individuel
+  const players = Object.entries(data.players || {})
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+  html += '<div class="section-title">Détail des joueurs</div>';
+  html += players.map((p, i) => {
+    const t = data.teams[p.teamId];
+    const teamBadge = t
+      ? `<span class="team-badge team-color-${t.colorIdx}">${escapeHtml(t.name)}</span>`
+      : '';
+    return `
+    <div class="score-row">
+      <span class="s-rank">${i + 1}</span>
+      <span class="s-emoji">${p.emoji || '⚡'}</span>
+      <span class="s-name">${escapeHtml(p.name || 'Joueur')} ${teamBadge}</span>
+      <span class="s-pts">${p.score || 0}</span>
+    </div>`;
+  }).join('');
+  $('podium-fullrank').innerHTML = html;
+}
+
+function spawnConfetti() {
+  const emojis = ['🎉','🎊','✨','⭐','💫','🌟'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    c.style.left = (Math.random() * 100) + 'vw';
+    c.style.animationDelay = (Math.random() * 2) + 's';
+    c.style.animationDuration = (3 + Math.random() * 2) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 6000);
+  }
+}
+
+// Boutons podium
+$('podium-home').addEventListener('click', () => { leaveAll(); showScreen('menu'); });
+$('podium-replay').addEventListener('click', async () => {
+  // Si on était la projection, on relance une nouvelle partie avec la même playlist
+  if (State.role === 'projection' && State.playlist) {
+    await closeRoom();
+    State.usedIndexes = new Set();
+    State.currentQuestionIndex = -1;
+    await createRoom();
+    showScreen('lobby');
+  } else {
+    leaveAll(); showScreen('menu');
+  }
+});
+
+// ============================================================
+//  ÉCRAN LOBBY — quand State.lastState change, on déclenche le rendu
+// ============================================================
+// La fonction render() appelle handlePhaseTransition qui gère ça.
+// Le bouton "Démarrer la partie" est dans renderLobby.
+
+// ============================================================
+//  LOBBY JOUEUR — état "prêt"
+// ============================================================
+function renderPlayerLobby(data) {
+  const players = Object.entries(data.players || {});
+  const ready = players.filter(([_, p]) => p.ready).length;
+  const hostTxt = data.hostReady ? '✓ animateur prêt' : '… animateur pas prêt';
+  $('pl-ready-status').innerHTML = `${ready} / ${players.length} joueurs prêts<br>${hostTxt}`;
+
+  // Mode équipes
+  const teamsEnabled = !!data.teamsEnabled;
+  const wrap = $('pl-team-picker-wrap');
+  if (teamsEnabled && data.teams) {
+    wrap.style.display = '';
+    const me = data.players?.[State.uid] || {};
+    const myTeamId = me.teamId;
+    const teamsArr = Object.values(data.teams).sort((a, b) => a.id - b.id);
+    // Compter les joueurs par équipe
+    const counts = {};
+    players.forEach(([_, p]) => {
+      if (typeof p.teamId === 'number') counts[p.teamId] = (counts[p.teamId] || 0) + 1;
+    });
+    $('pl-team-picker').innerHTML = teamsArr.map((t) => `
+      <div class="team-pick-card team-color-${t.colorIdx} ${myTeamId === t.id ? 'selected' : ''}"
+           data-team-id="${t.id}">
+        <div class="team-dot"></div>
+        <div class="team-info">
+          <div class="team-name">${escapeHtml(t.name)}</div>
+          <div class="team-count">${counts[t.id] || 0} joueur${(counts[t.id] || 0) > 1 ? 's' : ''}</div>
+        </div>
+      </div>
+    `).join('');
+    // Handlers de clic
+    $('pl-team-picker').querySelectorAll('.team-pick-card').forEach((card) => {
+      card.addEventListener('click', async () => {
+        const teamId = parseInt(card.dataset.teamId, 10);
+        try {
+          await update(ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid),
+            { teamId });
+        } catch (e) {
+          toast("Erreur : " + e.message);
+        }
+      });
+    });
+
+    // Si pas d'équipe choisie, désactive le bouton "prêt"
+    const rb = $('pl-ready');
+    if (typeof myTeamId !== 'number' && !rb.disabled) {
+      // Pas encore choisi : on bloque "prêt" tant que pas d'équipe
+      rb.disabled = true;
+      rb.textContent = '↑ Choisis ton équipe d\'abord';
+      rb.classList.remove('ready-pulse');
+    } else if (typeof myTeamId === 'number' && !me.ready) {
+      // Équipe choisie mais pas encore prêt : on réactive le bouton
+      rb.disabled = false;
+      rb.textContent = '✅ Je suis prêt !';
+      rb.classList.add('ready-pulse');
+    }
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+</script>
+</body>
+</html>
