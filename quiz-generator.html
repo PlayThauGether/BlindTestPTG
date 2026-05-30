@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Generator — BuzzQuiz PTG</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0d0b1f;
+  --panel:    #161230;
+  --panel2:   #1e1940;
+  --line:     rgba(255,255,255,.1);
+  --ink:      #f4f1ff;
+  --ink-dim:  #9b8fc4;
+  --accent:   #ff5c7a;
+  --gold:     #ffd166;
+  --mint:     #06d6a0;
+  --purple:   #8338ec;
+  --r: 12px;
+}
+
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: 'Outfit', sans-serif; font-size: 15px;
+  min-height: 100vh; padding: 0 0 60px;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #1a1040 0%, #0d0b1f 100%);
+  border-bottom: 1px solid var(--line);
+  padding: 20px 24px 18px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.header-logo { font-family: 'Fraunces'; font-weight: 900; font-size: 26px; }
+.header-logo span { color: var(--accent); }
+.header-sub { color: var(--ink-dim); font-size: 13px; }
+.header-right { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* LAYOUT */
+.main { max-width: 960px; margin: 0 auto; padding: 28px 16px; display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+@media (max-width: 800px) { .main { grid-template-columns: 1fr; } }
+
+/* CARDS */
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 16px; padding: 20px;
+}
+.card-title {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 18px;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+
+/* FORM */
+label { display: block; font-weight: 700; font-size: 12px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; margin-top: 14px; }
+label:first-child { margin-top: 0; }
+input[type=text], textarea, select {
+  width: 100%; background: var(--panel2); border: 1px solid var(--line);
+  color: var(--ink); border-radius: var(--r); padding: 10px 14px;
+  font-family: 'Outfit'; font-size: 14px; outline: none;
+  transition: border-color .2s;
+}
+input[type=text]:focus, textarea:focus { border-color: var(--purple); }
+textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+/* CHOICES */
+.choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.choice-row { display: flex; align-items: center; gap: 8px; }
+.choice-letter {
+  width: 30px; height: 30px; border-radius: 8px; flex: none;
+  display: grid; place-items: center; font-weight: 800; font-size: 13px;
+}
+.c0 { background: #4a6cf7; color: #fff; }
+.c1 { background: #e84393; color: #fff; }
+.c2 { background: #f6a623; color: #1a0; }
+.c3 { background: #06d6a0; color: #063; }
+.choice-input { flex: 1; }
+.correct-radio { display: none; }
+.correct-label {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line);
+  flex: none; cursor: pointer; display: grid; place-items: center; transition: all .15s;
+}
+.correct-radio:checked + .correct-label { background: var(--mint); border-color: var(--mint); }
+.correct-radio:checked + .correct-label::after { content: '✓'; font-size: 11px; color: #063; font-weight: 900; }
+
+/* BUTTONS */
+.btn {
+  padding: 10px 18px; border-radius: var(--r); border: none;
+  font-family: 'Outfit'; font-weight: 700; font-size: 14px; cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.btn:hover { opacity: .88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--purple); color: #fff; }
+.btn-gold { background: var(--gold); color: #1a0800; }
+.btn-mint { background: var(--mint); color: #022; }
+.btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-full { width: 100%; text-align: center; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+/* AI SECTION */
+.ai-section {
+  background: linear-gradient(135deg, rgba(131,56,236,.12), rgba(6,214,160,.08));
+  border: 1px solid rgba(131,56,236,.35); border-radius: var(--r);
+  padding: 14px; margin-top: 12px;
+}
+.ai-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--purple); color: #fff; border-radius: 999px;
+  padding: 3px 10px; font-size: 11px; font-weight: 700;
+  letter-spacing: .5px; margin-bottom: 10px;
+}
+.ai-generating {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--ink-dim); font-size: 13px; padding: 8px 0;
+}
+.spinner-sm {
+  width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2);
+  border-top-color: var(--purple); border-radius: 50%;
+  animation: spin .7s linear infinite; flex: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* QUESTION LIST */
+.q-list { display: flex; flex-direction: column; gap: 10px; }
+.q-item {
+  background: var(--panel2); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+  transition: border-color .15s;
+}
+.q-item:hover { border-color: var(--purple); }
+.q-item.active { border-color: var(--mint); background: rgba(6,214,160,.06); }
+.q-num {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 18px;
+  color: var(--gold); min-width: 28px; line-height: 1.2;
+}
+.q-body { flex: 1; min-width: 0; }
+.q-text { font-weight: 700; font-size: 14px; line-height: 1.4; }
+.q-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.q-chip {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--ink-dim);
+}
+.q-chip.correct { background: rgba(6,214,160,.15); border-color: var(--mint); color: var(--mint); }
+.q-actions { display: flex; gap: 4px; flex: none; }
+.q-del { background: rgba(255,92,122,.15); border: none; color: var(--accent);
+  width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.q-del:hover { background: var(--accent); color: #fff; }
+.q-edit-btn { background: rgba(131,56,236,.15); border: none; color: var(--purple);
+  width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+.q-edit-btn:hover { background: var(--purple); color: #fff; }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 32px 16px; color: var(--ink-dim); }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+/* API KEY */
+.api-key-section { margin-bottom: 18px; }
+.api-key-row { display: flex; gap: 8px; }
+.api-key-row input { flex: 1; }
+.api-status { font-size: 12px; margin-top: 5px; }
+.api-status.ok { color: var(--mint); }
+.api-status.err { color: var(--accent); }
+
+/* EXPORT */
+.export-box {
+  background: #0a0818; border: 1px solid var(--line); border-radius: var(--r);
+  padding: 14px; font-family: monospace; font-size: 12px; color: #9ef;
+  max-height: 300px; overflow-y: auto; white-space: pre; margin-top: 10px;
+}
+
+/* PLAYLIST META */
+.meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 20px; font-weight: 600; font-size: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.6); z-index: 9999;
+  opacity: 0; transition: opacity .3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* PROGRESS BAR */
+.progress-wrap { height: 4px; background: var(--panel2); border-radius: 999px; margin: 10px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--mint)); border-radius: 999px; transition: width .4s; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-logo">Buzz<span>Quiz</span></div>
+    <div class="header-sub">Générateur de questions — Play Thau'Gether</div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" id="btn-import-json">📂 Importer JSON</button>
+    <button class="btn btn-mint btn-sm" id="btn-export">💾 Exporter .json</button>
+    <input type="file" id="file-import" accept=".json" style="display:none">
+  </div>
+</div>
+
+<div class="main">
+  <!-- COLONNE GAUCHE : éditeur -->
+  <div>
+
+    <!-- Infos playlist -->
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-title">📋 Infos de la playlist</div>
+      <div class="meta-row">
+        <div>
+          <label>Nom de la playlist *</label>
+          <input type="text" id="pl-name" placeholder="Ex : Culture Générale 2024" />
+        </div>
+        <div>
+          <label>Description (optionnel)</label>
+          <input type="text" id="pl-desc" placeholder="Courte description..." />
+        </div>
+      </div>
+    </div>
+
+    <!-- Éditeur de question -->
+    <div class="card" id="editor-card">
+      <div class="card-title"><span id="editor-title-icon">➕</span> <span id="editor-title-text">Nouvelle question</span></div>
+
+      <label>Question *</label>
+      <textarea id="q-question" rows="3" placeholder="Saisis ta question ici…"></textarea>
+
+      <label style="margin-top:16px;">Réponse correcte * <span style="color:var(--ink-dim);font-weight:400;">(clique sur la lettre pour marquer la bonne réponse)</span></label>
+      <div class="choices-grid">
+        <div class="choice-row">
+          <div class="choice-letter c0">A</div>
+          <input class="choice-input" type="text" id="choice-0" placeholder="Choix A" />
+          <input class="correct-radio" type="radio" name="correct" id="cr0" value="0">
+          <label class="correct-label" for="cr0" title="Bonne réponse"></label>
+        </div>
+        <div class="choice-row">
+          <div class="choice-letter c1">B</div>
+          <input class="choice-input" type="text" id="choice-1" placeholder="Choix B" />
+          <input class="correct-radio" type="radio" name="correct" id="cr1" value="1">
+          <label class="correct-label" for="cr1" title="Bonne réponse"></label>
+        </div>
+        <div class="choice-row">
+          <div class="choice-letter c2">C</div>
+          <input class="choice-input" type="text" id="choice-2" placeholder="Choix C" />
+          <input class="correct-radio" type="radio" name="correct" id="cr3" value="2">
+          <label class="correct-label" for="cr3" title="Bonne réponse"></label>
+        </div>
+        <div class="choice-row">
+          <div class="choice-letter c3">D</div>
+          <input class="choice-input" type="text" id="choice-3" placeholder="Choix D" />
+          <input class="correct-radio" type="radio" name="correct" id="cr4" value="3">
+          <label class="correct-label" for="cr4" title="Bonne réponse"></label>
+        </div>
+      </div>
+
+      <label style="margin-top:16px;">Réponse buzzer (mode oral)</label>
+      <input type="text" id="q-buzzer" placeholder="Ex : L'Empire ottoman (version courte pour le buzzer)" />
+
+      <!-- Section IA -->
+      <div class="ai-section">
+        <div class="ai-tag">✨ Gemini AI</div>
+        <div style="font-size:13px; color:var(--ink-dim); margin-bottom:10px;">
+          Remplis la question + la bonne réponse dans le choix A, puis laisse l'IA générer les 3 mauvaises réponses.
+        </div>
+        <div id="ai-status"></div>
+        <button class="btn btn-gold btn-full" id="btn-ai-generate">✨ Générer les 3 mauvaises réponses</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-save-q" style="flex:1;">💾 Sauvegarder la question</button>
+        <button class="btn btn-ghost" id="btn-reset-q">🔄 Réinitialiser</button>
+      </div>
+
+      <div id="editor-progress" style="display:none;">
+        <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <div id="progress-label" style="font-size:12px; color:var(--ink-dim); text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE : sidebar -->
+  <div>
+    <!-- Clé API Gemini -->
+    <div class="card api-key-section">
+      <div class="card-title">🔑 Clé API Gemini</div>
+      <div style="font-size:12px; color:var(--ink-dim); margin-bottom:10px;">
+        Gratuit sur <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);">aistudio.google.com</a> — sauvegardée localement.
+      </div>
+      <div class="api-key-row">
+        <input type="password" id="api-key-input" placeholder="AIza..." />
+        <button class="btn btn-ghost btn-sm" id="btn-save-key">Sauver</button>
+      </div>
+      <div class="api-status" id="api-status-msg"></div>
+    </div>
+
+    <!-- Liste des questions -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📚 Questions <span id="q-count" style="color:var(--gold);">0</span></span>
+        <button class="btn btn-ghost btn-sm" id="btn-clear-all">🗑 Tout effacer</button>
+      </div>
+
+      <div id="q-list" class="q-list">
+        <div class="empty">
+          <div class="empty-icon">📝</div>
+          <div>Aucune question encore.</div>
+          <div style="font-size:12px; margin-top:4px;">Commence par en créer une !</div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-accent btn-full" id="btn-export-main">💾 Exporter la playlist JSON</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let questions = [];
+let editingIdx = null;
+
+// ============================================================
+//  UTILS
+// ============================================================
+function toast(msg, duration = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function getApiKey() {
+  return localStorage.getItem('buzzquiz_gemini_key') || '';
+}
+
+// ============================================================
+//  API KEY
+// ============================================================
+const keyInput = document.getElementById('api-key-input');
+const statusMsg = document.getElementById('api-status-msg');
+
+// Charger la clé sauvegardée
+keyInput.value = getApiKey();
+if (getApiKey()) {
+  statusMsg.textContent = '✓ Clé chargée';
+  statusMsg.className = 'api-status ok';
+}
+
+document.getElementById('btn-save-key').addEventListener('click', () => {
+  const key = keyInput.value.trim();
+  if (!key.startsWith('AIza')) {
+    statusMsg.textContent = '✗ Clé invalide (doit commencer par AIza…)';
+    statusMsg.className = 'api-status err';
+    return;
+  }
+  localStorage.setItem('buzzquiz_gemini_key', key);
+  statusMsg.textContent = '✓ Clé sauvegardée !';
+  statusMsg.className = 'api-status ok';
+  toast('Clé API sauvegardée ✓');
+});
+
+// ============================================================
+//  GEMINI AI — générer les 3 mauvaises réponses
+// ============================================================
+document.getElementById('btn-ai-generate').addEventListener('click', async () => {
+  const key = getApiKey();
+  if (!key) { toast('⚠ Renseigne ta clé API Gemini d\'abord'); return; }
+
+  const question = document.getElementById('q-question').value.trim();
+  const correct  = document.getElementById('choice-0').value.trim();
+  if (!question) { toast('⚠ Saisis la question d\'abord'); return; }
+  if (!correct)  { toast('⚠ Saisis la bonne réponse dans le choix A d\'abord'); return; }
+
+  const btn = document.getElementById('btn-ai-generate');
+  const statusEl = document.getElementById('ai-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Génération…';
+  statusEl.innerHTML = '<div class="ai-generating"><div class="spinner-sm"></div> Gemini génère les réponses…</div>';
+
+  const prompt = `Tu es un assistant pour créer des quiz. Pour la question "${question}" dont la bonne réponse est "${correct}", génère exactement 3 mauvaises réponses plausibles et crédibles mais incorrectes. Les réponses fausses doivent être dans le même registre que la vraie réponse (même longueur approximative, même type de contenu). Réponds UNIQUEMENT avec un JSON valide, sans texte avant ou après, sans backticks. Format : {"wrong1": "...", "wrong2": "...", "wrong3": "..."}`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.8, maxOutputTokens: 300 }
+        })
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'Erreur API');
+    }
+
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Nettoyer la réponse (enlever les backticks si présents)
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    // Remplir les choix B, C, D
+    document.getElementById('choice-1').value = parsed.wrong1 || '';
+    document.getElementById('choice-2').value = parsed.wrong2 || '';
+    document.getElementById('choice-3').value = parsed.wrong3 || '';
+    // Marquer A comme correct
+    document.getElementById('cr0').checked = true;
+
+    statusEl.innerHTML = '<div style="color:var(--mint); font-size:13px;">✓ 3 réponses générées !</div>';
+    toast('✨ Réponses générées !');
+  } catch (e) {
+    statusEl.innerHTML = `<div style="color:var(--accent); font-size:12px;">✗ ${e.message}</div>`;
+    toast('Erreur Gemini : ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Générer les 3 mauvaises réponses';
+  }
+});
+
+// ============================================================
+//  SAUVEGARDER UNE QUESTION
+// ============================================================
+document.getElementById('btn-save-q').addEventListener('click', () => {
+  const q = document.getElementById('q-question').value.trim();
+  const choices = [0,1,2,3].map(i => document.getElementById('choice-'+i).value.trim());
+  const correctRadio = document.querySelector('input[name="correct"]:checked');
+  const buzzer = document.getElementById('q-buzzer').value.trim();
+
+  if (!q) { toast('⚠ Saisis la question'); return; }
+  if (choices.some(c => !c)) { toast('⚠ Remplis les 4 choix'); return; }
+  if (!correctRadio) { toast('⚠ Clique sur le rond de la bonne réponse'); return; }
+
+  const correct = parseInt(correctRadio.value);
+
+  const entry = {
+    q,
+    a: buzzer || choices[correct],
+    choices,
+    correct,
+  };
+
+  if (editingIdx !== null) {
+    questions[editingIdx] = entry;
+    toast('✓ Question modifiée !');
+    editingIdx = null;
+  } else {
+    questions.push(entry);
+    toast('✓ Question ajoutée !');
+  }
+
+  resetEditor();
+  renderList();
+});
+
+// ============================================================
+//  RESET ÉDITEUR
+// ============================================================
+function resetEditor() {
+  document.getElementById('q-question').value = '';
+  [0,1,2,3].forEach(i => document.getElementById('choice-'+i).value = '');
+  document.querySelectorAll('input[name="correct"]').forEach(r => r.checked = false);
+  document.getElementById('q-buzzer').value = '';
+  document.getElementById('ai-status').innerHTML = '';
+  document.getElementById('editor-title-icon').textContent = '➕';
+  document.getElementById('editor-title-text').textContent = 'Nouvelle question';
+  editingIdx = null;
+  document.querySelectorAll('.q-item').forEach(el => el.classList.remove('active'));
+}
+
+document.getElementById('btn-reset-q').addEventListener('click', resetEditor);
+
+// ============================================================
+//  AFFICHER LA LISTE
+// ============================================================
+function renderList() {
+  const list = document.getElementById('q-list');
+  document.getElementById('q-count').textContent = questions.length;
+
+  if (!questions.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📝</div><div>Aucune question encore.</div><div style="font-size:12px; margin-top:4px;">Commence par en créer une !</div></div>`;
+    return;
+  }
+
+  list.innerHTML = questions.map((q, i) => `
+    <div class="q-item ${editingIdx === i ? 'active' : ''}" data-idx="${i}">
+      <div class="q-num">${i+1}</div>
+      <div class="q-body">
+        <div class="q-text">${escapeHtml(q.q.length > 80 ? q.q.slice(0,80)+'…' : q.q)}</div>
+        <div class="q-chips">
+          ${q.choices.map((c,ci) => `<span class="q-chip ${ci===q.correct?'correct':''}">${['A','B','C','D'][ci]}: ${escapeHtml(c.length>20?c.slice(0,20)+'…':c)}</span>`).join('')}
+        </div>
+      </div>
+      <div class="q-actions">
+        <button class="q-edit-btn" data-edit="${i}" title="Modifier">✏</button>
+        <button class="q-del" data-del="${i}" title="Supprimer">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Clic sur un item pour éditer
+  list.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      loadQuestion(parseInt(btn.dataset.edit));
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!confirm('Supprimer cette question ?')) return;
+      const idx = parseInt(btn.dataset.del);
+      questions.splice(idx, 1);
+      if (editingIdx === idx) resetEditor();
+      else if (editingIdx !== null && editingIdx > idx) editingIdx--;
+      renderList();
+      toast('Question supprimée');
+    });
+  });
+}
+
+function loadQuestion(idx) {
+  const q = questions[idx];
+  editingIdx = idx;
+  document.getElementById('q-question').value = q.q;
+  [0,1,2,3].forEach(i => document.getElementById('choice-'+i).value = q.choices[i] || '');
+  const radios = document.querySelectorAll('input[name="correct"]');
+  radios.forEach(r => r.checked = parseInt(r.value) === q.correct);
+  document.getElementById('q-buzzer').value = q.a || '';
+  document.getElementById('editor-title-icon').textContent = '✏';
+  document.getElementById('editor-title-text').textContent = `Modifier question ${idx+1}`;
+  document.getElementById('q-question').scrollIntoView({ behavior: 'smooth' });
+  renderList();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============================================================
+//  EFFACER TOUT
+// ============================================================
+document.getElementById('btn-clear-all').addEventListener('click', () => {
+  if (!questions.length) return;
+  if (!confirm(`Supprimer les ${questions.length} question(s) ?`)) return;
+  questions = [];
+  resetEditor();
+  renderList();
+  toast('Liste vidée');
+});
+
+// ============================================================
+//  EXPORT JSON
+// ============================================================
+function doExport() {
+  const name = document.getElementById('pl-name').value.trim();
+  if (!name) { toast('⚠ Donne un nom à la playlist'); return; }
+  if (!questions.length) { toast('⚠ Ajoute au moins une question'); return; }
+
+  const payload = {
+    name,
+    description: document.getElementById('pl-desc').value.trim(),
+    questions,
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = name.replace(/[^a-zA-Z0-9-_]/g, '_').toLowerCase();
+  a.download = safeName + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+  toast(`📥 ${questions.length} questions exportées !`);
+}
+
+document.getElementById('btn-export').addEventListener('click', doExport);
+document.getElementById('btn-export-main').addEventListener('click', doExport);
+
+// ============================================================
+//  IMPORT JSON
+// ============================================================
+document.getElementById('btn-import-json').addEventListener('click', () => {
+  document.getElementById('file-import').click();
+});
+document.getElementById('file-import').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.name) document.getElementById('pl-name').value = data.name;
+      if (data.description) document.getElementById('pl-desc').value = data.description;
+      if (Array.isArray(data.questions) && data.questions.length) {
+        if (questions.length && !confirm('Remplacer les questions actuelles ?')) return;
+        questions = data.questions;
+        resetEditor();
+        renderList();
+        toast(`✓ ${questions.length} questions importées !`);
+      }
+    } catch (err) {
+      toast('⚠ Fichier JSON invalide');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// Init
+renderList();
+</script>
+</body>
+</html>
