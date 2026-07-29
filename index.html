@@ -569,7 +569,46 @@
         .title-submode-btn.active { border-color:#00f5ff; background:rgba(0,245,255,0.15); color:#00f5ff; }
         .title-submode-btn:hover { border-color:#00f5ff; }
 
-        /* BOTS */
+        @keyframes wave1 { 0%,100%{height:20px} 50%{height:55px} }
+        @keyframes wave2 { 0%,100%{height:35px} 50%{height:15px} }
+        @keyframes wave3 { 0%,100%{height:50px} 50%{height:25px} }
+        @keyframes wave4 { 0%,100%{height:25px} 50%{height:60px} }
+        @keyframes wave5 { 0%,100%{height:45px} 50%{height:20px} }
+        @keyframes earModeIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+
+        /* MODE À L'OREILLE */
+        body.ear-mode .img-box { display:none !important; }
+        body.ear-mode.ear-revealed .img-box { display:block !important; } /* Montrer au reveal */
+        body.ear-mode.ear-revealed .ear-mode-visual { display:none !important; } /* Cacher l'onde */
+        body.ear-mode .game-main { flex-direction:column; align-items:center; justify-content:center; }
+        body.ear-mode .question-box { max-width:700px; width:100%; }
+        body.ear-mode .options { grid-template-columns:1fr 1fr !important; gap:1rem !important; }
+        body.ear-mode .opt { padding:1.2rem 1rem !important; font-size:1.1rem !important; }
+
+        .ear-mode-visual { display:none; flex-direction:column; align-items:center; margin-bottom:1.5rem; animation:earModeIn 0.5s ease; }
+        body.ear-mode .ear-mode-visual { display:flex; }
+
+        .sound-wave { display:flex; align-items:center; gap:5px; height:70px; padding:0 1rem; }
+        .sound-wave span { display:block; width:8px; border-radius:4px; background:linear-gradient(180deg,#00f5ff,#8338ec); }
+        .sound-wave.playing span:nth-child(1){animation:wave1 0.8s ease-in-out infinite}
+        .sound-wave.playing span:nth-child(2){animation:wave2 0.7s ease-in-out infinite 0.1s}
+        .sound-wave.playing span:nth-child(3){animation:wave3 0.9s ease-in-out infinite 0.2s}
+        .sound-wave.playing span:nth-child(4){animation:wave4 0.6s ease-in-out infinite 0.05s}
+        .sound-wave.playing span:nth-child(5){animation:wave5 0.85s ease-in-out infinite 0.15s}
+        .sound-wave.playing span:nth-child(6){animation:wave1 0.75s ease-in-out infinite 0.25s}
+        .sound-wave.playing span:nth-child(7){animation:wave2 0.95s ease-in-out infinite 0.1s}
+        .sound-wave.playing span:nth-child(8){animation:wave3 0.7s ease-in-out infinite 0.3s}
+        .sound-wave.playing span:nth-child(9){animation:wave4 0.8s ease-in-out infinite 0.2s}
+        .sound-wave.playing span:nth-child(10){animation:wave5 0.65s ease-in-out infinite 0.05s}
+        .sound-wave.playing span:nth-child(11){animation:wave1 0.9s ease-in-out infinite 0.15s}
+        .sound-wave.playing span:nth-child(12){animation:wave2 0.75s ease-in-out infinite 0.25s}
+
+        .ear-mode-label { color:rgba(0,245,255,0.7); font-size:0.85rem; font-weight:700; letter-spacing:0.1em; margin-top:0.5rem; }
+
+        /* Reveal cover en mode oreille = pochette apparaît à la réponse */
+        body.ear-mode #cover-reveal-ear { display:block; }
+        #cover-reveal-ear { display:none; text-align:center; margin-top:1rem; }
+        #cover-reveal-ear img { width:140px; height:140px; border-radius:12px; object-fit:cover; animation:earModeIn 0.4s ease; }
         .bot-panel { background:rgba(131,56,236,0.12); border:2px solid rgba(131,56,236,0.4); border-radius:14px; padding:0.8rem 1rem; margin-bottom:0.8rem; }
         .bot-panel h4 { color:#a855f7; font-size:0.9rem; font-weight:800; margin-bottom:0.7rem; }
         .bot-controls { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; }
@@ -1770,6 +1809,10 @@
                     <span>Mode Hôte (Affichage Questions Seulement)</span>
                 </label>
                 <label class="checkbox-label">
+                    <input type="checkbox" id="ear-mode">
+                    <span>🎧 Mode À L'Oreille (sans pochettes — plus difficile !)</span>
+                </label>
+                <label class="checkbox-label">
                     <input type="checkbox" id="distance-mode" onchange="if(this.checked) document.getElementById('host-mode').checked=false;">
                     <span>Mode Distance (Son sur tous les Appareils)</span>
                 </label>
@@ -2175,12 +2218,25 @@
 
                 <!-- GAME PRINCIPAL -->
                 <div class="game-main">
+                    <!-- Visuel Mode À L'Oreille (remplace la pochette) -->
+                    <div class="ear-mode-visual">
+                        <div class="sound-wave playing" id="sound-wave">
+                            <span></span><span></span><span></span><span></span><span></span><span></span>
+                            <span></span><span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <div class="ear-mode-label">🎧 ÉCOUTE ET TROUVE !</div>
+                    </div>
+
                     <div class="img-box">
                         <img id="cover-img" class="cover" src="" alt="Cover">
                         <div id="answer-reveal" class="answer-reveal hidden">
                             <h4>Réponse :</h4>
                             <div class="answer-text" id="answer-text"></div>
                         </div>
+                    </div>
+                    <!-- Révélation pochette en mode À L'Oreille -->
+                    <div id="cover-reveal-ear">
+                        <img id="cover-reveal-ear-img" src="" alt="">
                     </div>
                     
                     <!-- Réactions emoji — EN DEHORS du img-box pour rester visibles -->
@@ -3826,6 +3882,7 @@
             const emoji = hostMode ? '🎬' : selectedEmoji.create;
             const teamMode = document.getElementById('team-mode')?.checked || false;
             const teams = teamMode ? getTeamsFromUI() : [];
+            const earMode = document.getElementById('ear-mode')?.checked || false;
             
             
             gameState.musicDB = tracks;
@@ -3854,6 +3911,7 @@
                 teamMode: teamMode,
                 teams: teams,
                 titleOnlySubmode: mode === 'title-only' ? titleOnlySubmode : null,
+                earMode: earMode,
                 playlistName: playlistName || '',
                 gameMode: mode,
                 players: [{ name, score: 0, isHost: true, emoji: emoji, team: teamMode ? 'red' : null }],
@@ -4282,7 +4340,12 @@
             
             requestWakeLock();
 
-            // Pause fab + theme fab visible seulement pour l'hôte
+            // Mode À L'Oreille : masquer les pochettes
+            if (gameState.room.earMode) {
+                document.body.classList.add('ear-mode');
+            } else {
+                document.body.classList.remove('ear-mode');
+            }
             const fab = document.getElementById('pause-fab');
             if (fab) fab.classList.toggle('visible', gameState.isHost);
             showThemeFab(gameState.isHost);
@@ -4300,6 +4363,21 @@
 
             // Badge équipe du joueur
             updateTeamBadge();
+
+            // Mode À L'Oreille : réinitialiser onde sonore
+            if (gameState.room?.earMode) {
+                document.body.classList.remove('ear-revealed');
+                const wave = document.getElementById('sound-wave');
+                if (wave) wave.classList.add('playing');
+                const earReveal = document.getElementById('cover-reveal-ear');
+                if (earReveal) earReveal.style.display = 'none';
+                // En mode hôte : l'onde n'est visible que sur l'écran hôte, pas sur les téléphones joueurs
+                const earVisual = document.querySelector('.ear-mode-visual');
+                if (earVisual) {
+                    const showWave = !gameState.room.hostMode || gameState.isHost;
+                    earVisual.style.display = showWave ? 'flex' : 'none';
+                }
+            }
 
             // Lancer les bots pour cette question (hôte uniquement)
             if (gameState.isHost) runBotsForQuestion();
@@ -5042,6 +5120,13 @@
                     }
                     
                     document.getElementById('cover-img').style.filter = 'blur(0px)';
+
+                    // Mode À L'Oreille : stop onde + révéler pochette pleine taille
+                    if (gameState.room?.earMode) {
+                        document.body.classList.add('ear-revealed');
+                        // La pochette est déjà chargée dans #cover-img, juste la défloutée
+                        document.getElementById('cover-img').style.filter = 'blur(0px)';
+                    }
                     
                     const audioEl = document.getElementById('audio-player');
                     if (audioEl) audioEl.pause();
@@ -5842,7 +5927,8 @@
             const audioPlayer = document.getElementById('audio-player');
             if (audioPlayer) { audioPlayer.pause(); audioPlayer.src = ''; }
             gameState.gameInProgress = false;
-            stopAllBotTimers(); // Arrêter les timers bots // 🔊 Fin de partie
+            stopAllBotTimers();
+            document.body.classList.remove('ear-mode', 'ear-revealed'); // 🔊 Fin de partie
 
             const players = gameState.room.players || [];
             let sorted = [...players].sort((a, b) => {
