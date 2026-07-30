@@ -2324,6 +2324,25 @@
                 <button class="btn large" onclick="restartGame()">🏠 Menu principal</button>
             </div>
             <div class="share-confirm" id="share-confirm"></div>
+
+            <!-- VOTE PLAYLIST -->
+            <div id="vote-section" style="display:none; margin-top:2rem; width:100%; max-width:700px;">
+                <div style="background:rgba(131,56,236,0.12); border:1px solid rgba(131,56,236,0.4); border-radius:16px; padding:1.5rem;">
+                    <h3 style="color:#00f5ff; text-align:center; margin-bottom:1rem;">🗳️ Vote — Prochaine playlist ?</h3>
+                    <!-- VUE JOUEURS : boutons de vote -->
+                    <div id="vote-player-view" style="display:none;">
+                        <p style="color:#aaa; font-size:0.9rem; text-align:center; margin-bottom:1rem;">Choisis la prochaine playlist !</p>
+                        <div id="vote-options" style="display:flex; flex-direction:column; gap:0.6rem;"></div>
+                        <p id="vote-confirm-msg" style="color:#00ff64; text-align:center; margin-top:0.8rem; font-size:0.9rem; display:none;">✅ Vote enregistré !</p>
+                    </div>
+                    <!-- VUE HÔTE : résultats en live -->
+                    <div id="vote-host-view" style="display:none;">
+                        <div id="vote-results" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;"></div>
+                        <p style="color:#aaa; font-size:0.8rem; text-align:center;" id="vote-count-label"></p>
+                        <div style="display:flex; gap:0.8rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;" id="vote-host-actions"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ÉCRAN D'ATTENTE REJOIN -->
@@ -5141,6 +5160,13 @@
                     if (q.type === 'writing') {
                         disableWritingInputs();
                     }
+                    // BLOQUER LES BOUTONS QCM (empêche de cliquer après timer=0)
+                    if (q.type === 'qcm') {
+                        document.querySelectorAll('.opt').forEach(btn => {
+                            btn.onclick = null;
+                            btn.classList.add('disabled');
+                        });
+                    }
                     
                     // AFFICHER LA RÉPONSE
                     document.getElementById('answer-text').textContent = `${q.title} - ${q.artist}`;
@@ -5964,6 +5990,8 @@
         }
         
         function renderLeaderboard(sorted) {
+            // Lancer le vote playlist
+            setTimeout(() => initVoteSection(), 500);
             const isTeamMode = gameState.room?.teamMode && gameState.room?.teams?.length;
             const podium = document.getElementById('podium-container');
             const list = document.getElementById('leaderboard-container');
@@ -6437,7 +6465,165 @@
             goToMenu();
         }
 
+        // =============================================
+        // 🗳️ SYSTÈME DE VOTE PLAYLIST
+        // =============================================
+        let voteListener = null;
+
+        async function initVoteSection() {
+            const section = document.getElementById('vote-section');
+            if (!section || !gameState.room?.code) return;
+            section.style.display = 'block';
+
+            if (!gameState.isHost) {
+                // Les joueurs attendent que l'hôte charge les playlists
+                const snap = await db.ref(`rooms/${gameState.room.code}/votePlaylists`).once('value');
+                const playlists = snap.val();
+                if (playlists && Array.isArray(playlists)) {
+                    renderVotePlayerView(playlists);
+                } else {
+                    // Attendre que l'hôte les charge
+                    db.ref(`rooms/${gameState.room.code}/votePlaylists`).on('value', s => {
+                        const pls = s.val();
+                        if (pls && Array.isArray(pls)) {
+                            db.ref(`rooms/${gameState.room.code}/votePlaylists`).off();
+                            renderVotePlayerView(pls);
+                        }
+                    });
+                }
+                return;
+            }
+
+            // Hôte : charger toutes les playlists
+            const [deezerSnap, jsonSnap] = await Promise.all([
+                db.ref('playlists').once('value'),
+                db.ref('jsonPlaylists').once('value')
+            ]);
+
+            const playlists = [];
+            const deezerData = deezerSnap.val() || {};
+            Object.entries(deezerData).forEach(([id, pl]) => {
+                playlists.push({ id: `deezer_${id}`, name: pl.name, type: 'deezer', url: pl.url });
+            });
+            const jsonData = jsonSnap.val() || {};
+            Object.entries(jsonData).forEach(([name, pl]) => {
+                playlists.push({ id: `json_${name}`, name, type: 'json', jsonKey: name });
+            });
+
+            if (playlists.length === 0) { section.style.display = 'none'; return; }
+
+            await db.ref(`rooms/${gameState.room.code}/votePlaylists`).set(playlists);
+            await db.ref(`rooms/${gameState.room.code}/votes`).remove();
+
+            renderVoteHostView(playlists);
+        }
+
+        function renderVotePlayerView(playlists) {
+            const section = document.getElementById('vote-section');
+            if (section) section.style.display = 'block';
+            document.getElementById('vote-player-view').style.display = 'block';
+            document.getElementById('vote-host-view').style.display = 'none';
+            const container = document.getElementById('vote-options');
+            container.innerHTML = '';
+            const player = gameState.room?.players?.[gameState.playerIndex];
+            if (!player) return;
+
+            playlists.forEach(pl => {
+                const btn = document.createElement('button');
+                btn.style.cssText = 'width:100%;background:rgba(255,255,255,0.05);border:2px solid rgba(131,56,236,0.4);color:white;padding:0.8rem 1.2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;text-align:left;margin-bottom:0.4rem;';
+                btn.textContent = `🎵 ${pl.name}`;
+                btn.onclick = () => castVote(pl.id, player.name, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        async function castVote(playlistId, playerName, btn) {
+            const safeName = playerName.replace(/[.#$[\]]/g, '_');
+            await db.ref(`rooms/${gameState.room.code}/votes/${safeName}`).set(playlistId);
+            // Feedback visuel
+            document.querySelectorAll('#vote-options button').forEach(b => {
+                b.style.opacity = '0.4'; b.style.cursor = 'default';
+                b.onclick = null;
+            });
+            btn.style.opacity = '1';
+            btn.style.borderColor = '#00ff64';
+            btn.style.background = 'rgba(0,255,100,0.1)';
+            document.getElementById('vote-confirm-msg').style.display = 'block';
+        }
+
+        function renderVoteHostView(playlists) {
+            document.getElementById('vote-host-view').style.display = 'block';
+            document.getElementById('vote-player-view').style.display = 'none';
+
+            // Listener live des votes
+            if (voteListener) voteListener.off();
+            voteListener = db.ref(`rooms/${gameState.room.code}/votes`);
+            voteListener.on('value', snap => {
+                const votes = snap.val() || {};
+                updateVoteResults(votes, playlists);
+            });
+        }
+
+        function updateVoteResults(votes, playlists) {
+            const counts = {};
+            playlists.forEach(pl => { counts[pl.id] = 0; });
+            Object.values(votes).forEach(vid => { if (counts[vid] !== undefined) counts[vid]++; });
+
+            const total = Object.values(votes).length;
+            const sorted = [...playlists].sort((a,b) => (counts[b.id]||0) - (counts[a.id]||0));
+
+            const container = document.getElementById('vote-results');
+            container.innerHTML = '';
+            // Seulement top 3
+            sorted.slice(0, 3).forEach((pl, i) => {
+                const count = counts[pl.id] || 0;
+                const medals = ['🥇','🥈','🥉'];
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:0.8rem;padding:0.65rem 0.9rem;background:rgba(255,255,255,0.04);border-radius:8px;';
+                div.innerHTML = `
+                    <span style="font-size:1.1rem;">${medals[i]}</span>
+                    <span style="flex:1;font-weight:700;color:white;font-size:0.95rem;">${pl.name}</span>
+                    <span style="color:#ffbe0b;font-weight:800;font-family:monospace;min-width:50px;text-align:right;">${count} vote${count>1?'s':''}</span>
+                    <button onclick='selectVoteWinner(${JSON.stringify(pl)})' style="background:rgba(131,56,236,0.25);border:1px solid #8338ec;color:#00f5ff;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:700;cursor:pointer;">▶</button>
+                `;
+                container.appendChild(div);
+            });
+
+            const nonHost = (gameState.room?.players||[]).filter(p => !p.isHost);
+            document.getElementById('vote-count-label').textContent = `${total} / ${nonHost.length} joueurs ont voté`;
+        }
+
+        async function selectVoteWinner(playlist) {
+            if (voteListener) { voteListener.off(); voteListener = null; }
+            // Pré-remplir la création de partie avec cette playlist
+            goToCreate();
+            await new Promise(r => setTimeout(r, 300));
+
+            if (playlist.type === 'deezer') {
+                // Sélectionner dans le dropdown Deezer
+                const select = document.getElementById('playlist-select');
+                if (select) {
+                    select.value = playlist.url;
+                    refreshCustomDropdown('playlist-select');
+                    // Activer l'onglet Deezer
+                    const deezerTab = document.querySelector('[onclick*="deezer-tab"]');
+                    if (deezerTab) deezerTab.click();
+                }
+            } else {
+                // Sélectionner dans les playlists JSON sauvegardées
+                const select = document.getElementById('saved-playlist-select');
+                if (select) {
+                    select.value = playlist.jsonKey;
+                    refreshCustomDropdown('saved-playlist-select');
+                    await loadSavedPlaylist();
+                    const jsonTab = document.querySelector('[onclick*="saved-tab"]');
+                    if (jsonTab) jsonTab.click();
+                }
+            }
+        }
+
         function restartGame() {
+            if (voteListener) { voteListener.off(); voteListener = null; }
             goToMenu();
         }
 
@@ -8072,34 +8258,38 @@
             if (btn) btn.style.display = 'none';
         }
         
+        // Détecter ?join=CODE EN PREMIER — avant tout le reste
+        (function detectJoinUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinCode = urlParams.get('join');
+            if (joinCode && joinCode.length === 6 && /^\d+$/.test(joinCode)) {
+                window.history.replaceState({}, '', window.location.pathname);
+                window._pendingJoinCode = joinCode; // stocker pour après initAuth
+            }
+        })();
+
         // Lancer l'auth d'abord, puis tryReconnect si connecté
         initAuth().then(() => {
             if (currentUser) {
                 tryReconnect();
             }
-            // Initialiser les custom dropdowns
             initCustomDropdown('create-mode');
             initCustomDropdown('playlist-select');
             initCustomDropdown('saved-playlist-select');
-            // Initialiser les emoji pickers
             initEmojiPicker('create-emoji-picker', 'create');
             initEmojiPicker('join-emoji-picker', 'join');
 
-            // Détecter ?join=CODE dans l'URL → pré-remplir et ouvrir l'écran rejoindre
-            const urlParams = new URLSearchParams(window.location.search);
-            const joinCode = urlParams.get('join');
-            if (joinCode && joinCode.length === 6 && /^\d+$/.test(joinCode)) {
-                // Nettoyer l'URL sans recharger la page
-                window.history.replaceState({}, '', window.location.pathname);
-                // Aller sur l'écran rejoindre avec le code pré-rempli
+            // Appliquer le join code si détecté
+            if (window._pendingJoinCode) {
+                const joinCode = window._pendingJoinCode;
+                window._pendingJoinCode = null;
                 showScreen('join-screen');
                 const codeInput = document.getElementById('join-code');
                 if (codeInput) {
                     codeInput.value = joinCode;
                     codeInput.style.borderColor = '#00ff64';
-                    // Focus sur le champ pseudo
                     const nameInput = document.getElementById('join-name');
-                    if (nameInput) setTimeout(() => nameInput.focus(), 300);
+                    if (nameInput) setTimeout(() => nameInput.focus(), 400);
                 }
             }
         });
