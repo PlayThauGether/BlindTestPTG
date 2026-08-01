@@ -1835,6 +1835,10 @@
                     <span>🎧 Mode À L'Oreille (sans pochettes — plus difficile !)</span>
                 </label>
                 <label class="checkbox-label">
+                    <input type="checkbox" id="special-mode" onchange="toggleSpecialMode(this.checked)">
+                    <span>Mode S</span>
+                </label>
+                <label class="checkbox-label">
                     <input type="checkbox" id="distance-mode" onchange="if(this.checked) document.getElementById('host-mode').checked=false;">
                     <span>Mode Distance (Son sur tous les Appareils)</span>
                 </label>
@@ -3158,6 +3162,30 @@
 
         let titleOnlySubmode = 'qcm'; // 'qcm' | 'writing' | 'both'
 
+        function toggleSpecialMode(checked) {
+            const numSection = document.querySelector('.section h3')?.closest('.section');
+            // Trouver la section nombre de questions
+            const allSections = document.querySelectorAll('.section');
+            let numSection2 = null;
+            allSections.forEach(s => { if (s.querySelector('.num-btn')) numSection2 = s; });
+
+            if (checked) {
+                // Forcer 1 question et griser les boutons
+                selectNumQ(1);
+                if (numSection2) numSection2.style.opacity = '0.3';
+                document.querySelectorAll('.num-btn').forEach(b => { b.onclick = null; b.style.cursor = 'not-allowed'; });
+            } else {
+                // Remettre les boutons
+                if (numSection2) numSection2.style.opacity = '1';
+                document.querySelectorAll('.num-btn').forEach(b => {
+                    const n = parseInt(b.textContent);
+                    b.onclick = () => selectNumQ(n);
+                    b.style.cursor = 'pointer';
+                });
+                selectNumQ(10);
+            }
+        }
+
         function onModeChange(val) {
             const sub = document.getElementById('title-only-submode');
             if (sub) sub.style.display = val === 'title-only' ? 'block' : 'none';
@@ -3387,7 +3415,7 @@
                 names.forEach(name => {
                     const option = document.createElement('option');
                     option.value = name;
-                    option.textContent = `${name} (${saved[name].trackCount} tracks)`;
+                    option.textContent = name;
                     select.appendChild(option);
                 });
             }
@@ -3910,6 +3938,7 @@
             const teamMode = document.getElementById('team-mode')?.checked || false;
             const teams = teamMode ? getTeamsFromUI() : [];
             const earMode = document.getElementById('ear-mode')?.checked || false;
+            const specialMode = document.getElementById('special-mode')?.checked || false;
             
             
             gameState.musicDB = tracks;
@@ -3939,6 +3968,7 @@
                 teams: teams,
                 titleOnlySubmode: mode === 'title-only' ? titleOnlySubmode : null,
                 earMode: earMode,
+                specialMode: specialMode,
                 playlistName: playlistName || '',
                 gameMode: mode,
                 players: [{ name, score: 0, isHost: true, emoji: emoji, team: teamMode ? 'red' : null }],
@@ -4059,7 +4089,7 @@
                 // QR code dynamique
                 generateLobbyQR(gameState.room.code);
                 
-                // Récap
+                // Remplir le récap
                 const playlistName = gameState.playlistName || gameState.room.playlistName || '—';
                 document.getElementById('recap-playlist').textContent = playlistName;
                 const modeLabels = { 'qcm':'🎯 QCM','writing':'✍️ Écriture','mix':'🎉 Soirée','qcm-film':'🎬 Film','qcm-serie':'📺 Série','mix-disney':'🎧 Disney' };
@@ -4069,6 +4099,10 @@
                 document.getElementById('recap-questions').textContent = nbQ + ' questions';
                 const timerByMode = { 'qcm':'20 sec','qcm-film':'20 sec','qcm-serie':'20 sec','writing':'30 sec','mix':'20-30 sec','mix-disney':'20-30 sec' };
                 document.getElementById('recap-timer').textContent = timerByMode[mode] || '—';
+
+                // En Mode S : cacher le récap APRÈS l'avoir rempli
+                const hostRecap = document.getElementById('host-recap');
+                if (hostRecap) hostRecap.style.display = gameState.room.specialMode ? 'none' : '';
 
             } else {
                 // Layout joueur : juste le code
@@ -4492,7 +4526,7 @@
             gameState.lastMode = currentMode;
             gameState.lastLevel = currentLevel;
             gameState.lastType = currentType;
-            const timerDuration = q.type === 'qcm' ? 20 : 30;
+            const timerDuration = gameState.room?.specialMode ? 60 : (q.timer || (q.type === 'qcm' ? 20 : 30));
             gameState.currentTime = timerDuration;
             gameState.timerDuration = timerDuration;
             gameState.questionStartedAt = Date.now();
