@@ -563,7 +563,7 @@
         .player-item { display:flex; align-items:center; gap:0.6rem; padding:0.45rem 0.8rem; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:0.3rem; }
         .player-ready-dot { width:8px; height:8px; border-radius:50%; background:#444; flex-shrink:0; transition:all 0.3s; }
         .player-ready-dot.ready { background:#00ff64; box-shadow:0 0 8px #00ff64; }
-        .kick-btn { margin-left:auto; background:rgba(255,0,0,0.12); border:1px solid rgba(255,0,0,0.35); color:#ff6666; padding:0.15rem 0.5rem; border-radius:6px; font-size:0.75rem; cursor:pointer; flex-shrink:0; }
+        .kick-btn { margin-left:auto; background:rgba(255,0,0,0.12); border:1px solid rgba(255,0,0,0.35); color:#ff6666; padding:0.3rem 0.7rem; border-radius:6px; font-size:0.8rem; cursor:pointer; flex-shrink:0; min-width:36px; text-align:center; user-select:none; }
         .kick-btn:hover { background:rgba(255,0,0,0.28); }
         .title-submode-btn { padding:0.5rem 1.2rem; border-radius:20px; border:2px solid rgba(0,245,255,0.3); background:rgba(0,245,255,0.05); color:white; font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.2s; }
         .title-submode-btn.active { border-color:#00f5ff; background:rgba(0,245,255,0.15); color:#00f5ff; }
@@ -2064,6 +2064,7 @@
             <div id="bot-modal-bg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9997;" onclick="toggleBotModal()"></div>
             <button id="start-btn" class="btn large hidden" onclick="startGame()">▶️ Lancer la partie</button>
             <button id="host-ready-btn" class="btn large hidden" onclick="toggleHostReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
+            <button id="force-start-btn" class="btn hidden" onclick="startGame()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);font-size:0.85rem;padding:0.5rem 1rem;margin-top:0.3rem;">⚡ Lancer sans attendre</button>
             <button id="ready-btn" class="btn large" onclick="toggleReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
             <div class="ready-status" id="ready-status"></div>
             <button id="unlock-audio-btn" class="btn hidden" onclick="unlockAudio()" style="margin-top: 0.8rem; background: linear-gradient(135deg, #00f5ff, #8338ec); animation: pulse 2s infinite;">🔊 Activer le son (obligatoire sur iPhone)</button>
@@ -2835,9 +2836,18 @@
             const session = {
                 code: gameState.room.code,
                 name: gameState.room.players[gameState.playerIndex].name,
+                emoji: gameState.room.players[gameState.playerIndex].emoji || '😎',
                 isHost: gameState.isHost
             };
             localStorage.setItem('quizPartySession', JSON.stringify(session));
+        }
+
+        function _prefillJoinFromSession(session) {
+            // Pré-remplir le formulaire rejoindre avec pseudo + code de l'ancienne session
+            const nameInput = document.getElementById('join-name');
+            const codeInput = document.getElementById('join-code');
+            if (nameInput && session.name) nameInput.value = session.name;
+            if (codeInput && session.code) codeInput.value = session.code;
         }
 
         function clearSession() {
@@ -2858,6 +2868,8 @@
 
                 // Room plus en vie sur Firebase
                 if (!room) {
+                    // Pré-remplir le formulaire avec les infos connues
+                    _prefillJoinFromSession(session);
                     clearSession();
                     return;
                 }
@@ -3975,7 +3987,17 @@
                 const room = snapshot.val();
                 
                 if (!room) { alert('❌ Code invalide !'); return; }
-                if (room.started) { alert('❌ Partie déjà lancée !'); return; }
+                
+                // Si la partie est lancée : autoriser uniquement si le joueur était déjà dedans
+                if (room.started) {
+                    const existingPlayer = (room.players || []).find(p => p.name === name);
+                    if (!existingPlayer) {
+                        alert('❌ Partie déjà lancée !');
+                        return;
+                    }
+                    // Le joueur était dedans → le laisser rejoindre silencieusement
+                    // (il retrouvera son index et son score)
+                }
                 
                 // Vérifier si ce pseudo a été kické
                 const safeName = name.replace(/[.#$[\]]/g,'_');
@@ -3984,6 +4006,27 @@
                     return;
                 }
                 
+                // Si la partie est lancée et le joueur était dedans → rejoindre directement
+                if (room.started) {
+                    const existingIdx = (room.players || []).findIndex(p => p.name === name);
+                    if (existingIdx !== -1) {
+                        gameState.room = room;
+                        gameState.playerIndex = existingIdx;
+                        gameState.isHost = false;
+                        gameState.distanceMode = room.distanceMode || false;
+                        gameState.earMode = room.earMode || false;
+                        gameState.musicDB = room.questions;
+                        gameState.hostDisplayOnly = false;
+                        gameState.gameInProgress = true;
+                        saveSession();
+                        listenToRoom(code);
+                        listenKick(code, name);
+                        showScreen('game-screen');
+                        loadQuestion();
+                        return;
+                    }
+                }
+
                 // Vérifier si le pseudo existe déjà
                 const pseudoExists = room.players.some(p => p.name.toLowerCase() === name.toLowerCase());
                 if (pseudoExists) {
@@ -4045,6 +4088,7 @@
                 document.getElementById('host-ready-btn').classList.remove('hidden');
                 document.getElementById('ready-btn').classList.remove('visible');
                 document.getElementById('ready-btn').style.display = 'none';
+                document.getElementById('force-start-btn')?.classList.remove('hidden');
                 // Bouton répartition aléatoire en mode équipe
                 const randomBtn = document.getElementById('random-teams-btn');
                 if (randomBtn) randomBtn.classList.toggle('hidden', !gameState.room.teamMode);
@@ -4130,7 +4174,7 @@
                         : `<span style="color:#666;font-size:0.75rem;margin-left:auto;">…</span>`)
                     : '';
                 const kickBtn = (gameState.isHost && !isHost && currentScreen === 'lobby')
-                    ? `<button class="kick-btn" onclick="kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕</button>`
+                    ? `<button class="kick-btn" onclick="event.stopPropagation();kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕</button>`
                     : '';
                 const botBadge = p.isBot ? `<span class="bot-indicator">BOT</span>` : '';
                 div.innerHTML = `
@@ -4168,13 +4212,13 @@
             const kickRef = db.ref(`rooms/${code}/kicked/${safeName}`);
             kickRef.on('value', snap => {
                 if (snap.val()) {
-                    // Couper TOUS les listeners immédiatement pour stopper les writes fantômes
                     kickRef.off();
                     cleanupRoomListeners();
                     if (gameState.roomRef) gameState.roomRef.off();
                     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-                    gameState.room = null; // Vider l'état pour éviter tout write résiduel
-                    
+                    gameState.room = null;
+                    // Effacer son propre statut kicked pour pouvoir rejoindre plus tard
+                    db.ref(`rooms/${code}/kicked/${safeName}`).remove().catch(() => {});
                     alert('👢 Tu as été exclu de la partie.\n\nTu peux rejoindre avec un autre pseudo !');
                     goToMenu();
                 }
@@ -7587,8 +7631,14 @@
                 btn.textContent = '⬜ Pas encore prêt';
                 btn.classList.remove('is-ready');
             }
-            if (gameState.playerIndex !== undefined && gameState.room?.code) {
-                db.ref(`rooms/${gameState.room.code}/players/${gameState.playerIndex}/ready`).set(gameState.playerReady);
+            if (gameState.room?.code && gameState.room?.players) {
+                // Chercher par nom plutôt que par index stocké (index peut être décalé)
+                const myName = gameState.room.players[gameState.playerIndex]?.name || gameState.playerName;
+                const realIdx = gameState.room.players.findIndex(p => p.name === myName);
+                if (realIdx !== -1) {
+                    gameState.playerIndex = realIdx; // Corriger si décalé
+                    db.ref(`rooms/${gameState.room.code}/players/${realIdx}/ready`).set(gameState.playerReady);
+                }
             }
         }
 
@@ -8348,11 +8398,10 @@
             }
         })();
 
-        // Lancer l'auth d'abord, puis tryReconnect si connecté
+        // Lancer l'auth d'abord, puis tryReconnect pour tout le monde
         initAuth().then(() => {
-            if (currentUser) {
-                tryReconnect();
-            }
+            // tryReconnect pour l'hôte (connecté) ET les joueurs (session localStorage)
+            tryReconnect();
             initCustomDropdown('create-mode');
             initCustomDropdown('playlist-select');
             initCustomDropdown('saved-playlist-select');
