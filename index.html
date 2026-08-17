@@ -17,21 +17,37 @@
     <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
     <link rel="apple-touch-icon-precomposed" href="favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0a0e27">
+    <meta name="theme-color" content="#0e0e10">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Blind Test PTG">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#0a0e27">
+    <meta name="msapplication-TileColor" content="#0e0e10">
     <meta name="msapplication-TileImage" content="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        :root {
+            --sn-bg: #0e0e10;
+            --sn-card: #151517;
+            --sn-card2: #1a1a1d;
+            --sn-border: #242428;
+            --sn-sep: #1e1e22;
+            --sn-gold: #c9a24b;
+            --sn-gold-dark: #141310;
+            --sn-gold-bg: #1c1a12;
+            --sn-txt: #f2f2f4;
+            --sn-txt2: #d6d6da;
+            --sn-txt3: #b9b9c0;
+            --sn-muted: #6b6b72;
+            --sn-green: #4ead7c;
+            --sn-red: #e0596e;
+        }
         body {
             font-family: 'Montserrat', sans-serif;
-            background: #0a0e27;
-            color: white;
+            background: var(--sn-bg);
+            color: var(--sn-txt2);
             min-height: 100vh;
             min-height: -webkit-fill-available;
             /* Safe area pour iPhone PWA (éviter barre d'état/encoche) */
@@ -45,10 +61,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1), transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(131, 56, 236, 0.1), transparent 50%);
-            animation: pulse 8s infinite;
+            background: var(--sn-bg);
             z-index: 0;
         }
 
@@ -63,7 +76,7 @@
 
         /* RÉACTIONS EMOJI */
         .emoji-reactions { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin-top:0.8rem; }
-        .reaction-btn { font-size:1.6rem; background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.15); border-radius:12px; padding:0.4rem 0.7rem; cursor:pointer; transition:transform 0.15s; }
+        .reaction-btn { font-size:1.5rem; background:var(--sn-card); border:1px solid var(--sn-border); border-radius:8px; padding:0.4rem 0.7rem; cursor:pointer; transition:transform 0.15s; }
         .reaction-btn:active { transform:scale(0.85); }
         .emoji-float { position:fixed; pointer-events:none; z-index:9993; font-size:2.5rem; animation:emojiFloat 1.8s ease-out forwards; }
 
@@ -73,23 +86,23 @@
         .grey-confetti-el { position:fixed; pointer-events:none; z-index:9988; width:8px; height:8px; border-radius:2px; animation:greyConfetti linear forwards; }
 
         /* PARTAGE PODIUM */
-        .share-btn { background:linear-gradient(135deg,#8338ec,#ff006e); border:none; color:white; padding:0.7rem 1.5rem; border-radius:30px; font-weight:800; font-size:0.9rem; cursor:pointer; margin:0.5rem; }
+        .share-btn { background:transparent; border:1px solid #2e2e33; color:var(--sn-txt2); padding:0.7rem 1.5rem; border-radius:8px; font-weight:500; font-size:0.9rem; cursor:pointer; margin:0.5rem; }
         .share-btn:hover { opacity:0.85; }
-        .share-confirm { color:#00ff64; font-size:0.85rem; text-align:center; height:1.2rem; margin-top:0.2rem; }
+        .share-confirm { color:var(--sn-green); font-size:0.85rem; text-align:center; height:1.2rem; margin-top:0.2rem; }
 
         /* ENTRY ANIMATION */
         .screen.enter { animation: slideInUp 0.35s ease both; }
 
         /* STARS */
         .stars-wrap { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
-        .star { position:absolute; animation:starFloat linear infinite; font-size:14px; opacity:.6; }
+        .star { display:none; }
 
         /* GOLD ALL CORRECT */
-        .gold-flash-el { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,190,11,0.18); pointer-events:none; z-index:9990; animation:goldFlash 1.8s ease forwards; border-radius:0; }
-        .gold-ring-el { position:fixed; top:50%; left:50%; width:120px; height:120px; margin:-60px 0 0 -60px; border:5px solid #ffbe0b; border-radius:50%; pointer-events:none; z-index:9991; animation:goldRing 1.1s ease-out forwards; }
+        .gold-flash-el { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(201,162,75,0.14); pointer-events:none; z-index:9990; animation:goldFlash 1.8s ease forwards; border-radius:0; }
+        .gold-ring-el { position:fixed; top:50%; left:50%; width:120px; height:120px; margin:-60px 0 0 -60px; border:3px solid var(--sn-gold); border-radius:50%; pointer-events:none; z-index:9991; animation:goldRing 1.1s ease-out forwards; }
         @keyframes goldTextPop { 0% { opacity:0; transform:translate(-50%,-50%) scale(0.5); } 20% { opacity:1; transform:translate(-50%,-50%) scale(1.08); } 80% { opacity:1; transform:translate(-50%,-50%) scale(1); } 100% { opacity:0; transform:translate(-50%,-50%) scale(0.9); } }
         .gold-text-el { position:fixed; top:50%; left:50%; z-index:9993; pointer-events:none; text-align:center; animation:goldTextPop 2.8s ease forwards; white-space:nowrap; }
-        .gold-text-el span { display:block; font-family:'Bungee Shade',cursive; font-size:clamp(1.8rem, 5vw, 3.5rem); color:#ffbe0b; -webkit-text-stroke: 2px #000; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0 0 30px rgba(255,190,11,0.9); letter-spacing:0.02em; }
+        .gold-text-el span { display:block; font-family:'Montserrat',sans-serif; font-weight:500; font-size:clamp(1.6rem, 4.5vw, 3rem); color:var(--sn-gold); -webkit-text-stroke: 2px #000; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0 0 30px rgba(255,190,11,0.9); letter-spacing:0.02em; }
 
         .screen {
             position: relative;
@@ -110,19 +123,27 @@
         /* MENU */
         .logo { text-align: center; margin-bottom: 2rem; }
         .title {
-            font-family: 'Bungee Shade', cursive;
-            font-size: 4rem;
-            background: linear-gradient(45deg, #ff006e, #00f5ff, #ffbe0b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 500;
+            color: var(--sn-txt);
+            letter-spacing: 0.02em;
+        }
+        .title::after {
+            content: '';
+            display: block;
+            width: 48px;
+            height: 2px;
+            background: var(--sn-gold);
+            margin: 14px auto 0;
         }
         .subtitle {
-            font-size: 1.2rem;
-            color: #00f5ff;
-            letter-spacing: 0.2em;
+            font-size: 0.72rem;
+            color: var(--sn-gold);
+            letter-spacing: 0.4em;
             text-transform: uppercase;
-            margin-top: 0.5rem;
+            margin-top: 1rem;
+            font-weight: 500;
         }
 
         .menu-buttons {
@@ -135,24 +156,25 @@
 
         /* BUTTONS */
         .btn {
-            background: linear-gradient(135deg, #ff006e, #8338ec);
-            color: white;
+            background: var(--sn-gold);
+            color: var(--sn-gold-dark);
             border: none;
-            padding: 0.8rem 1.5rem;
+            padding: 0.85rem 1.6rem;
             font-size: 1rem;
-            font-weight: 800;
-            border-radius: 50px;
+            font-weight: 500;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: opacity 0.2s, transform 0.15s;
             font-family: 'Montserrat', sans-serif;
             margin: 0.3rem;
         }
 
-        .btn:hover:not(:disabled) { transform: translateY(-3px); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn.large { padding: 1.5rem 3rem; font-size: 1.3rem; }
-        .btn.secondary { background: linear-gradient(135deg, #00f5ff, #ffbe0b); }
-        .btn.danger { background: linear-gradient(135deg, #ff006e, #ff4444); }
+        .btn:hover:not(:disabled) { opacity: 0.88; }
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn.large { padding: 1.15rem 2.6rem; font-size: 1.1rem; }
+        .btn.secondary { background: transparent; border: 1px solid #2e2e33; color: var(--sn-txt2); }
+        .btn.danger { background: transparent; border: 1px solid #33222a; color: var(--sn-red); }
 
         /* INPUTS */
         .input, .select {
@@ -160,14 +182,15 @@
             max-width: 400px;
             padding: 1rem;
             margin: 0.5rem auto;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid #8338ec;
-            border-radius: 10px;
-            color: white;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            border-radius: 8px;
+            color: var(--sn-txt);
             font-size: 1rem;
             font-family: 'Montserrat', sans-serif;
             display: block;
         }
+        .input:focus { outline: none; border-color: var(--sn-gold); }
         .select { display: none; } /* Cacher les selects natifs */
 
         /* Custom Dropdown */
@@ -182,7 +205,7 @@
             width: 100%;
             padding: 1rem 2.5rem 1rem 1rem;
             background: rgba(0, 0, 0, 0.3);
-            border: 2px solid #8338ec;
+            border: 1px solid var(--sn-border);
             border-radius: 12px;
             color: white;
             font-size: 1rem;
@@ -195,7 +218,7 @@
             text-overflow: ellipsis;
         }
         .custom-dropdown-trigger:hover { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
-        .custom-dropdown-trigger.open { border-color: #ff006e; border-radius: 12px 12px 0 0; }
+        .custom-dropdown-trigger.open { border-color: var(--sn-red); border-radius: 12px 12px 0 0; }
         .custom-dropdown-trigger::after {
             content: '▾';
             position: absolute;
@@ -203,10 +226,10 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 1.2rem;
-            color: #8338ec;
+            color: var(--sn-muted);
             transition: transform 0.2s;
         }
-        .custom-dropdown-trigger.open::after { transform: translateY(-50%) rotate(180deg); color: #ff006e; }
+        .custom-dropdown-trigger.open::after { transform: translateY(-50%) rotate(180deg); color: var(--sn-red); }
         .custom-dropdown-list {
             display: none;
             position: absolute;
@@ -214,14 +237,14 @@
             left: 0;
             right: 0;
             background: rgba(20, 10, 40, 0.98);
-            border: 2px solid #ff006e;
+            border: 1px solid var(--sn-border);
             border-top: none;
             border-radius: 0 0 12px 12px;
             max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
             scrollbar-width: thin;
-            scrollbar-color: #8338ec transparent;
+            scrollbar-color: var(--sn-border) transparent;
         }
         .custom-dropdown-list.show { display: block; }
         .custom-dropdown-item {
@@ -234,16 +257,23 @@
         }
         .custom-dropdown-item:last-child { border-bottom: none; }
         .custom-dropdown-item:hover { background: rgba(168, 85, 247, 0.2); color: white; padding-left: 1.3rem; }
-        .custom-dropdown-item.selected { background: rgba(255, 0, 110, 0.15); color: #ff006e; font-weight: 700; }
+        .custom-dropdown-item.selected { background: rgba(255, 0, 110, 0.15); color: var(--sn-red); font-weight: 700; }
         .custom-dropdown-item.placeholder { color: rgba(255,255,255,0.4); font-style: italic; }
 
         .input::placeholder { color: rgba(255, 255, 255, 0.5); }
-        .input:focus, .select:focus { outline: none; border-color: #ff006e; }
+        .input:focus, .select:focus { outline: none; border-color: var(--sn-red); }
         .code-input { font-size: 2rem; text-align: center; letter-spacing: 0.5em; }
 
         /* SECTIONS */
         .section { margin: 1.5rem 0; text-align: center; width: 100%; max-width: 500px; }
-        .section h3 { color: #00f5ff; margin-bottom: 1rem; }
+        .section h3 {
+            color: var(--sn-muted);
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 0.9rem;
+        }
 
         .num-grid {
             display: grid;
@@ -254,33 +284,38 @@
         }
 
         .num-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid #8338ec;
-            color: white;
-            padding: 0.8rem;
-            font-size: 1.1rem;
-            font-weight: 800;
-            border-radius: 10px;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            color: var(--sn-txt2);
+            padding: 0.7rem 1.3rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
             font-family: 'Montserrat', sans-serif;
-            transition: all 0.2s;
         }
 
         .num-btn:hover { background: rgba(255, 255, 255, 0.1); }
-        .num-btn.active { background: linear-gradient(135deg, #ff006e, #8338ec); border-color: #ff006e; }
+        .num-btn.active {
+            background: var(--sn-gold);
+            border-color: var(--sn-gold);
+            color: var(--sn-gold-dark);
+        }
 
         /* CHECKBOX */
         .checkbox-label {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            gap: 0.7rem;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            border-radius: 8px;
+            padding: 0.85rem 1.1rem;
+            margin: 0.4rem auto;
+            max-width: 400px;
             cursor: pointer;
-            margin: 0.5rem 0;
-            padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            transition: all 0.3s;
+            font-size: 0.95rem;
+            color: var(--sn-txt2);
         }
 
         .checkbox-label:hover { background: rgba(0, 0, 0, 0.4); }
@@ -292,14 +327,14 @@
         }
 
         .checkbox-label span {
-            color: #00f5ff;
+            color: var(--sn-txt3);
             font-weight: 600;
         }
 
         /* PLAYLISTS */
         .playlists-box {
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
             border-radius: 20px;
             padding: 1.5rem;
             width: 100%;
@@ -321,13 +356,13 @@
         .playlist-name {
             flex: 1;
             font-weight: 600;
-            color: #ffbe0b;
+            color: var(--sn-gold);
         }
 
         .playlist-url {
             flex: 2;
             font-size: 0.8rem;
-            color: #aaa;
+            color: var(--sn-muted);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -337,39 +372,39 @@
         .code-display {
             text-align: center;
             background: linear-gradient(135deg, #1a1f3a, #2a2f4a);
-            border: 3px solid #ffbe0b;
+            border: 2px solid var(--sn-gold);
             border-radius: 20px;
             padding: 1rem 1.5rem;
             margin-bottom: 1rem;
             box-shadow: 0 10px 40px rgba(255, 190, 11, 0.3);
         }
 
-        .code-label { color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .code-label { color: var(--sn-muted); font-size: 0.7rem; margin-bottom: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; }
         .code-value {
             font-size: 3rem;
-            font-weight: 800;
-            color: #ffbe0b;
-            letter-spacing: 0.2em;
-            text-shadow: 0 0 30px rgba(255, 190, 11, 0.6);
+            font-weight: 500;
+            color: var(--sn-txt);
+            letter-spacing: 0.22em;
+            font-variant-numeric: tabular-nums;
         }
 
         .players-box {
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
-            border-radius: 20px;
-            padding: 1rem;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            border-radius: 10px;
+            padding: 1.1rem 1.2rem;
             width: 100%;
             max-width: 95%;
             margin-bottom: 1rem;
         }
 
-        .players-box h3 { color: #00f5ff; margin-bottom: 0.5rem; font-size: 1.2rem; text-align: center; }
+        .players-box h3 { color: var(--sn-muted); margin-bottom: 0.7rem; font-size: 0.72rem; text-align: left; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; }
 
         /* Conteneur en grille pour afficher les joueurs horizontalement */
         #players-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 0.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 0.6rem;
             max-height: 45vh;
             overflow-y: auto;
             padding: 0.3rem;
@@ -385,7 +420,7 @@
         }
 
         .player-num {
-            background: #8338ec;
+            background: var(--sn-gold);
             width: 24px;
             height: 24px;
             border-radius: 50%;
@@ -407,13 +442,13 @@
         }
 
         .waiting { text-align: center; margin-top: 2rem; }
-        .waiting p { font-size: 1.2rem; color: #ffbe0b; margin-top: 1rem; }
+        .waiting p { font-size: 1.2rem; color: var(--sn-gold); margin-top: 1rem; }
 
         .spinner {
             width: 60px;
             height: 60px;
             border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #ff006e;
+            border-top-color: var(--sn-red);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto;
@@ -421,107 +456,8 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* THEMES VISUELS */
-        body.theme-80s { background: #1a0020 !important; }
-        body.theme-80s .bg { background: radial-gradient(circle at 20% 50%, rgba(255,0,200,0.18), transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,200,0,0.12), transparent 50%); }
-        body.theme-80s .btn.large:not(.secondary) { background: linear-gradient(135deg, #ff00cc, #ffcc00) !important; color: #1a0020 !important; border-color: #ff00cc !important; }
-        body.theme-80s .title { background: linear-gradient(135deg, #ff00cc, #ffcc00) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-80s .opt { border-color: #ff00cc !important; }
-        body.theme-80s .timer { color: #ff00cc !important; }
-        body.theme-80s .timer-bar-fill { background: linear-gradient(90deg, #ff00cc, #ffcc00) !important; }
-
-        body.theme-hiphop { background: #080808 !important; }
-        body.theme-hiphop .bg { background: radial-gradient(circle at 30% 50%, rgba(255,180,0,0.12), transparent 50%), radial-gradient(circle at 70% 50%, rgba(200,0,0,0.08), transparent 50%); }
-        body.theme-hiphop .btn.large:not(.secondary) { background: linear-gradient(135deg, #c8960c, #dc143c) !important; border-color: #c8960c !important; }
-        body.theme-hiphop .title { background: linear-gradient(135deg, #ffd700, #dc143c) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-hiphop .opt { border-color: #c8960c !important; }
-        body.theme-hiphop .timer { color: #ffd700 !important; }
-        body.theme-hiphop .timer-bar-fill { background: linear-gradient(90deg, #c8960c, #dc143c) !important; }
-
-        body.theme-electro { background: #001122 !important; }
-        body.theme-electro .bg { background: radial-gradient(circle at 20% 50%, rgba(0,255,200,0.12), transparent 50%), radial-gradient(circle at 80% 30%, rgba(0,100,255,0.12), transparent 50%); }
-        body.theme-electro .btn.large:not(.secondary) { background: linear-gradient(135deg, #00ffcc, #0055ff) !important; color: #001122 !important; border-color: #00ffcc !important; }
-        body.theme-electro .title { background: linear-gradient(135deg, #00ffcc, #0055ff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-electro .opt { border-color: #00ffcc !important; }
-        body.theme-electro .timer { color: #00ffcc !important; }
-        body.theme-electro .timer-bar-fill { background: linear-gradient(90deg, #00ffcc, #0055ff) !important; }
-
-        body.theme-chill { background: #0d2018 !important; }
-        body.theme-chill .bg { background: radial-gradient(circle at 30% 60%, rgba(0,200,120,0.12), transparent 50%), radial-gradient(circle at 70% 30%, rgba(100,200,255,0.08), transparent 50%); }
-        body.theme-chill .btn.large:not(.secondary) { background: linear-gradient(135deg, #00c878, #00bfff) !important; color: #0d2018 !important; border-color: #00c878 !important; }
-        body.theme-chill .title { background: linear-gradient(135deg, #00c878, #00bfff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-chill .opt { border-color: #00c878 !important; }
-        body.theme-chill .timer { color: #00c878 !important; }
-        body.theme-chill .timer-bar-fill { background: linear-gradient(90deg, #00c878, #00bfff) !important; }
-
-        /* ROCK */
-        body.theme-rock { background: #0f0a00 !important; }
-        body.theme-rock .bg { background: radial-gradient(circle at 30% 50%, rgba(255,60,0,0.18), transparent 50%), radial-gradient(circle at 70% 70%, rgba(180,0,0,0.12), transparent 50%); }
-        body.theme-rock .btn.large:not(.secondary) { background: linear-gradient(135deg, #ff3c00, #8b0000) !important; border-color: #ff3c00 !important; }
-        body.theme-rock .title { background: linear-gradient(135deg, #ff3c00, #ff8c00) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-rock .opt { border-color: #ff3c00 !important; }
-        body.theme-rock .timer { color: #ff3c00 !important; }
-        body.theme-rock .timer-bar-fill { background: linear-gradient(90deg, #ff3c00, #ff8c00) !important; }
-        body.theme-rock .code-value { color: #ff3c00 !important; }
-
-        /* MUSIQUE FRANÇAISE */
-        body.theme-french { background: #0a0a1f !important; }
-        body.theme-french .bg { background: radial-gradient(circle at 25% 50%, rgba(0,0,200,0.15), transparent 50%), radial-gradient(circle at 75% 50%, rgba(220,0,0,0.12), transparent 50%); }
-        body.theme-french .btn.large:not(.secondary) { background: linear-gradient(135deg, #002395, #ed2939) !important; border-color: #ed2939 !important; }
-        body.theme-french .title { background: linear-gradient(135deg, #002395, #ffffff, #ed2939) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-french .opt { border-color: #ed2939 !important; }
-        body.theme-french .timer { color: #ed2939 !important; }
-        body.theme-french .timer-bar-fill { background: linear-gradient(90deg, #002395, #ed2939) !important; }
-        body.theme-french .code-value { color: #ed2939 !important; }
-
-        /* POP */
-        body.theme-pop { background: #1a0028 !important; }
-        body.theme-pop .bg { background: radial-gradient(circle at 30% 50%, rgba(255,0,200,0.2), transparent 50%), radial-gradient(circle at 70% 50%, rgba(255,220,0,0.15), transparent 50%); }
-        body.theme-pop .btn.large:not(.secondary) { background: linear-gradient(135deg, #ff00c8, #ffdc00) !important; color: #1a0028 !important; border-color: #ff00c8 !important; }
-        body.theme-pop .title { background: linear-gradient(135deg, #ff00c8, #ffdc00) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-pop .opt { border-color: #ff00c8 !important; }
-        body.theme-pop .timer { color: #ff00c8 !important; }
-        body.theme-pop .timer-bar-fill { background: linear-gradient(90deg, #ff00c8, #ffdc00) !important; }
-        body.theme-pop .code-value { color: #ff00c8 !important; }
-
-        /* ANNÉES 90 */
-        body.theme-90s { background: #0d0020 !important; }
-        body.theme-90s .bg { background: radial-gradient(circle at 20% 50%, rgba(0,200,180,0.18), transparent 50%), radial-gradient(circle at 80% 50%, rgba(180,0,200,0.15), transparent 50%); }
-        body.theme-90s .btn.large:not(.secondary) { background: linear-gradient(135deg, #00c8b4, #b400c8) !important; border-color: #00c8b4 !important; }
-        body.theme-90s .title { background: linear-gradient(135deg, #00c8b4, #ff6ec7, #b400c8) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-90s .opt { border-color: #00c8b4 !important; }
-        body.theme-90s .timer { color: #00c8b4 !important; }
-        body.theme-90s .timer-bar-fill { background: linear-gradient(90deg, #00c8b4, #b400c8) !important; }
-        body.theme-90s .code-value { color: #00c8b4 !important; }
-
-        /* ANNÉES 2000 */
-        body.theme-2000s { background: #050510 !important; }
-        body.theme-2000s .bg { background: radial-gradient(circle at 50% 50%, rgba(0,200,255,0.15), transparent 60%), radial-gradient(circle at 80% 20%, rgba(100,100,255,0.1), transparent 50%); }
-        body.theme-2000s .btn.large:not(.secondary) { background: linear-gradient(135deg, #00c8ff, #6464ff) !important; color: #050510 !important; border-color: #00c8ff !important; }
-        body.theme-2000s .title { background: linear-gradient(135deg, #00c8ff, #ffffff, #6464ff) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-2000s .opt { border-color: #00c8ff !important; }
-        body.theme-2000s .timer { color: #00c8ff !important; }
-        body.theme-2000s .timer-bar-fill { background: linear-gradient(90deg, #00c8ff, #6464ff) !important; }
-        body.theme-2000s .code-value { color: #00c8ff !important; }
-
-        /* MONDE */
-        body.theme-world { background: #0f0800 !important; }
-        body.theme-world .bg { background: radial-gradient(circle at 30% 50%, rgba(255,160,0,0.18), transparent 50%), radial-gradient(circle at 70% 60%, rgba(200,80,0,0.12), transparent 50%); }
-        body.theme-world .btn.large:not(.secondary) { background: linear-gradient(135deg, #ffa000, #e64a00) !important; color: #0f0800 !important; border-color: #ffa000 !important; }
-        body.theme-world .title { background: linear-gradient(135deg, #ffa000, #ff6b35, #e64a00) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-        body.theme-world .opt { border-color: #ffa000 !important; }
-        body.theme-world .timer { color: #ffa000 !important; }
-        body.theme-world .timer-bar-fill { background: linear-gradient(90deg, #ffa000, #e64a00) !important; }
-        body.theme-world .code-value { color: #ffa000 !important; }
 
         /* THEME PANEL */
-        .theme-fab { position:fixed; bottom:22px; right:15px; z-index:9990; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.2); color:white; font-size:1.2rem; cursor:pointer; display:none; align-items:center; justify-content:center; }
-        .theme-fab.visible { display:flex; }
-        .theme-popup { position:fixed; bottom:75px; right:10px; z-index:9990; display:none; flex-direction:column; gap:0.4rem; align-items:flex-end; }
-        .theme-popup.open { display:flex; animation:slideInUp 0.25s ease; }
-        .theme-chip { padding:0.35rem 0.9rem; border-radius:20px; font-size:0.8rem; font-weight:700; cursor:pointer; border:2px solid rgba(255,255,255,0.15); background:rgba(10,14,39,0.92); color:white; white-space:nowrap; transition:all 0.2s; }
-        .theme-chip:hover, .theme-chip.active { border-color:#ffbe0b; background:rgba(255,190,11,0.15); }
-        .theme-suggest { font-size:0.7rem; color:#ffbe0b; text-align:right; padding-right:4px; margin-bottom:-2px; }
         @keyframes timerDanger { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
         @keyframes hostGlow { 0%,100% { opacity:1; } }
         @keyframes msgIn { from { opacity:0; transform:translateX(-50%) translateY(20px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
@@ -532,23 +468,23 @@
 
         /* TIMER BAR */
         .timer-bar-wrap { width:100%; padding:0 0 4px; }
-        .timer-bar-bg { height:8px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
-        .timer-bar-fill { height:100%; border-radius:4px; transition:width 1s linear, background-color 0.5s; background:linear-gradient(90deg,#00ff64,#ffbe0b); }
-        .timer-bar-fill.warn { background:linear-gradient(90deg,#ffbe0b,#ff6600); }
-        .timer-bar-fill.danger { background:#ff006e; animation:timerDanger 0.4s infinite; }
+        .timer-bar-bg { width:100%; height:4px; background:var(--sn-border); border-radius:2px; overflow:hidden; }
+        .timer-bar-fill { height:100%; border-radius:2px; transition:width 1s linear; background:var(--sn-gold); }
+        .timer-bar-fill.warn { background:var(--sn-gold); opacity:0.8; }
+        .timer-bar-fill.danger { background:var(--sn-red); animation:timerPulseAnim 0.4s infinite; }
 
         /* HOST COVER FRAME */
 /* PAUSE */
         .pause-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.88); z-index:9995; flex-direction:column; align-items:center; justify-content:center; }
         .pause-overlay.active { display:flex; animation:pauseIn 0.3s ease; }
-        .pause-title { font-family:'Bungee Shade',cursive; font-size:5rem; color:#ffbe0b; text-shadow:0 0 60px rgba(255,190,11,0.9); margin-bottom:0.5rem; }
+        .pause-title { font-family:'Bungee Shade',cursive; font-size:5rem; color:var(--sn-gold); text-shadow:0 0 60px rgba(255,190,11,0.9); margin-bottom:0.5rem; }
         .pause-sub { color:rgba(255,255,255,0.6); font-size:1.1rem; margin-bottom:2rem; }
-        .pause-fab { position:fixed; top: calc(15px + env(safe-area-inset-top, 0px)); right: 160px; z-index:9996; background:rgba(255,190,11,0.15); border:2px solid #ffbe0b; color:#ffbe0b; padding:0.5rem 1rem; border-radius:30px; font-weight:800; font-size:0.85rem; cursor:pointer; white-space:nowrap; display:none; }
+        .pause-fab { position:fixed; top: calc(15px + env(safe-area-inset-top, 0px)); right: 160px; z-index:9996; background:var(--sn-card); border:1px solid var(--sn-gold); color:var(--sn-gold); padding:0.5rem 1rem; border-radius:30px; font-weight:500; font-size:0.85rem; cursor:pointer; white-space:nowrap; display:none; }
         .pause-fab.visible { display:block; }
         .pause-fab.paused { background:rgba(0,255,100,0.15); border-color:#00ff64; color:#00ff64; }
 
         /* DYNAMIC MESSAGES */
-        .dyn-msg { position:fixed; bottom:130px; left:50%; z-index:9993; background:rgba(10,14,39,0.95); border:2px solid #ffbe0b; border-radius:30px; padding:0.65rem 1.8rem; font-weight:800; font-size:1rem; color:white; white-space:nowrap; pointer-events:none; }
+        .dyn-msg { position:fixed; bottom:130px; left:50%; z-index:9993; background:var(--sn-card); border:1px solid var(--sn-gold); border-radius:30px; padding:0.65rem 1.8rem; font-weight:800; font-size:1rem; color:white; white-space:nowrap; pointer-events:none; }
         .dyn-msg.in { animation:msgIn 0.4s ease forwards; }
         .dyn-msg.out { animation:msgOut 0.4s ease forwards; }
 
@@ -556,18 +492,31 @@
         #ready-btn { display:none; }
         #ready-btn.visible { display:block; animation:readyPulse 1.5s infinite; }
         #ready-btn.is-ready { animation:none; opacity:0.7; }
-        .ready-status { color:#aaa; font-size:0.85rem; text-align:center; margin-top:0.3rem; display:none; }
+        .ready-status { color:var(--sn-muted); font-size:0.85rem; text-align:center; margin-top:0.3rem; display:none; }
         .ready-status.visible { display:block; }
 
         /* KICK */
-        .player-item { display:flex; align-items:center; gap:0.6rem; padding:0.45rem 0.8rem; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:0.3rem; }
-        .player-ready-dot { width:8px; height:8px; border-radius:50%; background:#444; flex-shrink:0; transition:all 0.3s; }
-        .player-ready-dot.ready { background:#00ff64; box-shadow:0 0 8px #00ff64; }
-        .kick-btn { margin-left:auto; background:rgba(255,0,0,0.12); border:1px solid rgba(255,0,0,0.35); color:#ff6666; padding:0.3rem 0.7rem; border-radius:6px; font-size:0.8rem; cursor:pointer; flex-shrink:0; min-width:36px; text-align:center; user-select:none; }
-        .kick-btn:hover { background:rgba(255,0,0,0.28); }
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            background: var(--sn-card2);
+            border: 1px solid var(--sn-border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--sn-txt2);
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .player-item > span:first-of-type { flex-shrink: 0; }
+        .player-ready-dot { width:7px; height:7px; border-radius:50%; background:#3a3a40; flex-shrink:0; transition:all 0.3s; }
+        .player-ready-dot.ready { background:var(--sn-green); }
+        .kick-btn { background:transparent; border:1px solid #33222a; color:var(--sn-red); padding:0.3rem 0.6rem; border-radius:6px; font-size:0.8rem; cursor:pointer; flex-shrink:0; min-width:32px; text-align:center; user-select:none; }
+        .kick-btn:hover { background:#241418; }
         .title-submode-btn { padding:0.5rem 1.2rem; border-radius:20px; border:2px solid rgba(0,245,255,0.3); background:rgba(0,245,255,0.05); color:white; font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.2s; }
-        .title-submode-btn.active { border-color:#00f5ff; background:rgba(0,245,255,0.15); color:#00f5ff; }
-        .title-submode-btn:hover { border-color:#00f5ff; }
+        .title-submode-btn.active { border-color:var(--sn-txt3); background:rgba(0,245,255,0.15); color:var(--sn-txt3); }
+        .title-submode-btn:hover { border-color:var(--sn-txt3); }
 
         @keyframes wave1 { 0%,100%{height:20px} 50%{height:55px} }
         @keyframes wave2 { 0%,100%{height:35px} 50%{height:15px} }
@@ -589,7 +538,7 @@
         body.ear-mode .ear-mode-visual { display:flex; }
 
         .sound-wave { display:flex; align-items:center; gap:5px; height:70px; padding:0 1rem; }
-        .sound-wave span { display:block; width:8px; border-radius:4px; background:linear-gradient(180deg,#00f5ff,#8338ec); }
+        .sound-wave span { display:block; width:8px; border-radius:4px; background:var(--sn-gold); }
         .sound-wave.playing span:nth-child(1){animation:wave1 0.8s ease-in-out infinite}
         .sound-wave.playing span:nth-child(2){animation:wave2 0.7s ease-in-out infinite 0.1s}
         .sound-wave.playing span:nth-child(3){animation:wave3 0.9s ease-in-out infinite 0.2s}
@@ -615,7 +564,7 @@
         .bot-count-btns { display:flex; gap:0.3rem; }
         .bot-count-btn { width:30px; height:30px; border-radius:8px; border:2px solid rgba(168,85,247,0.4); background:rgba(168,85,247,0.08); color:white; font-size:0.8rem; font-weight:700; cursor:pointer; }
         .bot-count-btn.active { border-color:#a855f7; background:rgba(168,85,247,0.25); color:#a855f7; }
-        .bot-speed-select { background:#1a1f3a; border:1px solid rgba(168,85,247,0.4); color:white; padding:0.3rem 0.5rem; border-radius:8px; font-size:0.8rem; }
+        .bot-speed-select { background:var(--sn-card); border:1px solid rgba(168,85,247,0.4); color:white; padding:0.3rem 0.5rem; border-radius:8px; font-size:0.8rem; }
         .bot-add-btn { background:linear-gradient(135deg,#a855f7,#7c3aed); border:none; color:white; padding:0.4rem 0.9rem; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer; }
         .bot-indicator { display:inline-block; font-size:0.65rem; background:rgba(168,85,247,0.2); border:1px solid rgba(168,85,247,0.5); color:#a855f7; border-radius:4px; padding:0 0.3rem; margin-left:0.3rem; vertical-align:middle; }
         .player-item.kicking { animation:kickSlide 0.4s ease forwards; }
@@ -627,15 +576,15 @@
             width: 100%;
             max-width: 800px;
             margin-bottom: 1.5rem;
-            background: #1a1f3a;
-            padding: 1rem 1.5rem;
-            border-radius: 15px;
-            border: 2px solid #8338ec;
-            font-weight: 800;
+            background: var(--sn-card);
+            padding: 0.9rem 1.4rem;
+            border-radius: 10px;
+            border: 1px solid var(--sn-border);
+            font-weight: 500;
         }
 
-        .timer { color: #ff006e; font-size: 1.3rem; }
-        .score { color: #ffbe0b; font-size: 1.3rem; }
+        .timer { color: var(--sn-gold); font-size: 1.2rem; font-variant-numeric: tabular-nums; font-weight: 500; }
+        .score { color: var(--sn-txt); font-size: 1.2rem; font-variant-numeric: tabular-nums; font-weight: 500; }
 
         .game-container {
             display: flex;
@@ -656,38 +605,40 @@
         }
 
         .scoreboard-side {
-            width: 250px;
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
-            border-radius: 20px;
-            padding: 1.5rem;
+            width: 200px;
+            flex-shrink: 0;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
             position: sticky;
             top: 20px;
         }
 
         .scoreboard-side h3 {
-            color: #00f5ff;
-            margin-bottom: 1rem;
-            text-align: center;
+            color: var(--sn-muted);
+            margin-bottom: 0.8rem;
+            text-align: left;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 500;
         }
 
         .score-item {
             display: flex;
             justify-content: space-between;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            font-size: 0.9rem;
+            padding: 0.45rem 0.1rem;
+            border-bottom: 1px solid var(--sn-sep);
+            font-size: 0.85rem;
         }
 
         .score-item.me {
-            background: rgba(255, 190, 11, 0.2);
-            border: 1px solid #ffbe0b;
+            color: var(--sn-gold);
         }
 
-        .score-name { font-weight: 600; }
-        .score-points { color: #ffbe0b; font-weight: 800; }
+        .score-name { font-weight: 500; color: var(--sn-txt2); }
+        .score-points { color: var(--sn-gold); font-weight: 500; font-variant-numeric: tabular-nums; }
 
         .img-box {
             width: 100%;
@@ -736,29 +687,32 @@
         .answer-reveal {
             text-align: center;
             margin-top: 1rem;
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 15px;
-            border: 2px solid #00f5ff;
+            padding: 1.3rem 1.5rem;
+            background: var(--sn-card);
+            border-radius: 10px;
+            border: 1px solid var(--sn-border);
+            border-top: 2px solid var(--sn-gold);
         }
 
         .answer-reveal h4 {
-            color: #00f5ff;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
+            color: var(--sn-muted);
+            font-size: 0.7rem;
+            margin-bottom: 0.6rem;
             text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 500;
         }
 
         .answer-reveal .answer-text {
-            color: #ffbe0b;
-            font-size: 1.8rem;
-            font-weight: 800;
+            color: var(--sn-gold);
+            font-size: 1.7rem;
+            font-weight: 500;
         }
 
         .audio-box { text-align: center; margin: 1rem 0; }
 
         .audio-btn {
-            background: linear-gradient(135deg, #ffbe0b, #ff006e);
+            background: var(--sn-gold); color: var(--sn-gold-dark);
             color: white;
             border: none;
             padding: 0.8rem 2rem;
@@ -774,8 +728,8 @@
         .q-text {
             text-align: center;
             font-size: 1.5rem;
-            font-weight: 800;
-            color: #00f5ff;
+            font-weight: 500;
+            color: var(--sn-txt);
             margin-bottom: 1.5rem;
             word-wrap: break-word;
             padding: 0 0.5rem;
@@ -789,15 +743,15 @@
         }
 
         .opt {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid #8338ec;
-            padding: 1.5rem 1rem;
-            border-radius: 15px;
-            color: white;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            padding: 1.3rem 1rem;
+            border-radius: 8px;
+            color: var(--sn-txt2);
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-weight: 500;
+            transition: border-color 0.15s, background 0.15s;
             word-wrap: break-word;
             text-align: center;
             min-height: 60px;
@@ -808,11 +762,11 @@
 
         /* Hover uniquement pour souris (pas tactile) */
         @media (hover: hover) and (pointer: fine) {
-            .opt:hover { background: rgba(131, 56, 236, 0.2); transform: scale(1.05); }
+            .opt:hover { border-color: var(--sn-gold); background: var(--sn-gold-bg); }
         }
         .opt:active { transform: scale(0.97); }
-        .opt.correct { background: rgba(0, 255, 100, 0.2); border-color: #00ff64; }
-        .opt.wrong { background: rgba(255, 0, 0, 0.2); border-color: #ff0033; }
+        .opt.correct { background: #14231b; border-color: var(--sn-green); color: var(--sn-green); }
+        .opt.wrong { background: #241418; border-color: var(--sn-red); color: var(--sn-red); }
         .opt.disabled { cursor: not-allowed; opacity: 0.6; }
 
         .result {
@@ -831,9 +785,9 @@
         .leaderboard-title {
             font-size: 2rem;
             font-weight: 800;
-            color: #ffbe0b;
+            color: var(--sn-txt);
             margin-bottom: 1rem;
-            text-shadow: 0 0 20px rgba(255, 190, 11, 0.5);
+            font-weight: 500;
         }
 
         .podium {
@@ -846,53 +800,38 @@
         }
 
         .podium-item {
-            background: #1a1f3a;
-            border: 3px solid #8338ec;
-            border-radius: 15px;
-            padding: 1rem 1rem;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
+            border-radius: 10px;
+            padding: 1.2rem 1.4rem;
             text-align: center;
-            min-width: 120px;
-            transition: all 0.3s;
+            min-width: 130px;
         }
         
         /* 1er place - Le plus grand au centre */
-        .podium-item.first {
-            order: 2;
-            transform: scale(1.1);
-            border-color: #ffbe0b;
-            box-shadow: 0 0 30px rgba(255, 190, 11, 0.4);
-            padding: 1.3rem 1.2rem;
-        }
+        .podium-item.first { border-top: 2px solid var(--sn-gold); }
         
         /* 2ème place - Moyen à gauche */
-        .podium-item.second {
-            order: 1;
-            transform: scale(1.03);
-            border-color: #00f5ff;
-        }
+        .podium-item.second { border-top: 2px solid #8a8a92; }
         
         /* 3ème place - Plus petit à droite */
-        .podium-item.third {
-            order: 3;
-            transform: scale(0.97);
-            border-color: #ff006e;
-        }
+        .podium-item.third { border-top: 2px solid #a9784f; }
 
         .medal { font-size: 2rem; margin-bottom: 0.3rem; }
         .p-name { 
             font-weight: 800; 
             font-size: 1rem; 
-            color: #ffbe0b; 
+            color: var(--sn-gold); 
             margin: 0.3rem 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .p-score { font-size: 1.2rem; font-weight: 800; color: #ff006e; }
+        .p-score { font-size: 1.2rem; font-weight: 800; color: var(--sn-red); }
 
         .leaderboard {
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
             border-radius: 20px;
             padding: 1rem;
             width: 100%;
@@ -912,14 +851,16 @@
         .lb-row {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            padding: 0.4rem 0.6rem;
-            background: rgba(0, 0, 0, 0.3);
+            gap: 0.8rem;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
             border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
         }
 
         .rank {
-            background: #8338ec;
+            background: var(--sn-gold);
             width: 28px;
             height: 28px;
             border-radius: 50%;
@@ -941,7 +882,7 @@
         }
         .pts { 
             font-weight: 800; 
-            color: #ffbe0b; 
+            color: var(--sn-gold); 
             font-size: 1rem;
             flex-shrink: 0;
         }
@@ -962,7 +903,7 @@
         }
 
         .loading-text {
-            color: #ffbe0b;
+            color: var(--sn-gold);
             font-size: 1.5rem;
             font-weight: 800;
             margin-top: 2rem;
@@ -1045,12 +986,12 @@
             }
         }
         .intro-scores-container { max-width: 550px; margin: 0 auto 0.8rem; }
-        .intro-scores-title { color: #ffbe0b; font-size: 1.1rem; font-weight: 800; text-align: center; margin-bottom: 0.6rem; letter-spacing: 0.05em; }
+        .intro-scores-title { color: var(--sn-gold); font-size: 1.1rem; font-weight: 800; text-align: center; margin-bottom: 0.6rem; letter-spacing: 0.05em; }
         .intro-scores-list { display: flex; flex-direction: column; gap: 0.4rem; }
         .intro-score-row { display: flex; align-items: center; gap: 0.8rem; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0.5rem 1rem; }
-        .intro-score-rank { color: #ffbe0b; font-weight: 800; font-size: 1.1rem; width: 28px; }
+        .intro-score-rank { color: var(--sn-gold); font-weight: 800; font-size: 1.1rem; width: 28px; }
         .intro-score-name { flex: 1; color: white; font-weight: 700; font-size: 1.05rem; }
-        .intro-score-pts { color: #00f5ff; font-weight: 800; font-size: 1.05rem; }
+        .intro-score-pts { color: var(--sn-txt3); font-weight: 800; font-size: 1.05rem; }
 
         /* PODIUM OVERLAY */
         .podium-card {
@@ -1078,7 +1019,7 @@
             min-width: 100px;
             padding: 1rem 0.5rem;
         }
-        .podium-block.rank1 { background: linear-gradient(180deg, rgba(255,190,11,0.4), rgba(255,190,11,0.1)); border: 2px solid #ffbe0b; height: 130px; box-shadow: 0 0 30px rgba(255,190,11,0.5); }
+        .podium-block.rank1 { background: var(--sn-gold-bg); border-top: 2px solid var(--sn-gold); height: 130px; }
         .podium-block.rank2 { background: linear-gradient(180deg, rgba(192,192,192,0.3), rgba(192,192,192,0.05)); border: 2px solid #aaa; height: 90px; }
         .podium-block.rank3 { background: linear-gradient(180deg, rgba(205,127,50,0.3), rgba(205,127,50,0.05)); border: 2px solid #cd7f32; height: 70px; }
 
@@ -1099,8 +1040,8 @@
         }
         .help-overlay.hidden { display: none; }
         .help-modal {
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
             border-radius: 20px;
             padding: 2rem;
             max-width: 600px;
@@ -1133,7 +1074,7 @@
         .help-title {
             padding: 1rem;
             cursor: pointer;
-            color: #00f5ff;
+            color: var(--sn-txt3);
             font-size: 1rem;
             display: flex;
             justify-content: space-between;
@@ -1141,7 +1082,7 @@
             transition: background 0.2s;
         }
         .help-title:hover { background: rgba(131,56,236,0.15); }
-        .help-arrow { font-size: 0.8rem; color: #aaa; transition: transform 0.3s; }
+        .help-arrow { font-size: 0.8rem; color: var(--sn-muted); transition: transform 0.3s; }
         .help-title.open .help-arrow { transform: rotate(180deg); }
         .help-content {
             display: none;
@@ -1175,7 +1116,7 @@
         .emoji-picker { display: none; }
         .emoji-pick { font-size: 1.6rem; width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .emoji-pick:hover { background: rgba(255,255,255,0.15); transform: scale(1.15); }
-        .emoji-pick.selected { border-color: #ff006e; background: rgba(255,0,110,0.2); transform: scale(1.15); box-shadow: 0 0 12px rgba(255,0,110,0.4); }
+        .emoji-pick.selected { border-color: var(--sn-red); background: rgba(255,0,110,0.2); transform: scale(1.15); box-shadow: 0 0 12px rgba(255,0,110,0.4); }
 
         /* EMOJI DROPDOWN TRIGGER */
         .emoji-dropdown-trigger {
@@ -1183,7 +1124,7 @@
             align-items: center;
             gap: 0.8rem;
             padding: 0.8rem 1.2rem;
-            border: 2px solid #ff006e;
+            border: 1px solid var(--sn-border);
             border-radius: 12px;
             background: rgba(255,255,255,0.05);
             cursor: pointer;
@@ -1193,8 +1134,8 @@
         }
         .emoji-dropdown-trigger:hover { border-color: #a855f7; background: rgba(168,85,247,0.1); }
         .emoji-dropdown-trigger .emoji-preview { font-size: 2rem; }
-        .emoji-dropdown-trigger .emoji-label { color: #00f5ff; font-weight: 700; font-size: 0.95rem; flex: 1; }
-        .emoji-dropdown-trigger .emoji-caret { color: #aaa; font-size: 0.8rem; }
+        .emoji-dropdown-trigger .emoji-label { color: var(--sn-txt3); font-weight: 700; font-size: 0.95rem; flex: 1; }
+        .emoji-dropdown-trigger .emoji-caret { color: var(--sn-muted); font-size: 0.8rem; }
 
         /* EMOJI MODAL */
         .emoji-modal-overlay {
@@ -1210,8 +1151,8 @@
         }
         .emoji-modal-overlay.hidden { display: none; }
         .emoji-modal {
-            background: #1a1f3a;
-            border: 2px solid #8338ec;
+            background: var(--sn-card);
+            border: 1px solid var(--sn-border);
             border-radius: 20px;
             padding: 1.5rem;
             max-width: 420px;
@@ -1225,7 +1166,7 @@
             align-items: center;
             margin-bottom: 1rem;
         }
-        .emoji-modal-header h3 { color: #00f5ff; font-size: 1.1rem; }
+        .emoji-modal-header h3 { color: var(--sn-txt3); font-size: 1.1rem; }
         .emoji-modal-close {
             background: rgba(255,0,0,0.5);
             border: none;
@@ -1250,17 +1191,17 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 800px; margin: 1.5rem auto; }
         .stat-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(131,56,236,0.3); border-radius: 15px; padding: 1rem; text-align: center; }
         .stat-card .stat-emoji { font-size: 2rem; margin-bottom: 0.3rem; }
-        .stat-card .stat-title { color: #00f5ff; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.2rem; letter-spacing: 0.05em; }
+        .stat-card .stat-title { color: var(--sn-txt3); font-size: 0.8rem; font-weight: 700; margin-bottom: 0.2rem; letter-spacing: 0.05em; }
         .stat-card .stat-desc { color: rgba(255,255,255,0.4); font-size: 0.7rem; font-style: italic; margin-bottom: 0.4rem; line-height: 1.3; }
-        .stat-card .stat-player { color: #ffbe0b; font-size: 1.05rem; font-weight: 800; }
+        .stat-card .stat-player { color: var(--sn-gold); font-size: 1.05rem; font-weight: 800; }
         .stat-card .stat-value { color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 0.2rem; }
         .speed-podium { background: rgba(255,190,11,0.08); border: 2px solid rgba(255,190,11,0.3); border-radius: 15px; padding: 1.2rem 1.5rem; max-width: 400px; margin: 1.5rem auto 0; }
-        .speed-podium h4 { color: #ffbe0b; text-align: center; margin-bottom: 0.8rem; font-size: 1rem; }
+        .speed-podium h4 { color: var(--sn-gold); text-align: center; margin-bottom: 0.8rem; font-size: 1rem; }
         .speed-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .speed-row:last-child { border-bottom: none; }
         .speed-rank { font-size: 1.2rem; width: 28px; text-align: center; }
         .speed-name { flex: 1; color: white; font-weight: 700; font-size: 0.95rem; }
-        .speed-time { color: #00f5ff; font-weight: 800; font-size: 0.95rem; }
+        .speed-time { color: var(--sn-txt3); font-weight: 800; font-size: 0.95rem; }
 
         /* TEAMS */
         /* ===== NOUVEAU MODE ÉQUIPES ===== */
@@ -1269,7 +1210,7 @@
         .team-config-section.visible { display:block; }
         .team-count-btns { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.8rem; justify-content:center; }
         .team-count-btn { padding:0.35rem 0.8rem; border-radius:20px; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; }
-        .team-count-btn.active { border-color:#ffbe0b; background:rgba(255,190,11,0.15); color:#ffbe0b; }
+        .team-count-btn.active { border-color:var(--sn-gold); background:rgba(255,190,11,0.15); color:var(--sn-gold); }
         .teams-inputs { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; width:100%; }
         .team-input-row { display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); border-radius:10px; padding:0.5rem 0.7rem; }
         .team-color-dot { width:22px; height:22px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,0.3); cursor:pointer; }
@@ -1283,9 +1224,9 @@
         .team-lobby-members { min-height:36px; display:flex; flex-direction:column; gap:0.25rem; }
         .team-lobby-player { font-size:0.78rem; background:rgba(255,255,255,0.08); border-radius:6px; padding:0.2rem 0.5rem; display:flex; align-items:center; gap:0.3rem; }
         .unassigned-pool { background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.2); border-radius:12px; padding:0.6rem; margin-bottom:0.6rem; }
-        .unassigned-pool h4 { font-size:0.8rem; color:#aaa; margin-bottom:0.4rem; }
+        .unassigned-pool h4 { font-size:0.8rem; color:var(--sn-muted); margin-bottom:0.4rem; }
         .assign-btn { margin-left:auto; font-size:0.65rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:4px; padding:0.1rem 0.35rem; cursor:pointer; }
-        .assign-select { font-size:0.7rem; background:#1a1f3a; border:1px solid rgba(255,255,255,0.3); color:white; border-radius:4px; padding:0.1rem; }
+        .assign-select { font-size:0.7rem; background:var(--sn-card); border:1px solid rgba(255,255,255,0.3); color:white; border-radius:4px; padding:0.1rem; }
 
         /* Badge équipe en jeu */
         .team-badge { display:inline-block; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.75rem; font-weight:800; margin-bottom:0.3rem; }
@@ -1294,13 +1235,13 @@
         .team-score-row { display:flex; align-items:center; gap:0.6rem; padding:0.35rem 0.6rem; border-radius:8px; margin-bottom:0.3rem; }
         .team-score-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
         .team-score-name { flex:1; font-weight:800; font-size:0.85rem; }
-        .team-score-pts { font-weight:800; font-size:0.85rem; color:#ffbe0b; }
+        .team-score-pts { font-weight:800; font-size:0.85rem; color:var(--sn-gold); }
 
         /* Résultats équipes */
         .team-results-grid { display:flex; gap:0.8rem; flex-wrap:wrap; justify-content:center; margin:1rem 0; }
         .team-result-card { border-radius:16px; padding:1rem 1.3rem; text-align:center; min-width:140px; border:2px solid; }
         .team-result-card .tr-name { font-size:1rem; font-weight:800; margin-bottom:0.3rem; }
-        .team-result-card .tr-score { font-size:1.6rem; font-weight:800; color:#ffbe0b; }
+        .team-result-card .tr-score { font-size:1.6rem; font-weight:800; color:var(--sn-gold); }
         .team-result-card .tr-members { font-size:0.75rem; color:rgba(255,255,255,0.6); margin-top:0.4rem; }
         .team-result-card .tr-mvp { font-size:0.8rem; margin-top:0.5rem; }
 
@@ -1316,7 +1257,7 @@
             gap: 0.5rem;
             padding: 0.6rem 1rem;
             background: rgba(0, 0, 0, 0.3);
-            border: 2px solid #8338ec;
+            border: 1px solid var(--sn-border);
             border-radius: 10px;
             font-weight: 700;
             font-size: 0.9rem;
@@ -1521,22 +1462,22 @@
 
         <!-- MODAL VOTE PLAYLIST -->
         <div id="vote-modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9995;align-items:center;justify-content:center;padding:1rem;">
-            <div style="background:#1a1f3a;border:2px solid rgba(131,56,236,0.5);border-radius:20px;padding:1.5rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative;">
-                <button onclick="closeVoteModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer;">✕</button>
+            <div style="background:var(--sn-card);border:1px solid var(--sn-border);border-radius:20px;padding:1.5rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative;">
+                <button onclick="closeVoteModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--sn-muted);font-size:1.4rem;cursor:pointer;">✕</button>
 
                 <!-- VUE JOUEURS -->
                 <div id="vote-player-view">
-                    <h3 style="color:#00f5ff;text-align:center;margin-bottom:0.5rem;font-size:1.4rem;">🗳️ Prochaine playlist ?</h3>
-                    <p style="color:#aaa;font-size:0.85rem;text-align:center;margin-bottom:1.2rem;">Clique sur ton choix !</p>
+                    <h3 style="color:var(--sn-txt3);text-align:center;margin-bottom:0.5rem;font-size:1.4rem;">🗳️ Prochaine playlist ?</h3>
+                    <p style="color:var(--sn-muted);font-size:0.85rem;text-align:center;margin-bottom:1.2rem;">Clique sur ton choix !</p>
                     <div id="vote-options" style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;"></div>
                     <p id="vote-confirm-msg" style="color:#00ff64;text-align:center;margin-top:1rem;font-size:1rem;font-weight:700;display:none;">✅ Vote enregistré !</p>
                 </div>
 
                 <!-- VUE HÔTE -->
                 <div id="vote-host-view" style="display:none;">
-                    <h3 style="color:#00f5ff;text-align:center;margin-bottom:1rem;font-size:1.4rem;">🗳️ Résultats du vote</h3>
+                    <h3 style="color:var(--sn-txt3);text-align:center;margin-bottom:1rem;font-size:1.4rem;">🗳️ Résultats du vote</h3>
                     <div id="vote-results" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.8rem;"></div>
-                    <p style="color:#aaa;font-size:0.8rem;text-align:center;" id="vote-count-label"></p>
+                    <p style="color:var(--sn-muted);font-size:0.8rem;text-align:center;" id="vote-count-label"></p>
                 </div>
             </div>
         </div>
@@ -1544,22 +1485,6 @@
         <audio id="ambient-audio" loop preload="none"></audio>
         <audio id="podium-audio" loop preload="none"></audio>
 
-        <!-- THEME PANEL (hôte uniquement) -->
-        <div class="theme-popup" id="theme-popup">
-            <div class="theme-suggest" id="theme-suggest"></div>
-            <div class="theme-chip active" data-theme="" onclick="applyTheme('')">🌙 Défaut</div>
-            <div class="theme-chip" data-theme="theme-80s" onclick="applyTheme('theme-80s')">🪩 Disco / 80s</div>
-            <div class="theme-chip" data-theme="theme-90s" onclick="applyTheme('theme-90s')">📼 Années 90</div>
-            <div class="theme-chip" data-theme="theme-2000s" onclick="applyTheme('theme-2000s')">💿 Années 2000</div>
-            <div class="theme-chip" data-theme="theme-pop" onclick="applyTheme('theme-pop')">🌟 Pop</div>
-            <div class="theme-chip" data-theme="theme-hiphop" onclick="applyTheme('theme-hiphop')">🎤 Hip-Hop / Rap</div>
-            <div class="theme-chip" data-theme="theme-rock" onclick="applyTheme('theme-rock')">🎸 Rock</div>
-            <div class="theme-chip" data-theme="theme-electro" onclick="applyTheme('theme-electro')">⚡ Électro</div>
-            <div class="theme-chip" data-theme="theme-french" onclick="applyTheme('theme-french')">🇫🇷 Musique Française</div>
-            <div class="theme-chip" data-theme="theme-chill" onclick="applyTheme('theme-chill')">🌿 Chill / Lofi</div>
-            <div class="theme-chip" data-theme="theme-world" onclick="applyTheme('theme-world')">🌍 Musique du Monde</div>
-        </div>
-        <button class="theme-fab" id="theme-fab" onclick="toggleThemePopup()" title="Thème visuel">🎨</button>
 
         <!-- LOADING -->
         <div id="loading-overlay" class="loading-overlay hidden">
@@ -1578,17 +1503,17 @@
                 <input id="login-username" class="input" placeholder="Nom d'utilisateur" autocomplete="username">
                 <input id="login-password" class="input" type="password" placeholder="Mot de passe" autocomplete="current-password">
                 <button class="btn large" onclick="doLogin()" style="width: 100%; margin-top: 1rem;">🔑 Connexion</button>
-                <p id="login-error" style="color: #ff006e; text-align: center; margin-top: 1rem; display: none;"></p>
+                <p id="login-error" style="color: var(--sn-red); text-align: center; margin-top: 1rem; display: none;"></p>
                 <button class="btn" onclick="goToMenu()" style="width: 100%; margin-top: 0.5rem; background: rgba(255,255,255,0.1);">← Retour</button>
             </div>
         </div>
 
         <!-- ADMIN : Gestion des utilisateurs -->
         <div id="admin-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Gestion des comptes</h2>
+            <h2 style="font-size: 2.5rem; color: var(--sn-gold); margin-bottom: 2rem;">👥 Gestion des comptes</h2>
             
             <div class="playlists-box" style="margin-bottom: 2rem;">
-                <h3 style="color: #00f5ff; margin-bottom: 1rem;">➕ Ajouter un utilisateur</h3>
+                <h3 style="color: var(--sn-txt3); margin-bottom: 1rem;">➕ Ajouter un utilisateur</h3>
                 <input id="admin-new-user" class="input" placeholder="Nom d'utilisateur" style="max-width: 100%;">
                 <input id="admin-new-pass" class="input" type="password" placeholder="Mot de passe" style="max-width: 100%;">
                 <label class="checkbox-label">
@@ -1599,7 +1524,7 @@
             </div>
 
             <div class="playlists-box">
-                <h3 style="color: #00f5ff; margin-bottom: 1rem;">📋 Utilisateurs existants</h3>
+                <h3 style="color: var(--sn-txt3); margin-bottom: 1rem;">📋 Utilisateurs existants</h3>
                 <div id="admin-users-list"></div>
             </div>
 
@@ -1614,7 +1539,7 @@
                 <p class="subtitle">PREMIÈRE INSTALLATION</p>
             </div>
             <div style="width: 100%; max-width: 400px;">
-                <p style="text-align: center; color: #00f5ff; margin-bottom: 1.5rem; font-size: 1.1rem;">
+                <p style="text-align: center; color: var(--sn-txt3); margin-bottom: 1.5rem; font-size: 1.1rem;">
                     Crée ton compte administrateur pour commencer :
                 </p>
                 <input id="setup-username" class="input" placeholder="Ton nom d'utilisateur">
@@ -1639,8 +1564,8 @@
                 <button id="account-menu-btn" class="btn" onclick="goToAccount()" style="display: none;">⚙️ Mon Compte</button>
                 <button id="logout-btn" class="btn danger" onclick="doLogout()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔓 Déconnexion (<span id="logged-user"></span>)</button>
                 <button id="login-menu-btn" class="btn" onclick="showLoginScreen()" style="font-size: 0.85rem; padding: 0.6rem 1.2rem;">🔑 Connexion Organisateur</button>
-                <button id="help-menu-btn" class="btn" onclick="toggleHelpGuide()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">❓ Guide d'utilisation</button>
-                <a id="nos-reseaux-menu" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
+                <button id="help-menu-btn" class="btn" onclick="toggleHelpGuide()" style="display: none; font-size: 0.85rem; padding: 0.6rem 1.2rem; background: transparent; border: 1px solid #2e2e33; color: var(--sn-txt2);">❓ Guide d'utilisation</button>
+                <a id="nos-reseaux-menu" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1rem; background: transparent; border: 1px solid #2e2e33; color: var(--sn-txt2);">🌐 Nos Réseaux</a>
             </div>
         </div>
 
@@ -1659,7 +1584,7 @@
         <div id="help-guide-overlay" class="help-overlay hidden" onclick="if(event.target===this)toggleHelpGuide()">
             <div class="help-modal">
                 <button class="help-close" onclick="toggleHelpGuide()">✕</button>
-                <h2 style="color: #ffbe0b; margin-bottom: 1.5rem; text-align: center;">❓ Guide d'utilisation</h2>
+                <h2 style="color: var(--sn-gold); margin-bottom: 1.5rem; text-align: center;">❓ Guide d'utilisation</h2>
                 
                 <div class="help-section">
                     <h3 class="help-title" onclick="toggleHelpSection(this)">🎮 Lancer une partie <span class="help-arrow">▼</span></h3>
@@ -1672,8 +1597,8 @@
                         <p>6. Clique sur <strong>Lancer</strong> → un code à 6 chiffres sera généré</p>
                         <p>7. Partage ce code aux joueurs, ils le tapent pour rejoindre</p>
                         <p>8. Quand tout le monde est dans le lobby, clique sur <strong>Démarrer</strong></p>
-                        <p style="margin-top: 0.5rem; color: #00f5ff;"><strong>💡 Mode Hôte</strong> : Coche cette option si tu veux que ton écran affiche les questions en grand (pour projeter sur un écran/TV). Tu ne joueras pas, tu seras le maître du jeu.</p>
-                        <p style="color: #00f5ff;"><strong>💡 Mode Distance</strong> : Coche cette option si les joueurs ne sont pas dans la même pièce. Chacun entendra la musique sur son propre téléphone.</p>
+                        <p style="margin-top: 0.5rem; color: var(--sn-txt3);"><strong>💡 Mode Hôte</strong> : Coche cette option si tu veux que ton écran affiche les questions en grand (pour projeter sur un écran/TV). Tu ne joueras pas, tu seras le maître du jeu.</p>
+                        <p style="color: var(--sn-txt3);"><strong>💡 Mode Distance</strong> : Coche cette option si les joueurs ne sont pas dans la même pièce. Chacun entendra la musique sur son propre téléphone.</p>
                     </div>
                 </div>
 
@@ -1684,10 +1609,10 @@
                         <p><strong>✍️ Écriture</strong> : Tape au clavier le titre et/ou l'artiste. Plus dur mais plus de points ! Fonctionne avec toutes les playlists Deezer.</p>
                         <p><strong>💿 Titres uniquement</strong> : Comme l'écriture mais uniquement les titres. Fonctionne avec toutes les playlists Deezer.</p>
                         <p><strong>🎉 Soirée</strong> : Mix de QCM et d'écriture pour varier les plaisirs. Fonctionne avec toutes les playlists Deezer.</p>
-                        <p style="color: #ffbe0b;">⚠️ <strong>Les modes ci-dessous nécessitent des playlists spécifiques :</strong></p>
-                        <p><strong>🎧 Disney Mix</strong> : 3 niveaux (Normal → Reverse → Extrait). <span style="color: #ff006e;">Fonctionne uniquement avec la playlist Disney.</span></p>
-                        <p><strong>🎬 Film</strong> : Retrouve les films à partir de dialogues et musiques. <span style="color: #ff006e;">Fonctionne uniquement avec la playlist Films.</span></p>
-                        <p><strong>📺 Série</strong> : Retrouve les séries à partir de génériques et extraits. <span style="color: #ff006e;">Fonctionne uniquement avec la playlist Séries.</span></p>
+                        <p style="color: var(--sn-gold);">⚠️ <strong>Les modes ci-dessous nécessitent des playlists spécifiques :</strong></p>
+                        <p><strong>🎧 Disney Mix</strong> : 3 niveaux (Normal → Reverse → Extrait). <span style="color: var(--sn-red);">Fonctionne uniquement avec la playlist Disney.</span></p>
+                        <p><strong>🎬 Film</strong> : Retrouve les films à partir de dialogues et musiques. <span style="color: var(--sn-red);">Fonctionne uniquement avec la playlist Films.</span></p>
+                        <p><strong>📺 Série</strong> : Retrouve les séries à partir de génériques et extraits. <span style="color: var(--sn-red);">Fonctionne uniquement avec la playlist Séries.</span></p>
                     </div>
                 </div>
 
@@ -1697,8 +1622,8 @@
                         <p><strong>Option 1 — Playlist enregistrée :</strong></p>
                         <p>Dans l'onglet <strong>🎵 Deezer</strong>, choisis une playlist dans la liste déroulante. Ce sont les playlists ajoutées par les administrateurs.</p>
                         <p style="margin-top: 0.8rem;"><strong>Option 2 — Lien Deezer :</strong></p>
-                        <p>Tu peux aussi coller un lien Deezer directement dans le champ URL. Va sur Deezer, trouve une playlist, copie son lien (ex: <span style="color: #aaa;">https://www.deezer.com/fr/playlist/123456789</span>) et colle-le.</p>
-                        <p style="margin-top: 0.5rem; color: #00f5ff;">💡 Si tu colles un lien, la playlist enregistrée sera automatiquement désélectionnée pour éviter les conflits.</p>
+                        <p>Tu peux aussi coller un lien Deezer directement dans le champ URL. Va sur Deezer, trouve une playlist, copie son lien (ex: <span style="color: var(--sn-muted);">https://www.deezer.com/fr/playlist/123456789</span>) et colle-le.</p>
+                        <p style="margin-top: 0.5rem; color: var(--sn-txt3);">💡 Si tu colles un lien, la playlist enregistrée sera automatiquement désélectionnée pour éviter les conflits.</p>
                     </div>
                 </div>
 
@@ -1712,7 +1637,7 @@
                         <p style="padding-left: 1rem;">• Playlist <strong>Disney</strong> → mode <strong>🎧 Disney Mix</strong></p>
                         <p style="padding-left: 1rem;">• Playlist <strong>Films</strong> → mode <strong>🎬 Film</strong></p>
                         <p style="padding-left: 1rem;">• Playlist <strong>Séries</strong> → mode <strong>📺 Série</strong></p>
-                        <p style="margin-top: 0.5rem; color: #ff006e;">⚠️ Si tu lances un mode spécial avec la mauvaise playlist, les questions ne fonctionneront pas correctement !</p>
+                        <p style="margin-top: 0.5rem; color: var(--sn-red);">⚠️ Si tu lances un mode spécial avec la mauvaise playlist, les questions ne fonctionneront pas correctement !</p>
                     </div>
                 </div>
 
@@ -1735,40 +1660,40 @@
                 </div>
 
                 <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-                    <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.8rem;">Un problème, un bug, une suggestion ?</p>
-                    <a href="/cdn-cgi/l/email-protection#c2b2aea3bbb6aaa3b7a5a7b6aaa7b082a5afa3abaeeca1adaffdb1b7a0a8a7a1b6ff80aeabaca6e296a7b1b6e2929685e2efe281adacb6a3a1b6" style="color: #00f5ff; font-weight: 800; font-size: 1.1rem; text-decoration: none;">📧 <span class="__cf_email__" data-cfemail="22524e435b564a43574547564a475062454f434b4e0c414d4f">[email&#160;protected]</span></a>
+                    <p style="color: var(--sn-muted); font-size: 0.9rem; margin-bottom: 0.8rem;">Un problème, un bug, une suggestion ?</p>
+                    <a href="/cdn-cgi/l/email-protection#c2b2aea3bbb6aaa3b7a5a7b6aaa7b082a5afa3abaeeca1adaffdb1b7a0a8a7a1b6ff80aeabaca6e296a7b1b6e2929685e2efe281adacb6a3a1b6" style="color: var(--sn-txt3); font-weight: 800; font-size: 1.1rem; text-decoration: none;">📧 <span class="__cf_email__" data-cfemail="22524e435b564a43574547564a475062454f434b4e0c414d4f">[email&#160;protected]</span></a>
                 </div>
             </div>
         </div>
 
         <!-- PLAYLISTS -->
         <div id="playlists-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">📋 Gérer mes Playlists</h2>
+            <h2 style="font-size: 2.5rem; color: var(--sn-gold); margin-bottom: 2rem;">📋 Gérer mes Playlists</h2>
             
             <!-- PLAYLISTS DEEZER -->
             <div class="playlists-box" style="margin-bottom: 2rem;">
-                <h3 style="color: #00f5ff; margin-bottom: 1rem;">🎵 Playlists Deezer</h3>
+                <h3 style="color: var(--sn-txt3); margin-bottom: 1rem;">🎵 Playlists Deezer</h3>
                 <div id="playlists-list"></div>
                 <button class="btn" onclick="showAddPlaylist()" style="margin-top: 1rem;">➕ Ajouter une playlist Deezer</button>
             </div>
 
             <!-- PLAYLISTS JSON -->
             <div class="playlists-box">
-                <h3 style="color: #00f5ff; margin-bottom: 1rem;">📚 Mes Playlists JSON</h3>
+                <h3 style="color: var(--sn-txt3); margin-bottom: 1rem;">📚 Mes Playlists JSON</h3>
                 <div id="json-playlists-list"></div>
-                <p id="no-json-playlists" style="color: #aaa; font-size: 0.9rem; margin-top: 0.5rem;">
+                <p id="no-json-playlists" style="color: var(--sn-muted); font-size: 0.9rem; margin-top: 0.5rem;">
                     Aucune playlist JSON sauvegardée.
                 </p>
                 
                 <!-- Création de playlist JSON -->
                 <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="color: #ffbe0b; margin-bottom: 0.8rem;">➕ Ajouter une playlist JSON</h4>
-                    <p style="margin-bottom: 0.8rem; font-size: 0.85rem; color: #aaa;">
+                    <h4 style="color: var(--sn-gold); margin-bottom: 0.8rem;">➕ Ajouter une playlist JSON</h4>
+                    <p style="margin-bottom: 0.8rem; font-size: 0.85rem; color: var(--sn-muted);">
                         📝 Colle le contenu de ton fichier JSON ici :
                     </p>
                     <textarea id="admin-json-input" class="input" placeholder='{"playlist": [{"title": "...", "artist": "...", "preview": "...", "cover": "..."}]}' style="min-height: 180px; font-family: monospace; font-size: 0.85rem; resize: vertical; max-width: 100%;"></textarea>
-                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #00f5ff;">
-                        💡 Utilise le <a href="playlist-generator.html" target="_blank" style="color: #ffbe0b; font-weight: 600;">générateur JSON</a> pour créer ta playlist facilement !
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--sn-txt3);">
+                        💡 Utilise le <a href="playlist-generator.html" target="_blank" style="color: var(--sn-gold); font-weight: 600;">générateur JSON</a> pour créer ta playlist facilement !
                     </p>
                     <input id="admin-json-name" class="input" placeholder="Nom de la playlist" style="max-width: 100%; margin-top: 0.5rem;">
                     <button class="btn" onclick="adminSaveJsonPlaylist()" style="margin-top: 0.8rem;">💾 Sauvegarder</button>
@@ -1787,13 +1712,13 @@
 
         <!-- CREATE -->
         <div id="create-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 0.5rem;">🎮 Créer une partie</h2>
+            <h2 style="font-size: 2.5rem; color: var(--sn-gold); margin-bottom: 0.5rem;">🎮 Créer une partie</h2>
             <div style="text-align: center; margin-bottom: 1.5rem;">
-                <button class="btn" onclick="toggleHelpGuide()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">❓ Guide d'utilisation</button>
+                <button class="btn" onclick="toggleHelpGuide()" style="font-size: 0.85rem; padding: 0.5rem 1.2rem; background: transparent; border: 1px solid #2e2e33; color: var(--sn-txt2);">❓ Guide d'utilisation</button>
             </div>
             
             <input id="create-name" class="input" placeholder="Ton pseudo" maxlength="20">
-            <p style="color: #00f5ff; font-size: 0.95rem; margin: 0.8rem 0 0.3rem; font-weight: 700; text-align: center;">😎 Ton emoji</p>
+            <p style="color: var(--sn-txt3); font-size: 0.95rem; margin: 0.8rem 0 0.3rem; font-weight: 700; text-align: center;">😎 Ton emoji</p>
             <div class="emoji-dropdown-trigger" onclick="openEmojiModal('create')">
                 <span class="emoji-preview" id="create-emoji-preview">😎</span>
                 <span class="emoji-label">Choisis ton emoji</span>
@@ -1815,7 +1740,7 @@
 
                 <!-- Sous-mode Titres uniquement -->
                 <div id="title-only-submode" style="display:none; margin-top:0.8rem; text-align:center;">
-                    <p style="color:#aaa; font-size:0.85rem; margin-bottom:0.6rem;">Comment répondre ?</p>
+                    <p style="color:var(--sn-muted); font-size:0.85rem; margin-bottom:0.6rem;">Comment répondre ?</p>
                     <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
                         <button class="title-submode-btn active" data-val="qcm" onclick="selectTitleSubmode('qcm')">🎯 QCM</button>
                         <button class="title-submode-btn" data-val="writing" onclick="selectTitleSubmode('writing')">✍️ Écriture</button>
@@ -1847,7 +1772,7 @@
                 <!-- Config équipes -->
                 <div class="team-config-section" id="team-config-section" style="margin:0 auto;">
                     <div style="margin-bottom:0.6rem;text-align:center;">
-                        <span style="color:#aaa;font-size:0.85rem;">Nombre d'équipes :</span>
+                        <span style="color:var(--sn-muted);font-size:0.85rem;">Nombre d'équipes :</span>
                         <div class="team-count-btns" style="margin-top:0.4rem;">
                             <button class="team-count-btn active" onclick="setTeamCount(2)">2</button>
                             <button class="team-count-btn" onclick="setTeamCount(3)">3</button>
@@ -1880,7 +1805,7 @@
                 
                 <!-- TABS -->
                 <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <button class="btn large" onclick="switchPlaylistTab('deezer')" id="tab-deezer" style="flex: 1; background: #ffbe0b;">
+                    <button class="btn large" onclick="switchPlaylistTab('deezer')" id="tab-deezer" style="flex: 1;">
                         🎵 Deezer
                     </button>
                     <button class="btn large" onclick="switchPlaylistTab('saved')" id="tab-saved" style="flex: 1; background: rgba(255,255,255,0.1);">
@@ -1893,7 +1818,7 @@
                     <select id="playlist-select" class="select">
                         <option value="">-- Sélectionner --</option>
                     </select>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #aaa;">
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--sn-muted);">
                         Ou ajouter une URL personnalisée :
                     </p>
                     <input id="custom-playlist-url" class="input" placeholder="URL Playlist Deezer">
@@ -1907,7 +1832,7 @@
                     <div id="saved-playlist-actions" style="margin-top: 1rem; display: none;">
                         <button class="btn" style="background: #f56565; color: white;" onclick="deleteSavedPlaylist()">🗑️ Supprimer cette playlist</button>
                     </div>
-                    <p style="margin-top: 1rem; font-size: 0.85rem; color: #aaa;" id="no-saved-playlists">
+                    <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--sn-muted);" id="no-saved-playlists">
                         Aucune playlist sauvegardée. Créez-en une dans l'onglet "🎨 Nouvelle Playlist" !
                     </p>
                 </div>
@@ -1920,16 +1845,16 @@
                 <button class="btn large" onclick="loadAndCreate()">🚀 Créer la partie</button>
             </div>
 
-            <a id="nos-reseaux-create" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1.5rem; background: linear-gradient(135deg, #00f5ff, #8338ec);">🌐 Nos Réseaux</a>
+            <a id="nos-reseaux-create" href="https://campsite.bio/playthaugether" target="_blank" class="btn large" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 1.5rem; background: transparent; border: 1px solid #2e2e33; color: var(--sn-txt2);">🌐 Nos Réseaux</a>
             <button class="btn" onclick="goToMenu()" style="margin-top: 1rem;">🏠 Retour</button>
         </div>
 
         <!-- MON COMPTE -->
         <div id="account-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">⚙️ Mon Compte</h2>
+            <h2 style="font-size: 2.5rem; color: var(--sn-gold); margin-bottom: 2rem;">⚙️ Mon Compte</h2>
             
             <div class="playlists-box" style="max-width: 400px; margin: 0 auto;">
-                <h3 style="color: #00f5ff; margin-bottom: 1.5rem;">🔒 Changer mon mot de passe</h3>
+                <h3 style="color: var(--sn-txt3); margin-bottom: 1.5rem;">🔒 Changer mon mot de passe</h3>
                 
                 <input id="account-old-pass" class="input" type="password" placeholder="Mot de passe actuel" style="max-width: 100%;">
                 <input id="account-new-pass" class="input" type="password" placeholder="Nouveau mot de passe" style="max-width: 100%;">
@@ -1946,9 +1871,9 @@
 
         <!-- JOIN -->
         <div id="join-screen" class="screen hidden">
-            <h2 style="font-size: 2.5rem; color: #ffbe0b; margin-bottom: 2rem;">👥 Rejoindre</h2>
+            <h2 style="font-size: 2.5rem; color: var(--sn-gold); margin-bottom: 2rem;">👥 Rejoindre</h2>
             <input id="join-name" class="input" placeholder="Ton pseudo" maxlength="20">
-            <p style="color: #00f5ff; font-size: 0.95rem; margin: 0.8rem 0 0.3rem; font-weight: 700; text-align: center;">😎 Ton emoji</p>
+            <p style="color: var(--sn-txt3); font-size: 0.95rem; margin: 0.8rem 0 0.3rem; font-weight: 700; text-align: center;">😎 Ton emoji</p>
             <div class="emoji-dropdown-trigger" onclick="openEmojiModal('join')">
                 <span class="emoji-preview" id="join-emoji-preview">😎</span>
                 <span class="emoji-label">Choisis ton emoji</span>
@@ -1962,7 +1887,7 @@
 
         <!-- LOBBY -->
         <div id="lobby-screen" class="screen hidden">
-            <h2 style="font-size: 1.8rem; color: #ffbe0b; margin-bottom: 1rem;">Salle d'attente</h2>
+            <h2 style="font-size: 1.8rem; color: var(--sn-gold); margin-bottom: 1rem;">Salle d'attente</h2>
             
             <!-- LAYOUT 2 COLONNES : gauche (récap + code) | droite (QR) — visible hôte uniquement -->
             <div id="lobby-host-layout" class="hidden" style="display:none; gap: 2rem; align-items: stretch; margin-bottom: 1.2rem; max-width: 900px; margin-left: auto; margin-right: auto;">
@@ -1971,23 +1896,23 @@
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
                     <!-- Récap -->
                     <div id="host-recap" style="background: rgba(131,56,236,0.15); border: 1px solid rgba(131,56,236,0.5); border-radius: 16px; padding: 1rem 1.2rem; flex: 1;">
-                        <h3 style="color: #ffbe0b; font-size: 1rem; margin-bottom: 0.8rem; text-align: center;">⚙️ Récap de la partie</h3>
+                        <h3 style="color: var(--sn-gold); font-size: 1rem; margin-bottom: 0.8rem; text-align: center;">⚙️ Récap de la partie</h3>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                             <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎵 Playlist</div>
+                                <div style="color: var(--sn-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎵 Playlist</div>
                                 <div id="recap-playlist" style="color: white; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
                             </div>
                             <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Mode</div>
-                                <div id="recap-mode" style="color: #00f5ff; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                                <div style="color: var(--sn-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Mode</div>
+                                <div id="recap-mode" style="color: var(--sn-txt3); font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
                             </div>
                             <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">❓ Questions</div>
-                                <div id="recap-questions" style="color: #ffbe0b; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                                <div style="color: var(--sn-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">❓ Questions</div>
+                                <div id="recap-questions" style="color: var(--sn-gold); font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
                             </div>
                             <div style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 0.6rem 0.8rem;">
-                                <div style="color: #aaa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">⏱️ Timer</div>
-                                <div id="recap-timer" style="color: #ff006e; font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
+                                <div style="color: var(--sn-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">⏱️ Timer</div>
+                                <div id="recap-timer" style="color: var(--sn-red); font-weight: 800; font-size: 0.9rem; margin-top: 0.2rem;">—</div>
                             </div>
                         </div>
                     </div>
@@ -2000,10 +1925,10 @@
 
                 <!-- COLONNE DROITE : QR code -->
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div style="border-radius:12px; border:4px solid #ffbe0b; box-shadow:0 0 40px rgba(255,190,11,0.5); overflow:hidden; line-height:0;">
+                    <div style="border-radius:12px; border:1px solid var(--sn-gold); overflow:hidden; line-height:0;">
                         <canvas id="lobby-qr" style="display:block;"></canvas>
                     </div>
-                    <p style="color: #ffbe0b; font-weight: 800; font-size: 0.85rem; margin-top: 0.6rem; text-align:center;">📱 Scanner pour rejoindre directement</p>
+                    <p style="color: var(--sn-gold); font-weight: 800; font-size: 0.85rem; margin-top: 0.6rem; text-align:center;">📱 Scanner pour rejoindre directement</p>
                 </div>
             </div>
 
@@ -2037,10 +1962,10 @@
             <button id="bot-panel-toggle" class="hidden" onclick="toggleBotModal()" style="margin-top:0.5rem;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.35);color:#a855f7;padding:0.3rem 0.8rem;border-radius:20px;font-size:0.78rem;font-weight:700;cursor:pointer;">🤖 Bots</button>
 
             <!-- Modale bots -->
-            <div id="bot-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9998;background:#1a1f3a;border:2px solid rgba(168,85,247,0.5);border-radius:16px;padding:1.2rem 1.5rem;min-width:280px;box-shadow:0 0 40px rgba(168,85,247,0.3);">
+            <div id="bot-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9998;background:var(--sn-card);border:2px solid rgba(168,85,247,0.5);border-radius:16px;padding:1.2rem 1.5rem;min-width:280px;box-shadow:0 0 40px rgba(168,85,247,0.3);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
                     <h4 style="color:#a855f7;font-size:0.95rem;font-weight:800;margin:0;">🤖 Bots de test</h4>
-                    <button onclick="toggleBotModal()" style="background:none;border:none;color:#aaa;font-size:1.2rem;cursor:pointer;">✕</button>
+                    <button onclick="toggleBotModal()" style="background:none;border:none;color:var(--sn-muted);font-size:1.2rem;cursor:pointer;">✕</button>
                 </div>
                 <div class="bot-controls">
                     <div class="bot-count-btns">
@@ -2067,7 +1992,7 @@
             <button id="force-start-btn" class="btn hidden" onclick="startGame()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);font-size:0.85rem;padding:0.5rem 1rem;margin-top:0.3rem;">⚡ Lancer sans attendre</button>
             <button id="ready-btn" class="btn large" onclick="toggleReady()" style="background:linear-gradient(135deg,#00ff64,#00c864);color:#001a0e;font-weight:900;">✅ Je suis prêt !</button>
             <div class="ready-status" id="ready-status"></div>
-            <button id="unlock-audio-btn" class="btn hidden" onclick="unlockAudio()" style="margin-top: 0.8rem; background: linear-gradient(135deg, #00f5ff, #8338ec); animation: pulse 2s infinite;">🔊 Activer le son (obligatoire sur iPhone)</button>
+            <button id="unlock-audio-btn" class="btn hidden" onclick="unlockAudio()" style="margin-top: 0.8rem; background: transparent; border: 1px solid #2e2e33; color: var(--sn-txt2); animation: pulse 2s infinite;">🔊 Activer le son (obligatoire sur iPhone)</button>
             <div id="waiting-div" class="waiting hidden">
                 <div class="spinner"></div>
                 <p>En attente de l'hôte...</p>
@@ -2077,10 +2002,10 @@
         <!-- LEVEL TRANSITION -->
         <div id="level-transition-screen" class="screen hidden">
             <div style="text-align: center;">
-                <h1 style="font-size: 4rem; color: #ffbe0b; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">
+                <h1 style="font-size: 4rem; color: var(--sn-gold); margin-bottom: 2rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">
                     🎯 NIVEAU <span id="next-level-num">2</span>
                 </h1>
-                <p style="font-size: 1.5rem; color: #00f5ff;" id="level-desc">Questions normales</p>
+                <p style="font-size: 1.5rem; color: var(--sn-txt3);" id="level-desc">Questions normales</p>
                 <div class="spinner" style="margin: 3rem auto;"></div>
             </div>
         </div>
@@ -2088,11 +2013,11 @@
         <!-- MODE START COUNTDOWN (10s) -->
         <div id="mode-start-screen" class="screen hidden">
             <div style="text-align: center;">
-                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 1rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);" id="mode-start-title">
+                <h1 style="font-size: 4rem; color: var(--sn-txt3); margin-bottom: 1rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);" id="mode-start-title">
                     🎯 MODE QCM
                 </h1>
                 <p id="mode-start-playlist" style="font-size: 2rem; color: #a855f7; font-weight: 800; margin-bottom: 2rem; text-shadow: 0 0 20px rgba(168,85,247,0.5);"></p>
-                <div style="font-size: 8rem; color: #ffbe0b; font-weight: 800; text-shadow: 0 0 50px rgba(255,190,11,0.8);" id="countdown-number">
+                <div style="font-size: 8rem; color: var(--sn-gold); font-weight: 800; text-shadow: 0 0 50px rgba(255,190,11,0.8);" id="countdown-number">
                     10
                 </div>
                 <p style="font-size: 1.5rem; color: white; margin-top: 2rem;">Préparez-vous...</p>
@@ -2102,8 +2027,8 @@
         <!-- QCM INTRO (unique) -->
         <div id="qcm-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">🎯 MODE QCM</h1>
-                <div class="intro-card" style="background: rgba(0,245,255,0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-txt3); margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">🎯 MODE QCM</h1>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">4 CHOIX DE RÉPONSE</p>
                     <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Une seule bonne réponse parmi les 4 propositions. Sois rapide — plus tu réponds vite, plus tu gagnes de points ! Attention, une mauvaise réponse ne rapporte rien.</p>
                 </div>
@@ -2115,10 +2040,10 @@
         <!-- FILM WRITING INTRO -->
         <div id="film-writing-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">🎬 MODE FILM</h1>
-                <div class="intro-card" style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-red); margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">🎬 MODE FILM</h1>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">✍️ TAPE LE NOM DU FILM</p>
-                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute l'extrait et tape le nom du film. L'orthographe est tolérante, les accents et majuscules ne comptent pas. Valide avec <strong style="color:#ffbe0b;">Entrée</strong> ou le bouton ✅ !</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute l'extrait et tape le nom du film. L'orthographe est tolérante, les accents et majuscules ne comptent pas. Valide avec <strong style="color:var(--sn-gold);">Entrée</strong> ou le bouton ✅ !</p>
                 </div>
                 <div class="intro-scores-container" id="film-writing-intro-scores"></div>
                 <div class="intro-countdown" style="margin: 1.2rem auto; font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.05em;">⏳ <span class="countdown-num">15</span>s</div>
@@ -2131,7 +2056,7 @@
                 <h1 style="font-size: 4rem; color: #a855f7; margin-bottom: 1.2rem; text-shadow: 0 0 30px rgba(168,85,247,0.5);">📺 MODE SÉRIE</h1>
                 <div class="intro-card" style="background: rgba(168,85,247,0.1); border: 3px solid #a855f7; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">✍️ TAPE LE NOM DE LA SÉRIE</p>
-                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute le générique et tape le nom de la série. L'orthographe est tolérante, les accents et majuscules ne comptent pas. Valide avec <strong style="color:#ffbe0b;">Entrée</strong> ou le bouton ✅ !</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute le générique et tape le nom de la série. L'orthographe est tolérante, les accents et majuscules ne comptent pas. Valide avec <strong style="color:var(--sn-gold);">Entrée</strong> ou le bouton ✅ !</p>
                 </div>
                 <div class="intro-scores-container" id="serie-writing-intro-scores"></div>
                 <div class="intro-countdown" style="margin: 1.2rem auto; font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.05em;">⏳ <span class="countdown-num">15</span>s</div>
@@ -2141,11 +2066,11 @@
         <!-- WRITING LEVEL 1 INTRO -->
         <div id="writing-lvl1-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ ÉCRITURE</h1>
-                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 1 — L'ARTISTE</p>
-                <div class="intro-card" style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-red); margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ ÉCRITURE</h1>
+                <p style="color: var(--sn-gold); font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 1 — L'ARTISTE</p>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎤 TAPE LE NOM DE L'ARTISTE</p>
-                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute l'extrait et tape le nom de l'artiste ou du groupe. Pas de panique sur l'orthographe, les petites fautes sont tolérées. Valide avec <strong style="color:#ffbe0b;">Entrée</strong> ou le bouton ✅ !</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Écoute l'extrait et tape le nom de l'artiste ou du groupe. Pas de panique sur l'orthographe, les petites fautes sont tolérées. Valide avec <strong style="color:var(--sn-gold);">Entrée</strong> ou le bouton ✅ !</p>
                 </div>
                 <div class="intro-scores-container" id="writing-lvl1-intro-scores"></div>
                 <div class="intro-countdown" style="margin: 1.2rem auto; font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.05em;">⏳ <span class="countdown-num">15</span>s</div>
@@ -2155,9 +2080,9 @@
         <!-- WRITING LEVEL 2 INTRO -->
         <div id="writing-lvl2-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ ÉCRITURE</h1>
-                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — TITRE + ARTISTE</p>
-                <div class="intro-card" style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-red); margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ ÉCRITURE</h1>
+                <p style="color: var(--sn-gold); font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — TITRE + ARTISTE</p>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎵 TITRE ET ARTISTE À TROUVER</p>
                     <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Deux champs : un pour le titre, un pour l'artiste. Tu peux répondre l'un, l'autre, ou les deux ! Chaque bonne réponse rapporte des points, et si tu trouves les <strong style="color:#00ff64;">deux ensemble tu gagnes un bonus</strong> supplémentaire !</p>
                 </div>
@@ -2169,11 +2094,11 @@
         <!-- WRITING TRANSITION (compatibilité) -->
         <div id="writing-transition-screen" class="screen hidden">
             <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 1.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ MODE ÉCRITURE</h1>
-                <div class="intro-card" style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin: 2rem 0;">
+                <h1 style="font-size: 4rem; color: var(--sn-red); margin-bottom: 1.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">✍️ MODE ÉCRITURE</h1>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin: 2rem 0;">
                     <p style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">📝 <strong>Orthographe tolérante !</strong></p>
                     <p style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">✅ <strong>N'oubliez pas de VALIDER !</strong></p>
-                    <p style="font-size: 1.1rem; color: #aaa; margin-top: 1.5rem;">(Les majuscules ne comptent pas)</p>
+                    <p style="font-size: 1.1rem; color: var(--sn-muted); margin-top: 1.5rem;">(Les majuscules ne comptent pas)</p>
                 </div>
                 <div class="intro-countdown" style="margin: 1.2rem auto; font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.05em;">⏳ <span class="countdown-num">15</span>s</div>
             </div>
@@ -2182,9 +2107,9 @@
         <!-- MIX LEVEL 1 INTRO -->
         <div id="mix-lvl1-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #00f5ff; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">🎧 MODE SOIRÉE</h1>
-                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 1 — QCM CLASSIQUE</p>
-                <div class="intro-card" style="background: rgba(0,245,255,0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-txt3); margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">🎧 MODE SOIRÉE</h1>
+                <p style="color: var(--sn-gold); font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 1 — QCM CLASSIQUE</p>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎯 4 CHOIX DE RÉPONSE</p>
                     <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Extraits musicaux classiques avec 4 propositions. Une seule bonne réponse — sois rapide, les points diminuent avec le temps ! Attention à ne pas te précipiter non plus.</p>
                 </div>
@@ -2196,11 +2121,11 @@
         <!-- MIX LEVEL 2 INTRO -->
         <div id="mix-lvl2-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #ff006e; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">🎧 MODE SOIRÉE</h1>
-                <p style="color: #ffbe0b; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — REVERSE 🔥</p>
-                <div class="intro-card" style="background: rgba(255,0,110,0.1); border: 3px solid #ff006e; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-red); margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,0,110,0.5);">🎧 MODE SOIRÉE</h1>
+                <p style="color: var(--sn-gold); font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 2 — REVERSE 🔥</p>
+                <div class="intro-card" style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">⏪ MUSIQUES À L'ENVERS !</p>
-                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Même principe que la manche 1, mais les morceaux sont joués <strong style="color:#ff006e;">à l'envers</strong> ! Toujours 4 choix, toujours 1 seule bonne réponse. Bonne chance pour reconnaître ça...</p>
+                    <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Même principe que la manche 1, mais les morceaux sont joués <strong style="color:var(--sn-red);">à l'envers</strong> ! Toujours 4 choix, toujours 1 seule bonne réponse. Bonne chance pour reconnaître ça...</p>
                 </div>
                 <div class="intro-scores-container" id="mix-lvl2-intro-scores"></div>
                 <div class="intro-countdown" style="margin: 1.2rem auto; font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.05em;">⏳ <span class="countdown-num">15</span>s</div>
@@ -2210,9 +2135,9 @@
         <!-- MIX LEVEL 3 INTRO -->
         <div id="mix-lvl3-intro-screen" class="screen hidden">
             <div style="text-align: center; max-width: 750px; margin: 0 auto;">
-                <h1 style="font-size: 4rem; color: #ffbe0b; margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">🎧 MODE SOIRÉE</h1>
-                <p style="color: #ff006e; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 3 — DIALOGUES 🎬</p>
-                <div class="intro-card" style="background: rgba(255,190,11,0.1); border: 3px solid #ffbe0b; border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
+                <h1 style="font-size: 4rem; color: var(--sn-gold); margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(255,190,11,0.5);">🎧 MODE SOIRÉE</h1>
+                <p style="color: var(--sn-red); font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem;">MANCHE 3 — DIALOGUES 🎬</p>
+                <div class="intro-card" style="background: rgba(255,190,11,0.1); border: 2px solid var(--sn-gold); border-radius: 20px; padding: 2rem; margin-bottom: 1.2rem;">
                     <p style="font-size: 2rem; color: white; font-weight: 800; margin-bottom: 1rem;">🎬 EXTRAITS DE FILMS & SÉRIES</p>
                     <p style="font-size: 1.25rem; color: #ddd; line-height: 1.6;">Fini la musique ! Cette manche c'est des extraits de films et de séries. Reconnaître la voix, le dialogue ou l'ambiance sonore parmi 4 propositions. La dernière ligne droite !</p>
                 </div>
@@ -2227,7 +2152,7 @@
             <!-- Badge équipe affiché en haut si mode équipe -->
             <div id="player-team-badge" style="text-align:center;display:none;margin-bottom:0.2rem;"></div>
             <div class="game-header">
-                <div class="timer">⏱️ <span id="timer">20</span>s <span id="level-badge" style="font-size:0.75rem; background:rgba(255,255,255,0.12); border-radius:6px; padding:2px 7px; margin-left:6px; color:#aaa;"></span></div>
+                <div class="timer">⏱️ <span id="timer">20</span>s <span id="level-badge" style="font-size:0.75rem; background:rgba(255,255,255,0.12); border-radius:6px; padding:2px 7px; margin-left:6px; color:var(--sn-muted);"></span></div>
                 <div>Q <span id="current-q">1</span>/<span id="total-q">10</span></div>
                 <div class="score">🏆 <span id="player-score">0</span></div>
             </div>
@@ -2322,9 +2247,9 @@
         </div>
 
         <!-- PODIUM OVERLAY (animation plein écran 5s) -->
-        <div id="podium-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:20000; background: linear-gradient(135deg, #0a0e27 0%, #1a0a3a 50%, #0a0e27 100%); flex-direction:column; align-items:center; justify-content:center; overflow:hidden;">
+        <div id="podium-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:20000; background: var(--sn-bg); flex-direction:column; align-items:center; justify-content:center; overflow:hidden;">
             <canvas id="podium-confetti" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
-            <div id="podium-overlay-title" style="font-family:'Bungee Shade',cursive; font-size:2.5rem; color:#ffbe0b; text-align:center; margin-bottom:2rem; opacity:0; transform:translateY(-30px); transition:all 0.6s ease; text-shadow:0 0 40px rgba(255,190,11,0.8);">🏆 PODIUM 🏆</div>
+            <div id="podium-overlay-title" style="font-family:'Bungee Shade',cursive; font-size:2.5rem; color:var(--sn-gold); text-align:center; margin-bottom:2rem; opacity:0; transform:translateY(-30px); transition:all 0.6s ease; text-shadow:0 0 40px rgba(255,190,11,0.8);">🏆 PODIUM 🏆</div>
             <div id="podium-overlay-players" style="display:flex; align-items:flex-end; justify-content:center; gap:1.5rem; width:100%; max-width:700px; padding:0 1rem;"></div>
             <div id="podium-skip" style="position:absolute; bottom:2rem; color:rgba(255,255,255,0.4); font-size:0.85rem; cursor:pointer;" onclick="skipPodiumAnimation()">Appuie pour passer →</div>
         </div>
@@ -2357,23 +2282,23 @@
         <!-- ÉCRAN D'ATTENTE REJOIN -->
         <div id="waiting-rejoin-screen" class="screen hidden">
             <div style="text-align: center; max-width: 600px; margin: 0 auto;">
-                <h1 style="font-size: 3rem; color: #00f5ff; margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
+                <h1 style="font-size: 3rem; color: var(--sn-txt3); margin-bottom: 2rem; text-shadow: 0 0 30px rgba(0,245,255,0.5);">
                     ⏳ En attente...
                 </h1>
                 
-                <div style="background: rgba(0, 245, 255, 0.1); border: 3px solid #00f5ff; border-radius: 20px; padding: 2rem; margin-bottom: 2rem;">
+                <div style="background: var(--sn-card); border: 1px solid var(--sn-border); border-top: 2px solid var(--sn-gold); border-radius: 10px; padding: 2rem; margin-bottom: 2rem;">
                     <div class="spinner" style="margin: 0 auto 2rem;"></div>
                     
                     <p style="font-size: 1.5rem; color: white; font-weight: 800; margin-bottom: 1rem;">
                         L'hôte prépare la prochaine partie
                     </p>
                     
-                    <p style="font-size: 1.2rem; color: #aaa; margin-bottom: 1.5rem;">
+                    <p style="font-size: 1.2rem; color: var(--sn-muted); margin-bottom: 1.5rem;">
                         Vous rejoindrez automatiquement dès que la partie sera créée
                     </p>
                     
                     <div style="background: rgba(255, 190, 11, 0.2); padding: 1rem; border-radius: 10px;">
-                        <p style="font-size: 1rem; color: #ffbe0b; font-weight: 800;">Code de la partie</p>
+                        <p style="font-size: 1rem; color: var(--sn-gold); font-weight: 800;">Code de la partie</p>
                         <p style="font-size: 2rem; color: white; font-weight: 800; margin-top: 0.5rem;" id="waiting-room-code">000000</p>
                     </div>
                 </div>
@@ -2650,8 +2575,8 @@
                 div.innerHTML = `
                     <div>
                         <span style="font-weight: 800; color: ${u.isAdmin ? '#ffbe0b' : 'white'};">${u.username || key}</span>
-                        ${u.isAdmin ? '<span style="color: #ffbe0b; font-size: 0.8rem; margin-left: 0.5rem;">👑 Admin</span>' : ''}
-                        ${isMe ? '<span style="color: #00f5ff; font-size: 0.8rem; margin-left: 0.5rem;">(toi)</span>' : ''}
+                        ${u.isAdmin ? '<span style="color: var(--sn-gold); font-size: 0.8rem; margin-left: 0.5rem;">👑 Admin</span>' : ''}
+                        ${isMe ? '<span style="color: var(--sn-txt3); font-size: 0.8rem; margin-left: 0.5rem;">(toi)</span>' : ''}
                     </div>
                     <div style="display: flex; gap: 0.4rem;">
                         <button class="btn" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; background: rgba(0,245,255,0.2);" onclick="adminResetPassword('${key}')">🔑</button>
@@ -3238,7 +3163,7 @@
             container.innerHTML = '';
             
             if (Object.keys(playlists).length === 0) {
-                container.innerHTML = '<p style="color: #aaa; text-align: center;">Aucune playlist enregistrée</p>';
+                container.innerHTML = '<p style="color: var(--sn-muted); text-align: center;">Aucune playlist enregistrée</p>';
                 return;
             }
             
@@ -3929,16 +3854,6 @@
             gameState.hostDisplayOnly = hostMode && true;
             gameState.distanceMode = distanceMode;
             
-            // 🎨 Auto-détecter le thème depuis le nom de la playlist
-            if (playlistName) {
-                const suggestedTheme = detectThemeFromPlaylist(playlistName);
-                if (suggestedTheme) {
-                    applyTheme(suggestedTheme, true);
-                    const suggest = document.getElementById('theme-suggest');
-                    if (suggest) suggest.textContent = `✨ Thème suggéré pour "${playlistName}"`;
-                }
-            }
-            
             const questions = createQuestionsWithLevels(tracks, gameState.numQuestions, mode);
             
 
@@ -4132,7 +4047,6 @@
             }
 
             // Theme fab visible pour l'hôte en lobby aussi
-            showThemeFab(gameState.isHost);
 
             // Afficher le bouton "Activer le son" si ce joueur aura besoin d'audio
             const needsAudio = gameState.isHost || gameState.distanceMode;
@@ -4170,8 +4084,8 @@
                 // Indicateur ✓ / … visible pour l'hôte
                 const readyLabel = gameState.isHost
                     ? (p.ready
-                        ? `<span style="color:#00ff64;font-size:0.75rem;font-weight:800;margin-left:auto;">✓ Prêt</span>`
-                        : `<span style="color:#666;font-size:0.75rem;margin-left:auto;">…</span>`)
+                        ? `<span style="color:var(--sn-green);font-size:0.75rem;font-weight:500;flex-shrink:0;">✓ Prêt</span>`
+                        : `<span style="color:var(--sn-muted);font-size:0.75rem;flex-shrink:0;">…</span>`)
                     : '';
                 const kickBtn = (gameState.isHost && !isHost && currentScreen === 'lobby')
                     ? `<button class="kick-btn" onclick="event.stopPropagation();kickPlayer('${p.name.replace(/'/g,"\\'")}')">✕</button>`
@@ -4179,8 +4093,8 @@
                 const botBadge = p.isBot ? `<span class="bot-indicator">BOT</span>` : '';
                 div.innerHTML = `
                     ${readyDot}
-                    <span>${p.emoji || '😎'}</span>
-                    <span style="font-weight:700;">${p.name}${isHost ? ' 👑' : ''}${teamTag}${botBadge}</span>
+                    <span style="flex-shrink:0;">${p.emoji || '😎'}</span>
+                    <span style="font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">${p.name}${isHost ? ' 👑' : ''}${teamTag}${botBadge}</span>
                     ${readyLabel}
                     ${kickBtn}
                 `;
@@ -4433,7 +4347,6 @@
             }
             const fab = document.getElementById('pause-fab');
             if (fab) fab.classList.toggle('visible', gameState.isHost);
-            showThemeFab(gameState.isHost);
             
             startGameWithCountdown();
         }
@@ -4748,7 +4661,7 @@
             gameState._correctPlayersRef = db.ref(`rooms/${gameState.room.code}/lastAnswers`);
             
             const renderResults = (lastAnswers) => {
-                if (!lastAnswers) { list.innerHTML = '<div style="text-align:center;color:#aaa;padding:0.8rem 0;">😬 Personne cette fois !</div>'; return; }
+                if (!lastAnswers) { list.innerHTML = '<div style="text-align:center;color:var(--sn-muted);padding:0.8rem 0;">😬 Personne cette fois !</div>'; return; }
 
                 // ANSWER LOG
                 if (!gameState.answerLog) gameState.answerLog = [];
@@ -4780,7 +4693,7 @@
                 results.sort((a, b) => a.time - b.time);
                 list.innerHTML = '';
                 if (results.length === 0) {
-                    list.innerHTML = '<div style="text-align:center;color:#aaa;padding:0.8rem 0;font-size:0.95rem;">😬 Personne cette fois !</div>';
+                    list.innerHTML = '<div style="text-align:center;color:var(--sn-muted);padding:0.8rem 0;font-size:0.95rem;">😬 Personne cette fois !</div>';
                 } else {
                     const medals = ['🥇','🥈','🥉'];
                     const teams = gameState.room?.teams || [];
@@ -4798,7 +4711,7 @@
                         }
                         div.style.cssText = `background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:0.6rem 0.8rem;margin-bottom:0.4rem;display:flex;justify-content:space-between;align-items:center;`;
                         div.innerHTML = `<span style="color:#fff;font-weight:700;font-size:0.95rem;">${medals[idx]||idx+1+'.'} ${r.emoji} ${r.name}</span>
-                            <span style="color:#00f5ff;font-weight:800;font-size:0.9rem;">${parseFloat(r.time).toFixed(0)}s</span>`;
+                            <span style="color:var(--sn-txt3);font-weight:800;font-size:0.9rem;">${parseFloat(r.time).toFixed(0)}s</span>`;
                         list.appendChild(div);
                     });
                 }
@@ -5046,7 +4959,7 @@
                     const span = document.createElement('span');
                     if (letter.revealed) {
                         span.textContent = letter.char.toUpperCase();
-                        span.style.cssText = 'display: inline-block; width: 24px; height: 32px; line-height: 32px; text-align: center; color: #00f5ff; text-shadow: 0 0 8px rgba(0,245,255,0.5);';
+                        span.style.cssText = 'display: inline-block; width: 24px; height: 32px; line-height: 32px; text-align: center; color: var(--sn-txt3); text-shadow: 0 0 8px rgba(0,245,255,0.5);';
                     } else {
                         span.textContent = '_';
                         span.style.cssText = 'display: inline-block; width: 24px; height: 32px; line-height: 32px; text-align: center; color: rgba(255,255,255,0.4);';
@@ -6113,7 +6026,7 @@
                 });
 
                 // Liste : top 3 joueurs seulement
-                list.innerHTML = `<h3 style="color:#ffbe0b;margin-bottom:0.8rem;text-align:center;">🏅 Top joueurs</h3><div class="leaderboard-grid"></div>`;
+                list.innerHTML = `<h3 style="color:var(--sn-gold);margin-bottom:0.8rem;text-align:center;">🏅 Top joueurs</h3><div class="leaderboard-grid"></div>`;
                 const grid = list.querySelector('.leaderboard-grid');
                 sorted.slice(0, 3).forEach((p, i) => {
                     const team = teams.find(t => t.id === p.teamId);
@@ -6143,7 +6056,7 @@
                     podium.appendChild(div);
                 });
 
-                list.innerHTML = '<h3 style="color:#00f5ff;margin-bottom:0.8rem;text-align:center;">🎯 Cette partie</h3><div class="leaderboard-grid"></div>';
+                list.innerHTML = '<h3 style="color:var(--sn-txt3);margin-bottom:0.8rem;text-align:center;">🎯 Cette partie</h3><div class="leaderboard-grid"></div>';
                 const grid = list.querySelector('.leaderboard-grid');
                 sorted.forEach((p, i) => {
                     const div = document.createElement('div');
@@ -6199,7 +6112,7 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             const ctx = canvas.getContext('2d');
-            const colors = ['#ff006e','#00f5ff','#ffbe0b','#8338ec','#00ff64','#ffffff','#ff9500'];
+            const colors = ['#c9a24b','#f2f2f4','#8a8a92','#a9784f','#e8d9b0'];
             const pieces = Array.from({length: 200}, () => ({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height - canvas.height,
@@ -6386,7 +6299,7 @@
                 
                 // Animation de rebond
                 numEl.style.transform = 'scale(1.4)';
-                numEl.style.color = countdown <= 3 ? '#ff006e' : '#ffbe0b';
+                numEl.style.color = countdown <= 3 ? '#e0596e' : '#c9a24b';
                 setTimeout(() => { numEl.style.transform = 'scale(1)'; }, 150);
                 numEl.textContent = countdown;
                 
@@ -6707,8 +6620,8 @@
                 div.innerHTML = `
                     <span style="font-size:1.1rem;">${medals[i]}</span>
                     <span style="flex:1;font-weight:700;color:white;font-size:0.95rem;">${pl.name}</span>
-                    <span style="color:#ffbe0b;font-weight:800;font-family:monospace;min-width:50px;text-align:right;">${count} vote${count>1?'s':''}</span>
-                    <button onclick='selectVoteWinner(${JSON.stringify(pl)})' style="background:rgba(131,56,236,0.25);border:1px solid #8338ec;color:#00f5ff;padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:700;cursor:pointer;">▶</button>
+                    <span style="color:var(--sn-gold);font-weight:800;font-family:monospace;min-width:50px;text-align:right;">${count} vote${count>1?'s':''}</span>
+                    <button onclick='selectVoteWinner(${JSON.stringify(pl)})' style="background:var(--sn-gold-bg);border:1px solid var(--sn-gold);color:var(--sn-gold);padding:0.25rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:700;cursor:pointer;">▶</button>
                 `;
                 container.appendChild(div);
             });
@@ -6876,7 +6789,7 @@
             const sorted = [...teams].sort((a,b) => (teamScores[b.id]||0) - (teamScores[a.id]||0));
             const winner = sorted[0];
             
-            let html = `<h3 style="color:#ffbe0b;text-align:center;margin:1.5rem 0 1rem;">⚔️ Résultat Équipes</h3>
+            let html = `<h3 style="color:var(--sn-gold);text-align:center;margin:1.5rem 0 1rem;">⚔️ Résultat Équipes</h3>
                 <div class="team-results-grid">`;
             
             sorted.forEach((team, i) => {
@@ -6896,7 +6809,7 @@
             if (sorted.length > 1) {
                 const isDraw = (teamScores[sorted[0].id]||0) === (teamScores[sorted[1].id]||0);
                 html += isDraw
-                    ? `<p style="text-align:center;color:#ffbe0b;font-size:1.2rem;font-weight:800;">🤝 ÉGALITÉ !</p>`
+                    ? `<p style="text-align:center;color:var(--sn-gold);font-size:1.2rem;font-weight:800;">🤝 ÉGALITÉ !</p>`
                     : `<p style="text-align:center;color:${winner.color};font-size:1.2rem;font-weight:800;">🏆 ${winner.name} GAGNE !</p>`;
             }
             
@@ -7412,7 +7325,7 @@
 
             // Fond dégradé
             const bg = ctx.createLinearGradient(0, 0, W, H);
-            bg.addColorStop(0, '#0a0e27'); bg.addColorStop(1, '#1a0a3a');
+            bg.addColorStop(0, '#0e0e10'); bg.addColorStop(1, '#1a1a1d');
             ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
             // Points dorés décoratifs
@@ -7819,7 +7732,6 @@
         // =============================================
         // 🎨 THÈMES VISUELS
         // =============================================
-        let themePopupOpen = false;
         // Mots-clés → thème suggéré
         const THEME_KEYWORDS = {
             'theme-80s':     ['80','disco','funk','eighties','daft','stranger','abba','queen','michael jackson','madonna'],
@@ -7843,36 +7755,16 @@
         }
 
         function applyTheme(theme, fromPlaylist = false) {
-            const ALL_THEMES = ['theme-80s','theme-90s','theme-2000s','theme-pop','theme-hiphop','theme-rock','theme-electro','theme-french','theme-chill','theme-world'];
-            ALL_THEMES.forEach(t => document.body.classList.remove(t));
-            if (theme) document.body.classList.add(theme);
-            
-            document.querySelectorAll('.theme-chip').forEach(c => {
-                c.classList.toggle('active', c.dataset.theme === theme);
-            });
-            
-            localStorage.setItem('ptg-theme', theme);
-            themePopupOpen = false;
-            document.getElementById('theme-popup')?.classList.remove('open');
+            // Thèmes visuels supprimés — DA Studio noir unique
+            localStorage.removeItem('ptg-theme');
         }
 
-        function toggleThemePopup() {
-            themePopupOpen = !themePopupOpen;
-            document.getElementById('theme-popup').classList.toggle('open', themePopupOpen);
-        }
+        function toggleThemePopup() { /* supprimé */ }
 
-        function showThemeFab(visible) {
-            const fab = document.getElementById('theme-fab');
-            const popup = document.getElementById('theme-popup');
-            if (fab) fab.classList.toggle('visible', visible);
-            if (!visible && popup) { popup.classList.remove('open'); themePopupOpen = false; }
-        }
+        function showThemeFab(visible) { /* supprimé */ }
 
-        // Restaurer thème sauvegardé
-        (() => {
-            const saved = localStorage.getItem('ptg-theme');
-            if (saved) applyTheme(saved);
-        })();
+        // Nettoyer tout ancien thème sauvegardé (thèmes supprimés)
+        localStorage.removeItem('ptg-theme');
 
         // =============================================
         // ✨ ANIMATION DORÉE — tout le monde a bon
@@ -8212,7 +8104,7 @@
 
             // --- Affichage stats ---
             if (stats.length > 0) {
-                let html = '<h3 style="color: #ffbe0b; text-align: center; margin-bottom: 1rem; font-size: 1.3rem;">🏅 Stats de la partie</h3>';
+                let html = '<h3 style="color: var(--sn-gold); text-align: center; margin-bottom: 1rem; font-size: 1.3rem;">🏅 Stats de la partie</h3>';
                 html += '<div class="stats-grid">';
                 stats.forEach(s => {
                     html += `<div class="stat-card">
@@ -8266,7 +8158,7 @@
                 canvas.height = window.innerHeight;
             });
             
-            const colors = ['#ff006e', '#00f5ff', '#ffbe0b', '#8338ec', '#00ff64', '#ff4444', '#ffffff', '#ff9500', '#a855f7'];
+            const colors = ['#c9a24b', '#f2f2f4', '#8a8a92', '#a9784f', '#e8d9b0'];
             const pieces = [];
             const count = 250; // Beaucoup plus de confettis
             
